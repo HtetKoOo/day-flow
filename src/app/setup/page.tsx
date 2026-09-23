@@ -25,7 +25,7 @@ export default function Setup() {
           <li>Restart the development server.</li>
         </ol>
         <p className="mt-6 text-sm">
-          မြန်မာလို အသေးစိတ်ကို project ရဲ့ README မှာ ဖတ်နိုင်ပါတယ်။
+          See the project README for detailed setup instructions.
         </p>
       </section>
       <Link className="mt-6 inline-block underline" href="/">
