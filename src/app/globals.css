@@ -1,0 +1,54 @@
+@import "tailwindcss";
+:root {
+  --background: #f7f8f5;
+  --foreground: #243d33;
+  --card: #ffffff;
+  --primary: #334d43;
+  --primary-foreground: #ffffff;
+  --secondary: #e9eee7;
+  --muted-foreground: #637368;
+  --border: #dce3d9;
+  --ring: #527663;
+  --accent: #e9eee7;
+  --accent-foreground: #243d33;
+  --secondary-foreground: #243d33;
+  --input: #c9d4c6;
+  --destructive: #a33232;
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --font-sans: Arial, Helvetica, sans-serif;
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  button,
+  a,
+  input {
+    touch-action: manipulation;
+  }
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
