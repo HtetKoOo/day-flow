@@ -5,12 +5,12 @@
   --background: #f8f7f5;
   --foreground: #302f38;
   --card: #fff;
-  --primary: #75639c;
+  --primary: #7954b3;
   --primary-foreground: #fff;
   --secondary: #efedf3;
   --muted-foreground: #706d79;
   --border: #e7e3eb;
-  --ring: #9580bd;
+  --ring: #8a63c5;
   --accent: #efedf3;
   --accent-foreground: #302f38;
   --secondary-foreground: #302f38;
@@ -24,12 +24,12 @@
   --background: #19191d;
   --foreground: #f0eef4;
   --card: #232328;
-  --primary: #c4b1e9;
+  --primary: #ceb3ff;
   --primary-foreground: #282036;
   --secondary: #303036;
   --muted-foreground: #b1adb9;
   --border: #37363f;
-  --ring: #c4b1e9;
+  --ring: #ceb3ff;
   --accent: #303036;
   --accent-foreground: #f0eef4;
   --secondary-foreground: #f0eef4;
@@ -97,104 +97,104 @@
   }
 }
 [data-color="sage"] {
-  --task-bg: #e3ecdc;
-  --task-fg: #355135;
-  --task-dot: #96b58a;
+  --task-bg: #c9f3bd;
+  --task-fg: #1d4d2c;
+  --task-dot: #8ee66d;
 }
 .dark [data-color="sage"] {
-  --task-bg: #344731;
-  --task-fg: #d6e8c9;
-  --task-dot: #96b58a;
+  --task-bg: #3e704c;
+  --task-fg: #efffe5;
+  --task-dot: #a5f36b;
 }
 [data-color="mint"] {
-  --task-bg: #dcf0e5;
-  --task-fg: #305748;
-  --task-dot: #83b9a0;
+  --task-bg: #bdf5d9;
+  --task-fg: #14563f;
+  --task-dot: #55dca2;
 }
 .dark [data-color="mint"] {
-  --task-bg: #294a3d;
-  --task-fg: #c0e7d2;
-  --task-dot: #83b9a0;
+  --task-bg: #1f7960;
+  --task-fg: #e4fff3;
+  --task-dot: #60e3ae;
 }
 [data-color="teal"] {
-  --task-bg: #daeeec;
-  --task-fg: #285859;
-  --task-dot: #80b6b0;
+  --task-bg: #b8f1f3;
+  --task-fg: #12565c;
+  --task-dot: #4ed4dc;
 }
 .dark [data-color="teal"] {
-  --task-bg: #294746;
-  --task-fg: #bfe3df;
-  --task-dot: #80b6b0;
+  --task-bg: #1b7075;
+  --task-fg: #e4ffff;
+  --task-dot: #56dde7;
 }
 [data-color="sky"] {
-  --task-bg: #e0edf5;
-  --task-fg: #34556e;
-  --task-dot: #8eafcd;
+  --task-bg: #c7e9ff;
+  --task-fg: #164d78;
+  --task-dot: #65b9fa;
 }
 .dark [data-color="sky"] {
-  --task-bg: #2e4253;
-  --task-fg: #cee3f5;
-  --task-dot: #8eafcd;
+  --task-bg: #286fa6;
+  --task-fg: #eaf6ff;
+  --task-dot: #71c7ff;
 }
 [data-color="lavender"] {
-  --task-bg: #e9e6f8;
-  --task-fg: #514976;
-  --task-dot: #a79bcb;
+  --task-bg: #ded3ff;
+  --task-fg: #49337d;
+  --task-dot: #aa90ff;
 }
 .dark [data-color="lavender"] {
-  --task-bg: #3f3a58;
-  --task-fg: #e0d8fa;
-  --task-dot: #a79bcb;
+  --task-bg: #6b4ba3;
+  --task-fg: #f6efff;
+  --task-dot: #c2a4ff;
 }
 [data-color="lilac"] {
-  --task-bg: #f0e4f3;
-  --task-fg: #684974;
-  --task-dot: #bb9bc9;
+  --task-bg: #f0d4fc;
+  --task-fg: #703682;
+  --task-dot: #e18af0;
 }
 .dark [data-color="lilac"] {
-  --task-bg: #4b3852;
-  --task-fg: #ebd1f4;
-  --task-dot: #bb9bc9;
+  --task-bg: #8b438c;
+  --task-fg: #fff0ff;
+  --task-dot: #e895ee;
 }
 [data-color="rose"] {
-  --task-bg: #f7e3e7;
-  --task-fg: #794750;
-  --task-dot: #cf9aa6;
+  --task-bg: #ffcfdc;
+  --task-fg: #7d2949;
+  --task-dot: #f58ba9;
 }
 .dark [data-color="rose"] {
-  --task-bg: #53363e;
-  --task-fg: #f8d0d9;
-  --task-dot: #cf9aa6;
+  --task-bg: #a44564;
+  --task-fg: #fff0f4;
+  --task-dot: #ff95b5;
 }
 [data-color="peach"] {
-  --task-bg: #f8e7db;
-  --task-fg: #785039;
-  --task-dot: #d4aa8e;
+  --task-bg: #ffd5bb;
+  --task-fg: #79351f;
+  --task-dot: #ff9d71;
 }
 .dark [data-color="peach"] {
-  --task-bg: #513e31;
-  --task-fg: #f3d8c1;
-  --task-dot: #d4aa8e;
+  --task-bg: #a95036;
+  --task-fg: #fff1e7;
+  --task-dot: #ffad79;
 }
 [data-color="amber"] {
-  --task-bg: #f5edcd;
-  --task-fg: #695826;
-  --task-dot: #c3b36e;
+  --task-bg: #fff0ad;
+  --task-fg: #604b0f;
+  --task-dot: #f4cf45;
 }
 .dark [data-color="amber"] {
-  --task-bg: #4a452b;
-  --task-fg: #eee2ad;
-  --task-dot: #c3b36e;
+  --task-bg: #8d701c;
+  --task-fg: #fffbed;
+  --task-dot: #ffd655;
 }
 [data-color="stone"] {
-  --task-bg: #e9e8e2;
-  --task-fg: #545950;
-  --task-dot: #a6aba0;
+  --task-bg: #dce8fa;
+  --task-fg: #354f70;
+  --task-dot: #9fbde9;
 }
 .dark [data-color="stone"] {
-  --task-bg: #3e433c;
-  --task-fg: #dce1d5;
-  --task-dot: #a6aba0;
+  --task-bg: #405d85;
+  --task-fg: #eef5ff;
+  --task-dot: #abc9f6;
 }
 
 .eyebrow {
@@ -1595,19 +1595,30 @@ body {
 }
 .agenda {
   display: grid;
-  gap: 10px;
+  gap: 0;
   max-width: 850px;
   margin: 0 auto;
+  padding-top: var(--agenda-start-offset, 0px);
+  transition: padding-top 320ms var(--ease-calm);
+}
+.agenda-item {
+  min-width: 0;
 }
 .agenda-card {
   display: flex;
   gap: 12px;
   align-items: center;
+  min-height: var(--agenda-task-height, 76px);
   border-radius: 22px;
   background: var(--task-bg);
   color: var(--task-fg);
   padding: 14px 18px;
   border-left: 4px solid var(--task-dot);
+  transition:
+    min-height 360ms var(--ease-calm),
+    background-color 260ms var(--ease-calm),
+    opacity 260ms var(--ease-calm),
+    filter 260ms var(--ease-calm);
 }
 .agenda-body {
   flex: 1;
@@ -1636,9 +1647,9 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 2px 0 10px 22px;
+  min-height: var(--agenda-gap-height, 26px);
+  margin: 0 0 0 22px;
   padding: 6px 10px;
-  min-height: 36px;
   background: none;
   border: 0;
   color: var(--muted-foreground);
@@ -1678,6 +1689,25 @@ body {
   width: 20px;
   height: 20px;
   min-width: 20px;
+}
+.agenda-card.is-half-hour {
+  padding-block: 10px;
+}
+.agenda-card.is-quarter-hour {
+  padding-block: 7px;
+}
+.agenda-card.is-quarter-hour .agenda-time {
+  margin-bottom: 0;
+  font-size: 12px;
+}
+.agenda-card.is-quarter-hour .agenda-body strong {
+  line-height: 1.25;
+}
+.agenda-compact .agenda-card.is-half-hour {
+  padding-block: 8px;
+}
+.agenda-compact .agenda-card.is-quarter-hour {
+  padding-block: 5px;
 }
 .week-timeline {
   grid-template-columns: repeat(7, minmax(160px, 1fr));
@@ -1840,17 +1870,22 @@ button,
 .agenda-card,
 .inbox-card {
   transition:
+    min-height 360ms var(--ease-calm),
     background-color 260ms var(--ease-calm),
     opacity 260ms var(--ease-calm),
     filter 260ms var(--ease-calm);
 }
 .agenda-card.is-complete,
 .inbox-card.is-complete {
-  opacity: 0.65;
-  filter: saturate(0.5);
+  opacity: 0.54;
+  filter: saturate(0.2) brightness(0.72);
 }
 .is-complete strong {
   opacity: 1;
+}
+.is-complete .completion-button {
+  opacity: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 18%, transparent);
 }
 .completion-button:disabled {
   opacity: 0.75;

@@ -5,6 +5,30 @@ import { agendaTasks, clockTime } from "@/lib/tasks/agenda";
 import { taskColor } from "@/lib/tasks/colors";
 import { TaskDragHandle } from "./drag-schedule";
 import type { ScheduledTask } from "@/lib/tasks/types";
+
+function durationHeight(minutes: number, compact: boolean) {
+  const heights = compact
+    ? [46, 54, 66, 82, 98, 112, 126]
+    : [54, 66, 88, 110, 132, 150, 168];
+  const position =
+    minutes <= 15 ? 0 : minutes <= 30 ? 1 : Math.min(6, Math.ceil(minutes / 60) + 1);
+
+  return `${heights[position]}px`;
+}
+
+function durationClass(minutes: number) {
+  if (minutes <= 15) return "is-quarter-hour";
+  if (minutes <= 30) return "is-half-hour";
+  return "";
+}
+
+function gapHeight(minutes: number, compact: boolean) {
+  const minimum = compact ? 18 : 26;
+  const maximum = compact ? 42 : 74;
+  const scale = compact ? 0.18 : 0.28;
+
+  return `${Math.round(Math.min(maximum, Math.max(minimum, minutes * scale)))}px`;
+}
 export function Timeline({
   tasks,
   onEdit,
@@ -25,13 +49,24 @@ export function Timeline({
     0,
     ...tasks.map((t) => minutes(t.start_time) + t.duration_minutes),
   );
+  const firstStart = Math.min(
+    24 * 60,
+    ...tasks.map((task) => minutes(task.start_time)),
+  );
+  const startOffset = tasks.length
+    ? gapHeight(Math.max(0, firstStart - 8 * 60), compact)
+    : "0px";
   return (
-    <div className={`agenda ${compact ? "agenda-compact" : ""}`}>
+    <div
+      className={`agenda ${compact ? "agenda-compact" : ""}`}
+      style={{ "--agenda-start-offset": startOffset } as React.CSSProperties}
+    >
       {items.map(({ task, gap, gapStart, overlaps }, index) => (
-        <div key={task.id}>
+        <div key={task.id} className="agenda-item">
           {gap > 0 && index > 0 && (
             <button
               className="agenda-gap"
+              style={{ "--agenda-gap-height": gapHeight(gap, compact) } as React.CSSProperties}
               onClick={() => onAdd(clockTime(gapStart))}
               aria-label={`Add task between ${clockTime(gapStart)} and ${task.start_time.slice(0, 5)}`}
             >
@@ -43,9 +78,12 @@ export function Timeline({
             </button>
           )}
           <article
-            className={`agenda-card ${task.is_completed ? "is-complete" : ""}`}
+            className={`agenda-card ${durationClass(task.duration_minutes)} ${task.is_completed ? "is-complete" : ""}`}
             data-color={taskColor(task.color)}
-            style={{ viewTransitionName: `dayflow-task-${task.id}` }}
+            style={{
+              viewTransitionName: `dayflow-task-${task.id}`,
+              "--agenda-task-height": durationHeight(task.duration_minutes, compact),
+            } as React.CSSProperties}
           >
             <button
               className="agenda-body"
