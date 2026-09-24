@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { RegisterServiceWorker } from "@/components/pwa/register";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 export const metadata: Metadata = {
   title: "DayFlow — Plan tomorrow tonight",
   description: "A calm, tomorrow-first personal planner.",
@@ -17,10 +18,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        {children}
-        <RegisterServiceWorker />
+        <ThemeProvider>
+          {children}
+          <RegisterServiceWorker />
+        </ThemeProvider>
       </body>
     </html>
   );

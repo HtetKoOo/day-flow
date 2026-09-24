@@ -20,11 +20,11 @@ Dependencies and lockfile, email/password Auth wiring and session refresh, prote
 
 ## Remaining V1 implementation (not represented as completed)
 
-- Persisted task CRUD and completion, category editor, profile/preferences forms.
-- Real timeline rendering from Supabase; Inbox mobile navigation; task sheet.
+- Category editor, profile/preferences forms; persisted Inbox CRUD and completion are implemented.
+- Timeline drag/resize remains pending. Compact chronological tasks, mobile Planner/Inbox navigation, and task sheet are implemented.
 - dnd-kit mouse/touch/keyboard scheduling and resizing (dependency installed).
 - Week editing, recurring instance generation, recurrence edit/skip behavior.
-- Account deletion with a narrowly scoped server endpoint; appearance options.
+- Account deletion with a narrowly scoped server endpoint. Light/Dark/System appearance is implemented.
 - Auth UX hardening, password recovery, live two-account Supabase tests, device PWA QA.
 
 ## Database decisions
@@ -38,3 +38,19 @@ Recurrence V1: daily or weekly, interval, optional end date, weekday 0=Sunday..6
 ## V2 only
 
 AI scheduling, calendar sync, push notifications, habits, analytics, social, attachments, teams, complex themes. Full offline editing/conflict resolution is not part of the PWA foundation.
+
+## Inbox implementation
+
+Inbox tasks now support title, notes, duration, editing, completion/reopening, and confirmed deletion through authenticated Server Actions. Ownership is derived from the verified session, fields are validated with Zod, and writes are constrained by owner and Inbox status in addition to RLS. The server reloads data after successful writes. The list shows up to 500 tasks with active tasks first and reports truncation. Live hosted UI verification remains a manual acceptance step.
+
+## Date/time scheduling
+
+Owner-scoped Server Actions set or clear schedule fields atomically, with Zod validation and midnight limits. Day/week queries are bounded by selected dates and profile week start; date selection persists in the URL. Exact start/end times are displayed; empty hours are compressed into clickable gaps. Scheduled tasks can be completed, reopened, rescheduled, or moved to Inbox. Overlapping tasks are labeled; drag/resize is pending. Inbox remains capped at 500 and selected schedules at 1,000 with visible truncation notices.
+
+## UI/UX direction (implemented design pass)
+
+Warm off-white / charcoal themes, soft ten-color task palette, generous rounding, quiet time guides, persistent desktop Inbox, mobile bottom navigation, and one modal/bottom-sheet editor. Theme preference is device-local. Tasks have independently persisted colors through an additive migration. Overlapping cards use lanes; minimum card size keeps short tasks selectable. Category color inheritance and drag/resize remain pending.
+
+## Approved navigation and motion update
+
+Today is the default on a fresh open; tomorrow planning remains one tap away, with an evening shortcut after 18:00 in the profile timezone. Day, 2 days, and Week are supported. Day uses a horizontally swipeable seven-day date strip, with one selected timeline below. 2 days shows the selected date and following date as headers joined with their matching timeline columns; Week expands that same pattern to seven columns. On narrow screens a date header and its task column scroll together. Calm transitions honor reduced motion, structural borders are removed, and completing a task does not reorder the Inbox.
