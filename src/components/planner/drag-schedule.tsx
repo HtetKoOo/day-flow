@@ -35,6 +35,30 @@ export function TaskDragHandle({ task, disabled }: { task: InboxTask; disabled: 
   </button>;
 }
 
+/** The Inbox is a drop destination too: dropping a scheduled task here
+ * removes its schedule while keeping the task. */
+export function InboxDropZone({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "planner-inbox-dropzone",
+    data: { kind: "inbox" },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`inbox-drop-zone${className ? ` ${className}` : ""}`}
+      data-over={isOver || undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
 type DraggableTaskCardProps = Omit<ComponentPropsWithoutRef<"article">, "children"> & {
   task: InboxTask;
   disabled: boolean;

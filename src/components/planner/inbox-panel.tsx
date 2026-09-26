@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { saveInboxTask } from "@/app/planner/actions";
-import { Plus, Check, ArrowUpRight } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { taskColor } from "@/lib/tasks/colors";
 import { TaskDragHandle } from "./drag-schedule";
 import type { InboxTask } from "@/lib/tasks/types";
@@ -51,7 +51,6 @@ export function InboxPanel({
           <strong>{task.title}</strong>
           <span>{task.duration_minutes} min</span>
         </button>
-        <ArrowUpRight size={15} aria-hidden className="inbox-arrow" />
         <TaskDragHandle task={task} disabled={pending || adding} />
       </li>
     );

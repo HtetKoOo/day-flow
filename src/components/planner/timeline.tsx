@@ -7,7 +7,9 @@ import { taskColor } from "@/lib/tasks/colors";
 import { DraggableTaskCard } from "./drag-schedule";
 import type { InboxTask, ScheduledTask } from "@/lib/tasks/types";
 
-function timelineMarker(task: ScheduledTask) {
+export function timelineMarker(
+  task: Pick<InboxTask, "title" | "duration_minutes">,
+) {
   const title = task.title.toLocaleLowerCase();
   if (/wake|morning/.test(title)) return { icon: Sunrise, moment: true };
   if (/breakfast|lunch|dinner|coffee|meal/.test(title)) return { icon: Coffee, moment: true };
@@ -15,14 +17,18 @@ function timelineMarker(task: ScheduledTask) {
   return { icon: ListChecks, moment: task.duration_minutes <= 15 };
 }
 
-function durationHeight(minutes: number, compact: boolean) {
+export function timelineTaskHeight(minutes: number, compact: boolean) {
   const heights = compact
     ? [46, 54, 66, 82, 98, 112, 126]
     : [54, 66, 88, 110, 132, 150, 168];
   const position =
     minutes <= 15 ? 0 : minutes <= 30 ? 1 : Math.min(6, Math.ceil(minutes / 60) + 1);
 
-  return `${heights[position]}px`;
+  return heights[position];
+}
+
+function durationHeight(minutes: number, compact: boolean) {
+  return `${timelineTaskHeight(minutes, compact)}px`;
 }
 
 function durationClass(minutes: number) {
@@ -48,6 +54,8 @@ export function Timeline({
   compact = false,
   draggingTask = null,
   dragTime = null,
+  dragPosition = null,
+  timeAxis,
 }: {
   day: string;
   tasks: ScheduledTask[];
@@ -58,6 +66,8 @@ export function Timeline({
   compact?: boolean;
   draggingTask?: InboxTask | null;
   dragTime?: string | null;
+  dragPosition?: number | null;
+  timeAxis?: { start: number; end: number; positions: Record<number, number>; height: number };
 }) {
   const { setNodeRef } = useDroppable({
     id: `timeline-surface-${day}`,
@@ -76,7 +86,18 @@ export function Timeline({
     ? gapHeight(Math.max(0, firstStart - 8 * 60), compact)
     : "0px";
   const targetMinute = dragTime ? minutes(dragTime) : null;
-  const previewTop = targetMinute === null ? 0 : Math.max(0, Math.min(100, ((targetMinute - 6 * 60) / (16 * 60)) * 100));
+  const previewTop = dragPosition === null ? 0 : Math.max(0, dragPosition);
+  const isTimeAligned = Boolean(timeAxis);
+  const timelineHeight = timeAxis?.height ?? null;
+  const timePosition = (minute: number) => {
+    if (!timeAxis) return 0;
+    const clamped = Math.max(timeAxis.start, Math.min(timeAxis.end, minute));
+    const lower = Math.floor(clamped / 15) * 15;
+    const upper = Math.min(timeAxis.end, lower + 15);
+    const lowerPosition = timeAxis.positions[lower] ?? 0;
+    const upperPosition = timeAxis.positions[upper] ?? lowerPosition;
+    return lowerPosition + (upperPosition - lowerPosition) * ((clamped - lower) / Math.max(1, upper - lower));
+  };
   const targetEnd = targetMinute === null || !draggingTask
     ? null
     : targetMinute + draggingTask.duration_minutes;
@@ -87,8 +108,12 @@ export function Timeline({
   return (
     <div
       ref={setNodeRef}
-      className={`agenda ${compact ? "agenda-compact" : ""} ${draggingTask ? "agenda-dragging" : ""}`}
-      style={{ "--agenda-start-offset": startOffset } as React.CSSProperties}
+      className={`agenda ${compact ? "agenda-compact" : ""} ${draggingTask ? "agenda-dragging" : ""} ${isTimeAligned ? "agenda-time-aligned" : ""}`}
+      data-timeline-day={day}
+      style={{
+        "--agenda-start-offset": startOffset,
+        ...(timelineHeight === null ? {} : { "--agenda-time-height": `${timelineHeight}px` }),
+      } as React.CSSProperties}
     >
       {draggingTask && targetMinute !== null && (
         <div
@@ -96,11 +121,13 @@ export function Timeline({
           data-color={taskColor(draggingTask.color)}
           data-conflict={hasDropConflict || undefined}
           style={{
-            "--agenda-guide-top": `${previewTop}%`,
+            "--agenda-guide-top": `${previewTop}px`,
           } as React.CSSProperties}
           aria-hidden="true"
         >
-          <span>{dragTime}</span>
+          <span>
+            {dragTime}–{endTime(dragTime!, draggingTask.duration_minutes)}
+          </span>
         </div>
       )}
       {items.map(({ task, gap, gapStart }, index) => {
@@ -116,6 +143,14 @@ export function Timeline({
         const isContiguous = index > 0 && gap === 0 && !overlapsPrevious;
         const nextGap = items[index + 1]?.gap ?? 0;
         const marker = timelineMarker(task);
+        const previousEnd = previousTask
+          ? minutes(previousTask.start_time) + previousTask.duration_minutes
+          : null;
+        const taskPosition = timePosition(taskStart);
+        const taskEndPosition = timePosition(taskStart + task.duration_minutes);
+        const gapPosition = previousEnd === null ? 0 : timePosition(previousEnd);
+        const gapVisualHeight = Math.max(0, taskPosition - gapPosition);
+        const taskVisualHeight = Math.max(1, taskEndPosition - taskPosition);
         const MarkerIcon = marker.icon;
         return <div
           key={task.id}
@@ -126,7 +161,14 @@ export function Timeline({
             draggingTask ? (
               <div
                 className="agenda-gap agenda-gap-visible"
-                style={{ "--agenda-gap-height": gapHeight(gap, compact) } as React.CSSProperties}
+                data-timeline-segment
+                data-timeline-segment-kind="gap"
+                data-start={clockTime(gapStart)}
+                data-end={task.start_time.slice(0, 5)}
+                style={{
+                  "--agenda-gap-height": isTimeAligned ? `${gapVisualHeight}px` : gapHeight(gap, compact),
+                  ...(isTimeAligned ? { "--agenda-gap-top": `${gapPosition}px` } : {}),
+                } as React.CSSProperties}
                 aria-hidden="true"
               >
                 <span
@@ -145,7 +187,14 @@ export function Timeline({
             ) : (
               <div
                 className="agenda-gap"
-                style={{ "--agenda-gap-height": gapHeight(gap, compact) } as React.CSSProperties}
+                data-timeline-segment
+                data-timeline-segment-kind="gap"
+                data-start={clockTime(gapStart)}
+                data-end={task.start_time.slice(0, 5)}
+                style={{
+                  "--agenda-gap-height": isTimeAligned ? `${gapVisualHeight}px` : gapHeight(gap, compact),
+                  ...(isTimeAligned ? { "--agenda-gap-top": `${gapPosition}px` } : {}),
+                } as React.CSSProperties}
               >
                 <span
                   className="timeline-connector"
@@ -173,11 +222,18 @@ export function Timeline({
             disabled={pending || compact}
             className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
             data-color={taskColor(task.color)}
+            data-timeline-segment
+            data-timeline-segment-kind="task"
+            data-start={task.start_time.slice(0, 5)}
+            data-end={endTime(task.start_time, task.duration_minutes)}
             title={compact ? `${task.title}, ${task.start_time.slice(0, 5)} to ${endTime(task.start_time, task.duration_minutes)}` : undefined}
             aria-label={compact ? `${task.title}, ${task.start_time.slice(0, 5)} to ${endTime(task.start_time, task.duration_minutes)}` : undefined}
             style={{
               viewTransitionName: `dayflow-task-${task.id}`,
-              "--agenda-task-height": durationHeight(task.duration_minutes, compact),
+              "--agenda-task-height": isTimeAligned
+                ? `${taskVisualHeight}px`
+                : durationHeight(task.duration_minutes, compact),
+              ...(isTimeAligned ? { "--agenda-time-position": `${taskPosition}px` } : {}),
             } as React.CSSProperties}
           >
             <span className="timeline-time" aria-hidden="true">
@@ -220,6 +276,7 @@ export function Timeline({
       {!draggingTask && (
         <button
           className="agenda-add"
+          style={isTimeAligned ? { "--agenda-add-position": `${timePosition(finish)}px` } as React.CSSProperties : undefined}
           aria-label="Add scheduled task"
           title="Add task"
           onClick={() =>

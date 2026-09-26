@@ -393,15 +393,6 @@
   margin-top: 7px;
   opacity: 0.85;
 }
-.inbox-arrow {
-  margin-top: 2px;
-  opacity: 0;
-  flex-shrink: 0;
-}
-.inbox-card:hover .inbox-arrow,
-.inbox-card:focus-within .inbox-arrow {
-  opacity: 1;
-}
 .is-complete strong {
   text-decoration: line-through;
   opacity: 0.65;
@@ -1690,48 +1681,6 @@ body {
 .agenda-dragging .agenda-add {
   pointer-events: none;
 }
-.agenda-insertion-guide {
-  position: absolute;
-  z-index: 3;
-  top: var(--agenda-guide-top);
-  right: 0;
-  left: 0;
-  height: 1px;
-  color: var(--task-fg);
-  pointer-events: none;
-}
-.agenda-insertion-guide::after {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: color-mix(in srgb, var(--task-dot) 68%, transparent);
-  content: "";
-}
-.agenda-insertion-guide[data-conflict="true"]::after {
-  height: 2px;
-  background: #ff9279;
-}
-.agenda-insertion-guide span {
-  position: absolute;
-  top: -10px;
-  left: 10px;
-  padding: 2px 7px;
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--task-fg);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.25;
-  box-shadow: 0 4px 14px #00000012;
-}
-.agenda-insertion-guide[data-conflict="true"] span {
-  color: #ffb19d;
-}
-.agenda-compact .agenda-insertion-guide span {
-  font-size: 11px;
-}
 .agenda-add {
   width: 44px;
   height: 44px;
@@ -2813,9 +2762,10 @@ button,
   }
 }
 
-/* One shared radius: moments are circles and durations extend from that circle. */
+/* Day and two-day nodes stay large enough for direct dragging, while leaving
+   more breathing room for task details and free-time labels. */
 .agenda {
-  --timeline-node-size: 64px;
+  --timeline-node-size: 56px;
 }
 .agenda::before {
   display: none;
@@ -2901,7 +2851,7 @@ button,
 /* The same spine coordinate drives both the nodes and a free-time connector. */
 .agenda {
   --timeline-spine-x: 160px;
-  --timeline-node-half: 32px;
+  --timeline-node-half: 28px;
 }
 .agenda-gap {
   margin-left: calc(var(--timeline-spine-x) - var(--timeline-node-half));
@@ -3229,15 +3179,11 @@ button,
     transition: opacity 180ms var(--ease-calm);
   }
   .planner-stage[data-view="day"] .agenda-card[data-draggable="true"]:hover,
-  .planner-stage[data-view="day"] .agenda-card[data-draggable="true"]:focus-within,
-  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:hover,
-  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:focus-within {
+  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:hover {
     opacity: 1;
   }
   .planner-stage[data-view="day"] .agenda-card[data-draggable="true"]:hover::before,
-  .planner-stage[data-view="day"] .agenda-card[data-draggable="true"]:focus-within::before,
-  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:hover::before,
-  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:focus-within::before {
+  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:hover::before {
     opacity: 1;
     transform: scale(1);
   }
@@ -3290,3 +3236,156 @@ button,
 .dark .timeline-connector[data-to-color="peach"] { --timeline-connector-to: #a95036; }
 .dark .timeline-connector[data-to-color="amber"] { --timeline-connector-to: #8d701c; }
 .dark .timeline-connector[data-to-color="stone"] { --timeline-connector-to: #405d85; }
+
+/* Dragging uses the same marker language as the timeline. The draggable
+   marker follows the pointer; the smaller ring stays on the timeline spine
+   and only communicates the vertical drop time. */
+.schedule-drag-marker {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--task-bg);
+  color: var(--task-fg);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--task-dot) 30%, transparent);
+  opacity: 0.94;
+  pointer-events: none;
+}
+.agenda-insertion-guide {
+  position: absolute;
+  z-index: 3;
+  top: var(--agenda-guide-top);
+  right: auto;
+  left: calc(var(--timeline-spine-x) - 11px);
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--task-dot);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--card) 86%, var(--task-bg));
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--task-dot) 13%, transparent);
+  transform: translateY(-50%);
+}
+.agenda-insertion-guide::after {
+  display: none;
+}
+.agenda-insertion-guide span {
+  position: absolute;
+  top: 50%;
+  left: auto;
+  right: calc(100% + 16px);
+  display: block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary) 92%, var(--card));
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  box-shadow: 0 4px 14px #00000018;
+}
+.agenda-insertion-guide[data-conflict="true"] {
+  border-color: #ff9279;
+  box-shadow: 0 0 0 5px #ff927922;
+}
+.agenda-insertion-guide[data-conflict="true"] span {
+  color: #ff9279;
+}
+.two-day-timelines .agenda {
+  --timeline-spine-x: 92px;
+}
+.inbox-drop-zone.inbox-content {
+  min-height: 100%;
+}
+
+/* Range views share one 06:00–22:00 clock. Cards and connectors are positioned
+   from that clock, so equal times line up across columns and starting a drag
+   never reflows the existing schedule. */
+.agenda-time-aligned {
+  height: var(--agenda-time-height);
+  min-height: var(--agenda-time-height);
+}
+.agenda-time-aligned.agenda-dragging {
+  min-height: var(--agenda-time-height);
+}
+.agenda-time-aligned .agenda-item {
+  display: contents;
+}
+.agenda-time-aligned .agenda-card {
+  position: absolute;
+  top: var(--agenda-time-position);
+  right: 0;
+  left: 0;
+  transform: translateY(-50%);
+}
+.agenda-time-aligned .agenda-gap {
+  position: absolute;
+  top: var(--agenda-gap-top);
+  right: 0;
+  left: 0;
+  height: var(--agenda-gap-height);
+  min-height: 0;
+}
+.agenda-time-aligned .agenda-add {
+  position: absolute;
+  top: var(--agenda-add-position);
+  transform: translateY(16px);
+}
+
+/* Connectors always sit behind task markers. This prevents a colour transition
+   from painting through either end circle or duration capsule. */
+.agenda-card {
+  position: relative;
+  z-index: 2;
+}
+.timeline-marker {
+  z-index: 3;
+}
+.agenda-gap,
+.agenda-time-aligned .agenda-gap {
+  z-index: 1;
+}
+
+/* In range views, the shared clock anchors cards at their start and sizes
+   capsules to their actual visual time span. Adjacent tasks therefore meet at
+   one edge; any free interval occupies its own visible space. */
+.agenda-time-aligned .agenda-card {
+  transform: none;
+}
+.agenda-time-aligned .timeline-time,
+.agenda-time-aligned .agenda-body {
+  align-self: start;
+  padding-top: 8px;
+}
+
+/* In range views, the shared clock anchors cards at their start and sizes
+   capsules to their actual visual time span. Adjacent tasks therefore meet at
+   one edge; any free interval occupies its own visible space. */
+.agenda-time-aligned .agenda-card {
+  transform: none;
+}
+.agenda-time-aligned .timeline-time,
+.agenda-time-aligned .agenda-body {
+  align-self: start;
+  padding-top: 8px;
+}
+
+/* Dragging is a visual state only. It must not change the day timeline's
+   padding or height, otherwise adjacent (zero-free-time) tasks appear apart. */
+.agenda-dragging:not(.agenda-time-aligned) {
+  min-height: 0;
+  padding-top: 34px;
+}
+.agenda-dragging:not(.agenda-time-aligned) .agenda-item.is-contiguous {
+  margin-top: 0;
+}
+
+/* A drop ends under the cursor. Keep its destination quiet until the pointer
+   leaves, so the ordinary task-hover surface does not flash or remain open. */
+.agenda-card[data-recently-dropped]::before {
+  opacity: 0 !important;
+  transform: scale(0.985) !important;
+}
