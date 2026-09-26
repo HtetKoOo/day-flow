@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useRef, useState, useTransition, useSyncExternalStore } from "react";
 import { PlannerToast } from "./planner-toast";
-import { DndContext, DragOverlay, MouseSensor, TouchSensor, KeyboardSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
-import { ScheduleTargets, scheduleCollision } from "./drag-schedule";
+import { DndContext, DragOverlay, MouseSensor, TouchSensor, KeyboardSensor, useSensor, useSensors, type DragEndEvent, type DragMoveEvent, type DragStartEvent } from "@dnd-kit/core";
+import { scheduleCollision } from "./drag-schedule";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDays, format, parseISO } from "date-fns";
@@ -20,6 +20,7 @@ import { DateStrip } from "@/components/planner/date-strip";
 import { Timeline } from "@/components/planner/timeline";
 import { completeTask, scheduleTask } from "@/app/planner/actions";
 import { dateKey, type plannerRange } from "@/lib/tasks/schedule";
+import { clockTime } from "@/lib/tasks/agenda";
 import { taskColor } from "@/lib/tasks/colors";
 import type { InboxTask, ScheduledTask, TaskResult } from "@/lib/tasks/types";
 export type PlannerProps = {
@@ -56,7 +57,8 @@ export function PlannerShell({
   const [notice, setNotice] = useState<TaskResult | null>(null);
   const [pending, startTransition] = useTransition();
   const [dragTask, setDragTask] = useState<InboxTask | null>(null);
-  const [dropLabel, setDropLabel] = useState("");
+  const [dragTarget, setDragTarget] = useState<{ day: string; time: string } | null>(null);
+  const dragPointer = useRef<{ y: number } | null>(null);
   const [undoAction, setUndoAction] = useState<
     { kind: "schedule" | "completion"; task: InboxTask } | null
   >(null);
@@ -77,7 +79,10 @@ export function PlannerShell({
         const result = await scheduleTask({ id: task.id, scheduled_date: day,
           start_time: time, duration_minutes: task.duration_minutes });
         setNotice(result);
-        if (result.ok) setUndoAction(undo ? null : { kind: "schedule", task });
+        if (result.ok) {
+          setUndoAction(undo ? null : { kind: "schedule", task });
+          router.refresh();
+        }
       } catch {
         setNotice({ ok: false, message: "Couldn’t confirm the schedule. Refresh to check before retrying." });
       }
@@ -85,11 +90,43 @@ export function PlannerShell({
   }
   function finishDrag(event: DragEndEvent) {
     setDragTask(null);
-    setDropLabel("");
+    dragPointer.current = null;
+    const target = dragTarget;
+    setDragTarget(null);
     const task = event.active.data.current?.task as InboxTask | undefined;
-    const target = event.over?.data.current;
-    if (!task || !target?.day || !target?.time || pending) return;
+    if (!task || !target || pending) return;
     persistSchedule(task, target.day, target.time);
+  }
+  function moveDrag(event: DragMoveEvent) {
+    const day = event.over?.data.current?.day;
+    const surface = event.over?.rect;
+    const task = event.active.data.current?.task as InboxTask | undefined;
+    const activeRect = event.active.rect.current.translated;
+    if (typeof day !== "string" || !surface || !task || !activeRect) {
+      setDragTarget(null);
+      return;
+    }
+    // The pointer, rather than the source card's centre, picks the time. This
+    // keeps a task visually attached to the cursor and makes 15 minute drops
+    // feel direct even when source cards have different heights.
+    const pointerY = dragPointer.current
+      ? dragPointer.current.y + event.delta.y
+      : activeRect.top + activeRect.height / 2;
+    const ratio = Math.max(0, Math.min(1, (pointerY - surface.top) / surface.height));
+    const earliest = 6 * 60;
+    const latest = 22 * 60 - task.duration_minutes;
+    const minute = Math.max(earliest, Math.min(latest,
+      Math.round((earliest + ratio * (22 * 60 - earliest)) / 15) * 15));
+    const time = clockTime(minute);
+    setDragTarget((current) =>
+      current?.day === day && current.time === time ? current : { day, time },
+    );
+  }
+  function beginDrag(event: DragStartEvent) {
+    const pointerY = (event.activatorEvent as PointerEvent).clientY;
+    dragPointer.current = typeof pointerY === "number" ? { y: pointerY } : null;
+    setDragTask(event.active.data.current?.task as InboxTask);
+    setMobile("planner");
   }
   const returnFocus = useRef<HTMLElement | null>(null);
   const isMobile = useSyncExternalStore(
@@ -190,12 +227,13 @@ export function PlannerShell({
   return (
     <DndContext id="dayflow-planner-drag" sensors={sensors}
       collisionDetection={scheduleCollision}
-      onDragStart={(event) => {
-        setDragTask(event.active.data.current?.task as InboxTask);
-        setMobile("planner");
+      onDragStart={beginDrag}
+      onDragMove={moveDrag}
+      onDragCancel={() => {
+        setDragTask(null);
+        setDragTarget(null);
+        dragPointer.current = null;
       }}
-      onDragOver={(event) => setDropLabel(event.over?.data.current?.time ?? "")}
-      onDragCancel={() => { setDragTask(null); setDropLabel(""); }}
       onDragEnd={finishDrag}>
     <main className="planner-app" data-inbox-open={inboxOpen}>
       <header className="app-header">
@@ -358,15 +396,19 @@ export function PlannerShell({
             setMobile(date ? "planner" : "inbox");
             if (date && !range.days.includes(date))
               router.push(href(date, currentView), { scroll: false });
+            else router.refresh();
           }}
           returnFocus={returnFocus}
         />
       )}
     </main>
     <DragOverlay dropAnimation={null}>
-      {dragTask && <div className="schedule-drag-preview" data-color={taskColor(dragTask.color)}>
-        <strong>{dragTask.title}</strong><span>{dropLabel || "Choose a time"} · {dragTask.duration_minutes} min</span>
-      </div>}
+      {dragTask && (
+        <div className="schedule-drag-ghost" data-color={taskColor(dragTask.color)}>
+          <strong>{dragTask.title}</strong>
+          <span>{dragTask.duration_minutes} min</span>
+        </div>
+      )}
     </DragOverlay>
     </DndContext>
   );
@@ -397,14 +439,16 @@ export function PlannerShell({
               {isRangeView && (
                 <div className="range-date-header">{renderDate(day)}</div>
               )}
-              {dragTask && <ScheduleTargets day={day} duration={dragTask.duration_minutes} />}
               <Timeline
+                day={day}
                 tasks={scheduled.filter((task) => task.scheduled_date === day)}
                 onEdit={(task) => open(task)}
                 onAdd={(time) => open(null, day, time)}
                 onComplete={complete}
                 pending={pending}
                 compact={range.week}
+                draggingTask={dragTask}
+                dragTime={dragTarget?.day === day ? dragTarget.time : null}
               />
             </section>
           ))}

@@ -114,7 +114,9 @@ export function TaskEditor({
           <div className="sheet-handle" />
           <div className="sheet-heading">
             <div>
-              <Dialog.Title>{task ? "Edit task" : "New task"}</Dialog.Title>
+              <Dialog.Title>
+                {time ? "Place task" : task ? "Edit task" : "New task"}
+              </Dialog.Title>
             </div>
             <button
               type="button"
@@ -202,7 +204,7 @@ export function TaskEditor({
                     <input
                       type="date"
                       name="date"
-                      defaultValue={task?.scheduled_date ?? date}
+                      defaultValue={time ? date : task?.scheduled_date ?? date}
                       required
                     />
                   </label>
@@ -212,9 +214,9 @@ export function TaskEditor({
                       type="time"
                       name="time"
                       defaultValue={
-                        task?.start_time?.slice(0, 5) ?? time ?? "09:00"
+                        time ?? task?.start_time?.slice(0, 5) ?? "09:00"
                       }
-                      step={60}
+                      step={300}
                       required
                     />
                   </label>
@@ -320,7 +322,13 @@ export function TaskEditor({
                 <span />
               )}
               <button className="primary-button" disabled={pending}>
-                {pending ? "Saving…" : task ? "Save changes" : "Add task"}
+                {pending
+                  ? "Saving…"
+                  : time
+                    ? "Place task"
+                    : task
+                      ? "Save changes"
+                      : "Add task"}
                 <Check size={17} />
               </button>
             </div>

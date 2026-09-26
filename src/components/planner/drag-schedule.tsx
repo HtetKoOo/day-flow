@@ -2,6 +2,7 @@
 
 import { useDraggable, useDroppable, pointerWithin, closestCenter, type CollisionDetection } from "@dnd-kit/core";
 import { GripVertical } from "lucide-react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import type { InboxTask } from "@/lib/tasks/types";
 
@@ -10,7 +11,8 @@ export const scheduleCollision: CollisionDetection = (args) => {
   const containers = args.droppableContainers.filter((container) => {
     const node = container.node.current;
     const list = node?.closest(".schedule-drop-times");
-    if (!node || !list) return false;
+    if (!node) return false;
+    if (!list) return true;
     const bounds = list.getBoundingClientRect();
     const row = node.getBoundingClientRect();
     const pointer = args.pointerCoordinates;
@@ -31,6 +33,42 @@ export function TaskDragHandle({ task, disabled }: { task: InboxTask; disabled: 
     disabled={disabled} data-dragging={isDragging}>
     <GripVertical size={18} />
   </button>;
+}
+
+type DraggableTaskCardProps = Omit<ComponentPropsWithoutRef<"article">, "children"> & {
+  task: InboxTask;
+  disabled: boolean;
+  children: ReactNode;
+};
+
+/**
+ * Makes the full scheduled-task surface the drag activator. Controls inside
+ * the card remain normal buttons: a short click edits/completes, while a
+ * deliberate pointer movement starts the shared DnD sensor.
+ */
+export function DraggableTaskCard({
+  task,
+  disabled,
+  children,
+  ...props
+}: DraggableTaskCardProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: task.id,
+    data: { task },
+    disabled,
+  });
+  return (
+    <article
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      {...props}
+      data-draggable={disabled ? undefined : "true"}
+      data-dragging={isDragging || undefined}
+    >
+      {children}
+    </article>
+  );
 }
 
 function TimeTarget({ day, time, duration }: { day: string; time: string; duration: number }) {
