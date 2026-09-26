@@ -2,7 +2,7 @@
 
 Tomorrow-first personal planner · Next.js + Supabase · Web App + PWA
 
-This repository contains the **V1 foundation**, not the complete planner. It includes the Today/Tomorrow/Week shell, authentication wiring, database schema and RLS, PWA assets, and development setup. Task CRUD, drag/resize interactions, and recurring instance generation are tracked in the [V1 blueprint](docs/V1-BLUEPRINT.md).
+This repository contains the **V1 foundation**, not the complete planner. It includes the Day/2 days/Week planner shell, authentication wiring, database schema and RLS, PWA assets, and development setup. Persistent Inbox task CRUD and completion are implemented. Timeline scheduling, drag/resize interactions, and recurring instance generation are tracked in the [V1 blueprint](docs/V1-BLUEPRINT.md).
 
 ## 1. Local development
 
@@ -110,3 +110,46 @@ The project targets personal use within free-tier limits. Vercel Hobby is intend
 - [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
 - [Supabase pricing](https://supabase.com/pricing)
 - [Vercel Hobby](https://vercel.com/docs/plans/hobby)
+
+## Try the Inbox
+
+1. Sign in and choose **Add task** in the Inbox. Enter a title, duration, and optional notes.
+2. Save, then refresh: the task should remain because it is stored in Supabase.
+3. Edit the task; use its checkbox to complete it or reopen it in place.
+4. Choose Delete and confirm to remove a disposable test task.
+
+In Supabase Table Editor, an Inbox row has your Auth user ID and null `scheduled_date`/`start_time`. Completion updates `is_completed` and `completed_at` together. Never edit `user_id` to assign tasks through the UI. Existing RLS policies enforce ownership. No additional migration is needed for Inbox CRUD.
+
+## Schedule a task
+
+Click an Inbox task, choose **Set a time**, enter its date, start time, and duration, then save. The app opens that day and the task leaves the Inbox. Day, 2 days, Week, and date navigation load the selected date range from Supabase; the URL preserves your selection on refresh.
+
+Click a task to reschedule it, or select **Inbox** in the editor to clear both date and start time. Completion also works on scheduled tasks. Times are interpreted in the displayed profile timezone (UTC by default); timezone settings UI is still pending. Tasks must end by midnight. Tasks appear in a compact chronological list with exact times. Overlaps are labeled and free gaps can be clicked to schedule a task. Duration resizing remains a later phase.
+
+Use the grip on an Inbox or scheduled task to drag it to a day. While dragging, that day's half-hour targets appear; drop on a labeled time to save through the authenticated schedule action. Touch users can hold the grip to start. Escape cancels, and dropping outside the targets leaves the schedule unchanged. The task stays in place until the server confirms saving; Undo restores its previous date/time (or returns it to Inbox). For exact minute times or duration edits, use the task editor. Scheduling alone needs no color migration; color edits require the migration below.
+
+## Design update: themes and task colors
+
+Apply **only** `supabase/migrations/20260924000100_task_colors.sql` once in the hosted SQL Editor before saving through the redesigned task editor. This adds a constrained `color` column; existing tasks default to sage and ownership policies are unchanged. Do not rerun the foundation migration. Existing tasks can still be read before applying this update; saves show an actionable error until it is applied.
+
+- Light, Dark, and System (default) are available in Settings → Appearance. The preference is saved in this browser, not synced between accounts/devices.
+- Each task has one of ten preset colors, with separate light/dark palettes. Click a card to open one editor for title, schedule, duration, notes, and color. Category inheritance is not yet implemented.
+- Desktop/tablet widths above 760px show Inbox beside the timeline. Smaller screens use Planner/Inbox bottom navigation and a bottom sheet.
+- Completion controls remain visible on day cards. Delete is inside the editor with explicit confirmation. Unsaved edits require discard confirmation when closing.
+- The compact timeline compresses empty hours. Day has a swipeable seven-day navigator and one selected-day timeline. 2 days and Week place their date headers directly above their matching timeline columns, so dates and tasks scroll together on smaller screens. Each date shows up to three task-color dots and an overflow count. Inbox visibility is saved in this browser.
+
+Manual acceptance: apply the color migration, change a real task's color, refresh, and check it persists. Test an Inbox-to-scheduled save on mobile, theme persistence after reload, and account isolation. Layout and editor interactions were checked with disposable preview fixtures; no hosted user data was modified during visual QA.
+
+### Visual style
+
+DayFlow uses a system sans-serif font, larger task titles, neutral light/dark surfaces, and a lavender accent. Appearance settings offer Light, Dark, and System. The planner prioritizes dates and tasks with minimal supporting text.
+
+### Calm navigation and daily defaults
+
+Opening `/planner` without a date shows Today in the profile timezone. An explicit URL date remains selected. The 2 days view compares that date with the following day, including across week/month/year boundaries; mobile uses horizontal swipe with snapping. After 18:00 in the profile timezone, Today shows a quiet “Plan tomorrow” link. This never changes the selected day automatically.
+
+Inbox opens/closes with a 260ms transition and remembers its visibility. Hidden desktop Inbox controls are removed from keyboard navigation. Reduced-motion preferences disable animation. Completed tasks stay in place; Inbox order follows creation time instead of completion status. Editing within the current range preserves the view and scroll position; moving a task outside it opens the new date in the same view.
+
+### Compact calendar layout
+
+The planner toolbar contains month context, previous/next controls, Today, view selection, and Settings. Branding stays off the planning surface. Day uses a horizontally swipeable seven-day date navigator and one selected-date timeline. 2 days shows two date headers joined with their two timeline columns, and Week expands that same layout to seven columns. On small screens each range column scrolls horizontally together with its own date header. Inbox has one toggle label and remembers its visibility.

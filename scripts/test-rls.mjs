@@ -36,6 +36,15 @@ try {
       "utf8",
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/20260924000100_task_colors.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   await db.exec(`insert into auth.users values ('${A}'),('${B}');`);
   await as(B);
   const [cat] = await ok(
@@ -131,6 +140,26 @@ try {
   await ok(
     "select * from public.tasks where title='Keep me' and category_id is null",
   );
+  const [colored] = await ok(
+    "insert into public.tasks(title,color) values ('Colored task','lavender') returning id,color",
+  );
+  assert.equal(colored.color, "lavender");
+  await ok(
+    `update public.tasks set color='peach' where id='${colored.id}' returning id`,
+  );
+  const [reloaded] = await ok(
+    `select color from public.tasks where id='${colored.id}'`,
+  );
+  assert.equal(reloaded.color, "peach");
+  await denied(
+    "insert into public.tasks(title,color) values ('Invalid color','neon')",
+  );
+  await as(B);
+  await ok(
+    `update public.tasks set color='rose' where id='${colored.id}' returning id`,
+    0,
+  );
+  await as(A);
   await db.exec("reset role; set role anon;");
   for (const table of ["profiles", "categories", "tasks", "recurring_tasks"]) {
     await denied(`select * from public.${table}`);
