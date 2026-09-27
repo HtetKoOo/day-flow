@@ -680,7 +680,7 @@ export function PlannerShell({
             </Link>
           )}
           <div className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`} data-view={displayedView} aria-busy={showRoutePending}>
-            <div className="planner-view-content" key={`${displayedDay}-${displayedView}`}>
+            <div className="planner-view-content">
               {!isRangeView && (
                 <DateStrip
                   onMove={(direction) =>

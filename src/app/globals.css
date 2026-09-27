@@ -2519,28 +2519,18 @@ button,
   color: var(--primary);
   box-shadow: 0 2px 12px #22182e06;
 }
-/* Every view uses the same short handoff. It avoids browser-specific native
-   transitions and keeps Day, 2 days, and Week visually coherent. */
+/* Keep one planner surface mounted across view changes. The layout updates in
+   a single commit, avoiding a fade or remount flash on large Week grids. */
 .planner-view-content {
   display: flex;
   flex: 1;
   min-height: 0;
   flex-direction: column;
-  animation: dayflow-view-enter 160ms ease-out both;
-}
-@keyframes dayflow-view-enter {
-  from { opacity: 0.72; }
-  to { opacity: 1; }
 }
 @media (max-width: 760px) {
   .app-header .view-switch button {
     padding: 8px 10px;
     white-space: nowrap;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .planner-view-content {
-    animation: none;
   }
 }
 
@@ -3361,10 +3351,6 @@ button,
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-.planner-stage.is-route-pending .timeline-scroll {
-  opacity: 0.56;
-  transition: opacity 120ms ease-out;
 }
 .planner-stage.is-route-pending::after {
   content: "";
