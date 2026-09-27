@@ -147,6 +147,7 @@ export default async function Planner({
       today={today}
       range={range}
       stripDays={strip.days}
+      weekStartsOn={profile.week_starts_on}
     />
   );
 }
