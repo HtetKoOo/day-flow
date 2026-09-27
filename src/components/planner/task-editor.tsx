@@ -16,7 +16,7 @@ import { saveTask, deleteTask } from "@/app/planner/actions";
 import { taskColors, taskColor } from "@/lib/tasks/colors";
 import type { InboxTask } from "@/lib/tasks/types";
 
-const durationPresets = [15, 30, 45, 60, 90, 120];
+const durationPresets = [15, 30, 45, 60, 90, 120, 150, 180];
 
 function durationLabel(minutes: number) {
   const hours = Math.floor(minutes / 60);
