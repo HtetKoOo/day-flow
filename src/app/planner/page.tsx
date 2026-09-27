@@ -48,18 +48,6 @@ export default async function Planner({
         </Link>
       </main>
     );
-  const {
-    data: tasks,
-    error: tasksError,
-    count,
-  } = await supabase
-    .from("tasks")
-    .select("*", { count: "exact" })
-    .eq("user_id", user.id)
-    .is("scheduled_date", null)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: true })
-    .limit(500);
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: profile.timezone,
     year: "numeric",
@@ -73,20 +61,32 @@ export default async function Planner({
     profile.week_starts_on,
   );
   const strip = plannerRange(today, range.day, "week", profile.week_starts_on);
+  const [inboxResult, scheduledResult] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("*", { count: "exact" })
+      .eq("user_id", user.id)
+      .is("scheduled_date", null)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .limit(500),
+    supabase
+      .from("tasks")
+      .select("*", { count: "exact" })
+      .eq("user_id", user.id)
+      .gte("scheduled_date", strip.from)
+      .lte("scheduled_date", range.to > strip.to ? range.to : strip.to)
+      .order("scheduled_date")
+      .order("start_time")
+      .order("id")
+      .limit(1000),
+  ]);
+  const { data: tasks, error: tasksError, count } = inboxResult;
   const {
     data: scheduled,
     error: scheduleError,
     count: scheduledCount,
-  } = await supabase
-    .from("tasks")
-    .select("*", { count: "exact" })
-    .eq("user_id", user.id)
-    .gte("scheduled_date", strip.from)
-    .lte("scheduled_date", range.to > strip.to ? range.to : strip.to)
-    .order("scheduled_date")
-    .order("start_time")
-    .order("id")
-    .limit(1000);
+  } = scheduledResult;
   return (
     <PlannerShell
       timezone={profile.timezone}
