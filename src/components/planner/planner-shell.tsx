@@ -415,6 +415,27 @@ export function PlannerShell({
     });
     return () => cancelAnimationFrame(frame);
   }, [optimisticRoute, today]);
+  // Back and forward use the same local snapshot whenever it already contains
+  // the requested dates. A route outside this week still refreshes from server.
+  useEffect(() => {
+    const syncHistoryRoute = () => {
+      const params = new URLSearchParams(window.location.search);
+      const day = params.get("date") ?? today;
+      const requestedView = params.get("view");
+      const view: PlannerView = requestedView === "week" || requestedView === "two-days"
+        ? requestedView
+        : "day";
+      const nextRange = plannerRange(today, day, view, weekStartsOn);
+      if (!nextRange.days.every((nextDay) => stripDays.includes(nextDay))) {
+        router.refresh();
+        return;
+      }
+      setNavigationTarget(null);
+      setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+    };
+    window.addEventListener("popstate", syncHistoryRoute);
+    return () => window.removeEventListener("popstate", syncHistoryRoute);
+  }, [range.day, router, serverView, stripDays, today, weekStartsOn]);
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of scheduled) {
@@ -450,12 +471,18 @@ export function PlannerShell({
   function navigate(day: string, view: PlannerView = serverView) {
     if (routeStillLoading || (day === range.day && view === serverView)) return;
     const nextRange = plannerRange(today, day, view, weekStartsOn);
-    setNavigationTarget({ day, view });
-    if (nextRange.days.every((nextDay) => stripDays.includes(nextDay))) {
+    const isLoadedRoute = nextRange.days.every((nextDay) => stripDays.includes(nextDay));
+    if (isLoadedRoute) {
+      // Day, 2 days, and Week are different presentations of the same local
+      // weekly snapshot. Update them without an RSC request, so there is no
+      // loading boundary or browser fallback between views.
+      window.history.pushState(null, "", href(day, view));
+      setNavigationTarget(null);
       setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+      setMobile("planner");
+      return;
     }
-    // The planner owns its own compact content transition. Letting browser-native
-    // view transitions run as well makes different view changes feel unrelated.
+    setNavigationTarget({ day, view });
     startTransition(() => router.push(href(day, view), { scroll: false }));
     setMobile("planner");
   }
