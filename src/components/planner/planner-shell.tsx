@@ -223,6 +223,103 @@ export function PlannerShell({
   const [undoAction, setUndoAction] = useState<
     { kind: "schedule" | "completion"; task: InboxTask } | null
   >(null);
+  // Keep the result of a move in memory immediately. The server action still
+  // confirms it in the background, but the timeline no longer waits for a
+  // round trip before reflecting the drop.
+  const [display, setDisplay] = useState(() => ({
+    tasks,
+    scheduled,
+    total,
+    sourceTasks: tasks,
+    sourceScheduled: scheduled,
+    sourceTotal: total,
+  }));
+  const receivedScheduleMessages = useRef(new Set<string>());
+  if (
+    display.sourceTasks !== tasks
+    || display.sourceScheduled !== scheduled
+    || display.sourceTotal !== total
+  ) {
+    setDisplay({
+      tasks,
+      scheduled,
+      total,
+      sourceTasks: tasks,
+      sourceScheduled: scheduled,
+      sourceTotal: total,
+    });
+  }
+  const displayTasks = display.tasks;
+  const displayScheduled = display.scheduled;
+  const displayTotal = display.total;
+  const applySchedule = useCallback((task: InboxTask, day: string | null, time: string | null) => {
+    const nextTask = { ...task, scheduled_date: day, start_time: time };
+    const wasInInbox = !task.scheduled_date || !task.start_time;
+    const movesToInbox = !day || !time;
+    setDisplay((current) => ({
+      ...current,
+      tasks: movesToInbox
+        ? [...current.tasks.filter((item) => item.id !== task.id), nextTask]
+        : current.tasks.filter((item) => item.id !== task.id),
+      scheduled: movesToInbox
+        ? current.scheduled.filter((item) => item.id !== task.id)
+        : [
+            ...current.scheduled.filter((item) => item.id !== task.id),
+            nextTask as ScheduledTask,
+          ],
+      total: wasInInbox === movesToInbox
+        ? current.total
+        : Math.max(0, current.total + (movesToInbox ? 1 : -1)),
+    }));
+  }, []);
+  const publishSchedule = useCallback((task: InboxTask, day: string | null, time: string | null) => {
+    const id = typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random()}`;
+    const message = { type: "schedule", id, task, day, time };
+    try {
+      const channel = new BroadcastChannel("dayflow-planner");
+      channel.postMessage(message);
+      channel.close();
+    } catch {}
+    try {
+      localStorage.setItem("dayflow-planner-sync", JSON.stringify(message));
+      localStorage.removeItem("dayflow-planner-sync");
+    } catch {}
+  }, []);
+  useEffect(() => {
+    const receive = (message: unknown) => {
+      if (!message || typeof message !== "object") return;
+      const payload = message as { id?: string; type?: string; task?: InboxTask; day?: string | null; time?: string | null };
+      if (payload.type === "schedule" && payload.task && typeof payload.task.id === "string") {
+        if (payload.id && receivedScheduleMessages.current.has(payload.id)) return;
+        if (payload.id) {
+          receivedScheduleMessages.current.add(payload.id);
+          if (receivedScheduleMessages.current.size > 100) {
+            const oldest = receivedScheduleMessages.current.values().next().value;
+            if (oldest) receivedScheduleMessages.current.delete(oldest);
+          }
+        }
+        applySchedule(payload.task, payload.day ?? null, payload.time ?? null);
+      }
+    };
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel("dayflow-planner");
+      channel.onmessage = (event) => receive(event.data);
+    } catch {}
+    const receiveStorage = (event: StorageEvent) => {
+      if (event.key !== "dayflow-planner-sync" || !event.newValue) return;
+      try {
+        receive(JSON.parse(event.newValue));
+      } catch {}
+    };
+    window.addEventListener("storage", receiveStorage);
+    return () => {
+      channel?.close();
+      window.removeEventListener("storage", receiveStorage);
+    };
+  }, [applySchedule]);
   useEffect(() => {
     if (!dragTask) return;
     const trackPointer = (event: PointerEvent) => {
@@ -243,13 +340,20 @@ export function PlannerShell({
   function persistSchedule(task: InboxTask, day: string | null, time: string | null, undo = false) {
     setNotice(null);
     setUndoAction(null);
+    applySchedule(task, day, time);
     startTransition(async () => {
       try {
         const result = await scheduleTask({ id: task.id, scheduled_date: day,
           start_time: time, duration_minutes: task.duration_minutes });
         setNotice(result);
-        if (result.ok) setUndoAction(undo ? null : { kind: "schedule", task });
+        if (result.ok) {
+          publishSchedule(task, day, time);
+          setUndoAction(undo ? null : { kind: "schedule", task });
+        } else {
+          applySchedule({ ...task, scheduled_date: day, start_time: time }, task.scheduled_date ?? null, task.start_time ?? null);
+        }
       } catch {
+        applySchedule({ ...task, scheduled_date: day, start_time: time }, task.scheduled_date ?? null, task.start_time ?? null);
         setNotice({ ok: false, message: "Couldn’t confirm the schedule. Refresh to check before retrying." });
       }
     });
@@ -418,16 +522,16 @@ export function PlannerShell({
   }, [loadedDays, range.day, router, serverView, today, weekStartsOn]);
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
-    for (const task of scheduled) {
+    for (const task of displayScheduled) {
       const tasksForDay = byDay.get(task.scheduled_date) ?? [];
       tasksForDay.push(task);
       byDay.set(task.scheduled_date, tasksForDay);
     }
     return byDay;
-  }, [scheduled]);
+  }, [displayScheduled]);
   const selectedScheduled = useMemo(
-    () => scheduled.filter((task) => displayedDays.includes(task.scheduled_date)),
-    [displayedDays, scheduled],
+    () => displayScheduled.filter((task) => displayedDays.includes(task.scheduled_date)),
+    [displayScheduled, displayedDays],
   );
   const timeAxis = useMemo(
     () => isRangeView ? buildRangeTimeAxis(selectedScheduled, displayedRange.week) : undefined,
@@ -576,7 +680,7 @@ export function PlannerShell({
         >
           <Inbox size={20} />
           <span>Inbox</span>
-          {total > 0 && <span className="inbox-toggle-count">{total}</span>}
+          {displayTotal > 0 && <span className="inbox-toggle-count">{displayTotal}</span>}
         </button>
         <div className="calendar-navigation">
           <div className="date-navigation">
@@ -670,8 +774,8 @@ export function PlannerShell({
         >
           <InboxDropZone className="inbox-content">
             <InboxPanel
-              tasks={tasks}
-              total={total}
+              tasks={displayTasks}
+              total={displayTotal}
               loadError={inboxError}
               pending={pending}
               onComplete={complete}
@@ -727,7 +831,7 @@ export function PlannerShell({
           onClick={() => setMobile("inbox")}
         >
           <Inbox size={20} />
-          Inbox {total > 0 && <span>{total}</span>}
+          Inbox {displayTotal > 0 && <span>{displayTotal}</span>}
         </button>
       </nav>
       {editor && (
