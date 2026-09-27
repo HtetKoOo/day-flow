@@ -9,10 +9,22 @@ import {
   Clock3,
   Trash2,
   AlignLeft,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { saveTask, deleteTask } from "@/app/planner/actions";
 import { taskColors, taskColor } from "@/lib/tasks/colors";
 import type { InboxTask } from "@/lib/tasks/types";
+
+const durationPresets = [15, 30, 45, 60, 90, 120];
+
+function durationLabel(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (!hours) return `${minutes}m`;
+  return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
+}
+
 export function TaskEditor({
   task,
   date,
@@ -34,6 +46,7 @@ export function TaskEditor({
     Boolean(task?.scheduled_date || time),
   );
   const [color, setColor] = useState(taskColor(task?.color));
+  const [duration, setDuration] = useState(task?.duration_minutes ?? 30);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -57,7 +70,7 @@ export function TaskEditor({
         const result = await saveTask(task?.id ?? null, {
           title: form.get("title"),
           notes: form.get("notes") ?? "",
-          duration_minutes: form.get("duration"),
+          duration_minutes: duration,
           color,
           scheduled_date: chosenDate,
           start_time: scheduled ? form.get("time") : null,
@@ -222,23 +235,53 @@ export function TaskEditor({
                   </label>
                 </div>
               )}
-              <label className="editor-label">
-                <span>
+              <div className="duration-editor" role="group" aria-label="Task duration">
+                <span className="duration-heading">
                   <Clock3 size={16} /> Duration
                 </span>
-                <div className="duration-field">
-                  <input
-                    aria-label="Duration in minutes"
-                    type="number"
-                    name="duration"
-                    defaultValue={task?.duration_minutes ?? 30}
-                    min={5}
-                    max={1440}
-                    required
-                  />
-                  <span>minutes</span>
+                <div className="duration-presets" aria-label="Quick durations">
+                  {durationPresets.map((minutes) => (
+                    <button
+                      key={minutes}
+                      type="button"
+                      aria-pressed={duration === minutes}
+                      onClick={() => {
+                        setDuration(minutes);
+                        setDirty(true);
+                      }}
+                    >
+                      {durationLabel(minutes)}
+                    </button>
+                  ))}
                 </div>
-              </label>
+                <div className="duration-stepper">
+                  <span>Custom</span>
+                  <div>
+                    <button
+                      type="button"
+                      aria-label="Reduce duration by 15 minutes"
+                      onClick={() => {
+                        setDuration((current) => Math.max(5, current - 15));
+                        setDirty(true);
+                      }}
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <output aria-live="polite">{durationLabel(duration)}</output>
+                    <button
+                      type="button"
+                      aria-label="Increase duration by 15 minutes"
+                      onClick={() => {
+                        setDuration((current) => Math.min(1440, current + 15));
+                        setDirty(true);
+                      }}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+                <input type="hidden" name="duration" value={duration} />
+              </div>
               <details
                 className="notes-details"
                 open={task?.notes ? true : undefined}
