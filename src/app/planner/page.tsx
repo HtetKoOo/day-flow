@@ -20,6 +20,7 @@ type PlannerSnapshot = {
   inbox_error: boolean;
   scheduled: TaskRow[];
   scheduled_count: number;
+  loaded_through?: string;
   scheduled_error: boolean;
 };
 function toTask(row: TaskRow) {
@@ -100,6 +101,7 @@ export default async function Planner({
         inbox_error: !!inboxResult.error,
         scheduled: (scheduledResult.data ?? []) as TaskRow[],
         scheduled_count: scheduledResult.count ?? 0,
+        loaded_through: range.to > strip.to ? range.to : strip.to,
         scheduled_error: !!scheduledResult.error,
       };
     }
@@ -131,6 +133,9 @@ export default async function Planner({
     profile.week_starts_on,
   );
   const strip = plannerRange(today, range.day, "week", profile.week_starts_on);
+  const loadedDays = snapshot.loaded_through && snapshot.loaded_through > strip.to
+    ? [...strip.days, snapshot.loaded_through]
+    : strip.days;
   return (
     <PlannerShell
       timezone={profile.timezone}
@@ -147,6 +152,7 @@ export default async function Planner({
       today={today}
       range={range}
       stripDays={strip.days}
+      loadedDays={loadedDays}
       weekStartsOn={profile.week_starts_on}
     />
   );

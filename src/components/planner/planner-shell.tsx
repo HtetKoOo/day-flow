@@ -178,6 +178,7 @@ function visualDropTarget(day: string, pointerY: number): VisualDropTarget | nul
 
 export type PlannerProps = {
   stripDays: string[];
+  loadedDays: string[];
   timezone: string;
   tasks: InboxTask[];
   inboxError: boolean;
@@ -191,6 +192,7 @@ export type PlannerProps = {
 };
 export function PlannerShell({
   stripDays,
+  loadedDays,
   timezone,
   tasks,
   inboxError,
@@ -380,7 +382,7 @@ export function PlannerShell({
       && optimisticRange
       && optimisticRoute.sourceDay === range.day
       && optimisticRoute.sourceView === serverView
-      && optimisticRange.days.every((day) => stripDays.includes(day)),
+      && optimisticRange.days.every((day) => loadedDays.includes(day)),
   );
   const displayedRange = canUseOptimisticRange && optimisticRange
     ? optimisticRange
@@ -426,7 +428,7 @@ export function PlannerShell({
         ? requestedView
         : "day";
       const nextRange = plannerRange(today, day, view, weekStartsOn);
-      if (!nextRange.days.every((nextDay) => stripDays.includes(nextDay))) {
+      if (!nextRange.days.every((nextDay) => loadedDays.includes(nextDay))) {
         router.refresh();
         return;
       }
@@ -435,7 +437,7 @@ export function PlannerShell({
     };
     window.addEventListener("popstate", syncHistoryRoute);
     return () => window.removeEventListener("popstate", syncHistoryRoute);
-  }, [range.day, router, serverView, stripDays, today, weekStartsOn]);
+  }, [loadedDays, range.day, router, serverView, today, weekStartsOn]);
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of scheduled) {
@@ -471,7 +473,7 @@ export function PlannerShell({
   function navigate(day: string, view: PlannerView = serverView) {
     if (routeStillLoading || (day === range.day && view === serverView)) return;
     const nextRange = plannerRange(today, day, view, weekStartsOn);
-    const isLoadedRoute = nextRange.days.every((nextDay) => stripDays.includes(nextDay));
+    const isLoadedRoute = nextRange.days.every((nextDay) => loadedDays.includes(nextDay));
     if (isLoadedRoute) {
       // Day, 2 days, and Week are different presentations of the same local
       // weekly snapshot. Update them without an RSC request, so there is no
