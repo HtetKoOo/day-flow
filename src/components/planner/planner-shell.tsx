@@ -398,6 +398,23 @@ export function PlannerShell({
       && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
   );
   const showRoutePending = routeStillLoading && !canUseOptimisticRange;
+  // A route may be interrupted by a browser navigation or a failed RSC request.
+  // Never leave an optimistic layout on screen when it no longer matches the URL.
+  useEffect(() => {
+    if (!optimisticRoute) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlDay = params.get("date") ?? today;
+    const requestedView = params.get("view");
+    const urlView: PlannerView = requestedView === "week" || requestedView === "two-days"
+      ? requestedView
+      : "day";
+    if (urlDay === optimisticRoute.day && urlView === optimisticRoute.view) return;
+    const frame = requestAnimationFrame(() => {
+      setOptimisticRoute(null);
+      setNavigationTarget(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [optimisticRoute, today]);
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of scheduled) {
