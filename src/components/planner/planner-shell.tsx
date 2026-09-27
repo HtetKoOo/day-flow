@@ -23,6 +23,7 @@ import { completeTask, scheduleTask } from "@/app/planner/actions";
 import { dateKey, minutes, plannerRange } from "@/lib/tasks/schedule";
 import { clockTime } from "@/lib/tasks/agenda";
 import { taskColor } from "@/lib/tasks/colors";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { InboxTask, ScheduledTask, TaskResult } from "@/lib/tasks/types";
 
 /* DragOverlay starts at the source element's rectangle. Compensate for the
@@ -253,24 +254,33 @@ export function PlannerShell({
   const displayScheduled = display.scheduled;
   const displayTotal = display.total;
   const applySchedule = useCallback((task: InboxTask, day: string | null, time: string | null) => {
-    const nextTask = { ...task, scheduled_date: day, start_time: time };
-    const wasInInbox = !task.scheduled_date || !task.start_time;
     const movesToInbox = !day || !time;
-    setDisplay((current) => ({
-      ...current,
-      tasks: movesToInbox
-        ? [...current.tasks.filter((item) => item.id !== task.id), nextTask]
-        : current.tasks.filter((item) => item.id !== task.id),
-      scheduled: movesToInbox
-        ? current.scheduled.filter((item) => item.id !== task.id)
-        : [
-            ...current.scheduled.filter((item) => item.id !== task.id),
-            nextTask as ScheduledTask,
-          ],
-      total: wasInInbox === movesToInbox
-        ? current.total
-        : Math.max(0, current.total + (movesToInbox ? 1 : -1)),
-    }));
+    setDisplay((current) => {
+      const existingInbox = current.tasks.find((item) => item.id === task.id);
+      const existingScheduled = current.scheduled.find((item) => item.id === task.id);
+      const wasInInbox = Boolean(existingInbox);
+      const nextTask = {
+        ...(existingInbox ?? existingScheduled ?? task),
+        ...task,
+        scheduled_date: day,
+        start_time: time,
+      };
+      return {
+        ...current,
+        tasks: movesToInbox
+          ? [...current.tasks.filter((item) => item.id !== task.id), nextTask]
+          : current.tasks.filter((item) => item.id !== task.id),
+        scheduled: movesToInbox
+          ? current.scheduled.filter((item) => item.id !== task.id)
+          : [
+              ...current.scheduled.filter((item) => item.id !== task.id),
+              nextTask as ScheduledTask,
+            ],
+        total: wasInInbox === movesToInbox
+          ? current.total
+          : Math.max(0, current.total + (movesToInbox ? 1 : -1)),
+      };
+    });
   }, []);
   const publishSchedule = useCallback((task: InboxTask, day: string | null, time: string | null) => {
     const id = typeof crypto.randomUUID === "function"
@@ -320,6 +330,37 @@ export function PlannerShell({
       window.removeEventListener("storage", receiveStorage);
     };
   }, [applySchedule]);
+  useEffect(() => {
+    const supabase = createBrowserClient();
+    const channel = supabase
+      .channel("dayflow-planner-tasks")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tasks" },
+        (payload) => {
+          const row = payload.new as Partial<InboxTask>;
+          if (
+            typeof row.id !== "string"
+            || typeof row.title !== "string"
+            || typeof row.notes !== "string"
+            || typeof row.duration_minutes !== "number"
+            || typeof row.is_completed !== "boolean"
+          ) {
+            router.refresh();
+            return;
+          }
+          applySchedule(
+            row as InboxTask,
+            typeof row.scheduled_date === "string" ? row.scheduled_date : null,
+            typeof row.start_time === "string" ? row.start_time.slice(0, 5) : null,
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [applySchedule, router]);
   useEffect(() => {
     if (!dragTask) return;
     const trackPointer = (event: PointerEvent) => {
