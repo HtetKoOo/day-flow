@@ -454,13 +454,9 @@ export function PlannerShell({
     if (nextRange.days.every((nextDay) => stripDays.includes(nextDay))) {
       setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
     }
-    const update = () =>
-      startTransition(() => router.push(href(day, view), { scroll: false }));
-    const viewDocument = document as Document & {
-      startViewTransition?: (updateCallback: () => void) => unknown;
-    };
-    if (viewDocument.startViewTransition) viewDocument.startViewTransition(update);
-    else update();
+    // The planner owns its own compact content transition. Letting browser-native
+    // view transitions run as well makes different view changes feel unrelated.
+    startTransition(() => router.push(href(day, view), { scroll: false }));
     setMobile("planner");
   }
   function changeView(view: PlannerView) {
@@ -684,16 +680,18 @@ export function PlannerShell({
             </Link>
           )}
           <div className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`} data-view={displayedView} aria-busy={showRoutePending}>
-            {!isRangeView && (
-              <DateStrip
-                onMove={(direction) =>
-                  navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
-                }
-              >
-                {stripDays.map(renderDate)}
-              </DateStrip>
-            )}
-            {renderTimeline()}
+            <div className="planner-view-content" key={`${displayedDay}-${displayedView}`}>
+              {!isRangeView && (
+                <DateStrip
+                  onMove={(direction) =>
+                    navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
+                  }
+                >
+                  {stripDays.map(renderDate)}
+                </DateStrip>
+              )}
+              {renderTimeline()}
+            </div>
           </div>
         </section>
       </div>
