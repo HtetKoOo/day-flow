@@ -388,6 +388,7 @@ export function PlannerShell({
   }
   useEffect(() => {
     const destinations = new Set([
+      ...stripDays.map((day) => href(day, currentView)),
       href(dateKey(addDays(parseISO(range.day), -7)), currentView),
       href(dateKey(addDays(parseISO(range.day), 7)), currentView),
       href(today, currentView),
@@ -395,8 +396,12 @@ export function PlannerShell({
         .filter((view) => view !== currentView)
         .map((view) => href(range.day, view)),
     ]);
-    destinations.forEach((destination) => router.prefetch(destination));
-  }, [currentView, range.day, router, today]);
+    const handle = window.setTimeout(
+      () => destinations.forEach((destination) => router.prefetch(destination)),
+      200,
+    );
+    return () => window.clearTimeout(handle);
+  }, [currentView, range.day, router, stripDays, today]);
 
   function changeView(view: "day" | "two-days" | "week") {
     const destination = href(range.day, view);
