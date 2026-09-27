@@ -8,7 +8,6 @@ import {
   Inbox,
   Clock3,
   Trash2,
-  AlignLeft,
   Minus,
   Plus,
 } from "lucide-react";
@@ -16,7 +15,7 @@ import { saveTask, deleteTask } from "@/app/planner/actions";
 import { taskColors, taskColor } from "@/lib/tasks/colors";
 import type { InboxTask } from "@/lib/tasks/types";
 
-const durationPresets = [15, 30, 45, 60, 90, 120, 150, 180];
+const durationPresets = [15, 30, 60, 90, 120, 180];
 
 function durationLabel(minutes: number) {
   const hours = Math.floor(minutes / 60);
@@ -282,25 +281,16 @@ export function TaskEditor({
                 </div>
                 <input type="hidden" name="duration" value={duration} />
               </div>
-              <details
-                className="notes-details"
-                open={task?.notes ? true : undefined}
-              >
-                <summary>
-                  <AlignLeft size={16} /> {task?.notes ? "Notes" : "Add a note"}
-                </summary>
-                <label className="sr-only" htmlFor="task-notes">
-                  Notes
-                </label>
+              <label className="notes-input" htmlFor="task-notes">
                 <textarea
                   id="task-notes"
                   name="notes"
                   defaultValue={task?.notes ?? ""}
-                  rows={3}
+                  rows={2}
                   maxLength={10000}
-                  placeholder="Notes"
+                  placeholder="Add a note…"
                 />
-              </details>
+              </label>
               {scheduled && (
                 <p className="editor-timezone">All times in {timezone}</p>
               )}
