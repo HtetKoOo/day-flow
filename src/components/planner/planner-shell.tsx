@@ -364,9 +364,7 @@ export function PlannerShell({
     ) >= 18;
   type PlannerView = "day" | "two-days" | "week";
   const serverView: PlannerView = range.week ? "week" : range.twoDays ? "two-days" : "day";
-  const [optimisticRoute, setOptimisticRoute] = useState<{
-    sourceDay: string;
-    sourceView: PlannerView;
+  const [localRoute, setLocalRoute] = useState<{
     day: string;
     view: PlannerView;
   } | null>(null);
@@ -374,18 +372,15 @@ export function PlannerShell({
     day: string;
     view: PlannerView;
   } | null>(null);
-  const optimisticRange = optimisticRoute
-    ? plannerRange(today, optimisticRoute.day, optimisticRoute.view, weekStartsOn)
+  const localRange = localRoute
+    ? plannerRange(today, localRoute.day, localRoute.view, weekStartsOn)
     : null;
-  const canUseOptimisticRange = Boolean(
-    optimisticRoute
-      && optimisticRange
-      && optimisticRoute.sourceDay === range.day
-      && optimisticRoute.sourceView === serverView
-      && optimisticRange.days.every((day) => loadedDays.includes(day)),
+  const canUseLocalRange = Boolean(
+    localRange
+      && localRange.days.every((day) => loadedDays.includes(day)),
   );
-  const displayedRange = canUseOptimisticRange && optimisticRange
-    ? optimisticRange
+  const displayedRange = canUseLocalRange && localRange
+    ? localRange
     : range;
   const displayedView: PlannerView = displayedRange.week
     ? "week"
@@ -399,24 +394,7 @@ export function PlannerShell({
     navigationTarget
       && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
   );
-  const showRoutePending = routeStillLoading && !canUseOptimisticRange;
-  // A route may be interrupted by a browser navigation or a failed RSC request.
-  // Never leave an optimistic layout on screen when it no longer matches the URL.
-  useEffect(() => {
-    if (!optimisticRoute) return;
-    const params = new URLSearchParams(window.location.search);
-    const urlDay = params.get("date") ?? today;
-    const requestedView = params.get("view");
-    const urlView: PlannerView = requestedView === "week" || requestedView === "two-days"
-      ? requestedView
-      : "day";
-    if (urlDay === optimisticRoute.day && urlView === optimisticRoute.view) return;
-    const frame = requestAnimationFrame(() => {
-      setOptimisticRoute(null);
-      setNavigationTarget(null);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [optimisticRoute, today]);
+  const showRoutePending = routeStillLoading && !canUseLocalRange;
   // Back and forward use the same local snapshot whenever it already contains
   // the requested dates. A route outside this week still refreshes from server.
   useEffect(() => {
@@ -433,7 +411,7 @@ export function PlannerShell({
         return;
       }
       setNavigationTarget(null);
-      setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+      setLocalRoute({ day, view });
     };
     window.addEventListener("popstate", syncHistoryRoute);
     return () => window.removeEventListener("popstate", syncHistoryRoute);
@@ -471,7 +449,7 @@ export function PlannerShell({
       && navigationTarget.view === view;
   }
   function navigate(day: string, view: PlannerView = serverView) {
-    if (routeStillLoading || (day === range.day && view === serverView)) return;
+    if (routeStillLoading || (day === displayedDay && view === displayedView)) return;
     const nextRange = plannerRange(today, day, view, weekStartsOn);
     const isLoadedRoute = nextRange.days.every((nextDay) => loadedDays.includes(nextDay));
     if (isLoadedRoute) {
@@ -480,10 +458,13 @@ export function PlannerShell({
       // loading boundary or browser fallback between views.
       window.history.pushState(null, "", href(day, view));
       setNavigationTarget(null);
-      setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+      setLocalRoute({ day, view });
       setMobile("planner");
       return;
     }
+    // This route needs data outside the local snapshot. Stop rendering the
+    // previous local route before requesting it from the server.
+    setLocalRoute(null);
     setNavigationTarget({ day, view });
     startTransition(() => router.push(href(day, view), { scroll: false }));
     setMobile("planner");
