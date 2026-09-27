@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, useTransition, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, useSyncExternalStore } from "react";
 import { PlannerToast } from "./planner-toast";
 import { DndContext, DragOverlay, MouseSensor, TouchSensor, KeyboardSensor, useSensor, useSensors, type DragEndEvent, type DragMoveEvent, type DragStartEvent, type Modifier } from "@dnd-kit/core";
 import { InboxDropZone, scheduleCollision } from "./drag-schedule";
@@ -210,7 +210,10 @@ export function PlannerShell({
   const [pending, startTransition] = useTransition();
   const [dragTask, setDragTask] = useState<InboxTask | null>(null);
   const [dragTarget, setDragTarget] = useState<{ day: string; time: string; top: number } | null>(null);
+  const dragTargetRef = useRef<{ day: string; time: string; top: number } | null>(null);
   const dragPointer = useRef<{ y: number } | null>(null);
+  const queuedDragMove = useRef<DragMoveEvent | null>(null);
+  const dragMoveFrame = useRef<number | null>(null);
   const pointerInitiatedDrag = useRef(false);
   const [undoAction, setUndoAction] = useState<
     { kind: "schedule" | "completion"; task: InboxTask } | null
@@ -240,10 +243,7 @@ export function PlannerShell({
         const result = await scheduleTask({ id: task.id, scheduled_date: day,
           start_time: time, duration_minutes: task.duration_minutes });
         setNotice(result);
-        if (result.ok) {
-          setUndoAction(undo ? null : { kind: "schedule", task });
-          router.refresh();
-        }
+        if (result.ok) setUndoAction(undo ? null : { kind: "schedule", task });
       } catch {
         setNotice({ ok: false, message: "Couldn’t confirm the schedule. Refresh to check before retrying." });
       }
@@ -260,7 +260,9 @@ export function PlannerShell({
         if (active instanceof HTMLElement && active.closest("[data-draggable]")) active.blur();
       });
     }
-    const target = dragTarget;
+    flushDragMove();
+    const target = dragTargetRef.current;
+    dragTargetRef.current = null;
     const task = event.active.data.current?.task as InboxTask | undefined;
     setDragTarget(null);
     if (!task || pending) return;
@@ -271,12 +273,13 @@ export function PlannerShell({
     if (!target) return;
     persistSchedule(task, target.day, target.time);
   }
-  function moveDrag(event: DragMoveEvent) {
+  function updateDragTarget(event: DragMoveEvent) {
     const day = event.over?.data.current?.day;
     const surface = event.over?.rect;
     const task = event.active.data.current?.task as InboxTask | undefined;
     const activeRect = event.active.rect.current.translated;
     if (typeof day !== "string" || !surface || !task || !activeRect) {
+      dragTargetRef.current = null;
       setDragTarget(null);
       return;
     }
@@ -295,19 +298,46 @@ export function PlannerShell({
         visualTarget?.minute ?? Math.round((earliest + ratio * (22 * 60 - earliest)) / 15) * 15,
       ),
     );
-    const time = clockTime(minute);
-    const top = visualTarget?.top ?? ratio * surface.height;
+    const target = {
+      day,
+      time: clockTime(minute),
+      top: visualTarget?.top ?? ratio * surface.height,
+    };
+    dragTargetRef.current = target;
     setDragTarget((current) =>
-      current?.day === day && current.time === time && Math.abs(current.top - top) < 0.5
+      current?.day === target.day
+      && current.time === target.time
+      && Math.abs(current.top - target.top) < 0.5
         ? current
-        : { day, time, top },
+        : target,
     );
+  }
+  function flushDragMove() {
+    if (dragMoveFrame.current !== null) {
+      cancelAnimationFrame(dragMoveFrame.current);
+      dragMoveFrame.current = null;
+    }
+    const event = queuedDragMove.current;
+    queuedDragMove.current = null;
+    if (event) updateDragTarget(event);
+  }
+  function moveDrag(event: DragMoveEvent) {
+    queuedDragMove.current = event;
+    if (dragMoveFrame.current !== null) return;
+    dragMoveFrame.current = requestAnimationFrame(() => {
+      dragMoveFrame.current = null;
+      const latest = queuedDragMove.current;
+      queuedDragMove.current = null;
+      if (latest) updateDragTarget(latest);
+    });
   }
   function beginDrag(event: DragStartEvent) {
     pointerInitiatedDrag.current = "clientX" in event.activatorEvent;
     const pointer = event.activatorEvent as PointerEvent;
     const pointerY = pointer.clientY;
     dragPointer.current = typeof pointerY === "number" ? { y: pointerY } : null;
+    dragTargetRef.current = null;
+    queuedDragMove.current = null;
     setDragTask(event.active.data.current?.task as InboxTask);
     setMobile("planner");
   }
@@ -329,6 +359,23 @@ export function PlannerShell({
     ) >= 18;
   const currentView = range.week ? "week" : range.twoDays ? "two-days" : "day";
   const isRangeView = range.week || range.twoDays;
+  const scheduledByDay = useMemo(() => {
+    const byDay = new Map<string, ScheduledTask[]>();
+    for (const task of scheduled) {
+      const tasksForDay = byDay.get(task.scheduled_date) ?? [];
+      tasksForDay.push(task);
+      byDay.set(task.scheduled_date, tasksForDay);
+    }
+    return byDay;
+  }, [scheduled]);
+  const selectedScheduled = useMemo(
+    () => scheduled.filter((task) => range.days.includes(task.scheduled_date)),
+    [range.days, scheduled],
+  );
+  const timeAxis = useMemo(
+    () => isRangeView ? buildRangeTimeAxis(selectedScheduled, range.week) : undefined,
+    [isRangeView, range.week, selectedScheduled],
+  );
   const inboxOpen = useSyncExternalStore(subscribeInbox, readInbox, () => true);
   function toggleInbox() {
     try {
@@ -339,6 +386,18 @@ export function PlannerShell({
   function href(day: string, view = "day") {
     return `/planner?date=${day}${view !== "day" ? `&view=${view}` : ""}`;
   }
+  useEffect(() => {
+    const destinations = new Set([
+      href(dateKey(addDays(parseISO(range.day), -7)), currentView),
+      href(dateKey(addDays(parseISO(range.day), 7)), currentView),
+      href(today, currentView),
+      ...(["day", "two-days", "week"] as const)
+        .filter((view) => view !== currentView)
+        .map((view) => href(range.day, view)),
+    ]);
+    destinations.forEach((destination) => router.prefetch(destination));
+  }, [currentView, range.day, router, today]);
+
   function changeView(view: "day" | "two-days" | "week") {
     const destination = href(range.day, view);
     const update = () =>
@@ -379,7 +438,7 @@ export function PlannerShell({
     });
   }
   function renderDate(day: string) {
-    const dayTasks = scheduled.filter((t) => t.scheduled_date === day);
+    const dayTasks = scheduledByDay.get(day) ?? [];
     const incomplete = scheduleError || scheduledCount > scheduled.length;
     return (
       <Link
@@ -413,6 +472,10 @@ export function PlannerShell({
       onDragStart={beginDrag}
       onDragMove={moveDrag}
       onDragCancel={() => {
+        if (dragMoveFrame.current !== null) cancelAnimationFrame(dragMoveFrame.current);
+        dragMoveFrame.current = null;
+        queuedDragMove.current = null;
+        dragTargetRef.current = null;
         setDragTask(null);
         setDragTarget(null);
         dragPointer.current = null;
@@ -460,6 +523,8 @@ export function PlannerShell({
           <button
             type="button"
             onClick={() => changeView("day")}
+            disabled={pending}
+            aria-busy={pending}
             aria-current={currentView === "day" ? "page" : undefined}
           >
             Day
@@ -467,6 +532,8 @@ export function PlannerShell({
           <button
             type="button"
             onClick={() => changeView("two-days")}
+            disabled={pending}
+            aria-busy={pending}
             aria-current={range.twoDays ? "page" : undefined}
           >
             2 days
@@ -474,6 +541,8 @@ export function PlannerShell({
           <button
             type="button"
             onClick={() => changeView("week")}
+            disabled={pending}
+            aria-busy={pending}
             aria-current={range.week ? "page" : undefined}
           >
             Week
@@ -579,7 +648,6 @@ export function PlannerShell({
             setMobile(date ? "planner" : "inbox");
             if (date && !range.days.includes(date))
               router.push(href(date, currentView), { scroll: false });
-            else router.refresh();
           }}
           returnFocus={returnFocus}
         />
@@ -613,12 +681,6 @@ export function PlannerShell({
         </div>
       );
     }
-    const timeAxis = isRangeView
-      ? buildRangeTimeAxis(
-          scheduled.filter((task) => range.days.includes(task.scheduled_date)),
-          range.week,
-        )
-      : undefined;
     return (
       <div className={`timeline-scroll ${isRangeView ? "range-scroll" : ""}`}>
         <div
@@ -636,7 +698,7 @@ export function PlannerShell({
               )}
               <Timeline
                 day={day}
-                tasks={scheduled.filter((task) => task.scheduled_date === day)}
+                tasks={scheduledByDay.get(day) ?? []}
                 onEdit={(task) => open(task)}
                 onAdd={(time) => open(null, day, time)}
                 onComplete={complete}
