@@ -471,7 +471,7 @@ export function PlannerShell({
       && navigationTarget.view === view;
   }
   function navigate(day: string, view: PlannerView = serverView) {
-    if (routeStillLoading || (day === range.day && view === serverView)) return;
+    if (routeStillLoading || (day === displayedDay && view === displayedView)) return;
     const nextRange = plannerRange(today, day, view, weekStartsOn);
     const isLoadedRoute = nextRange.days.every((nextDay) => loadedDays.includes(nextDay));
     if (isLoadedRoute) {
