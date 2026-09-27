@@ -178,6 +178,7 @@ function visualDropTarget(day: string, pointerY: number): VisualDropTarget | nul
 
 export type PlannerProps = {
   stripDays: string[];
+  loadedDays: string[];
   timezone: string;
   tasks: InboxTask[];
   inboxError: boolean;
@@ -191,6 +192,7 @@ export type PlannerProps = {
 };
 export function PlannerShell({
   stripDays,
+  loadedDays,
   timezone,
   tasks,
   inboxError,
@@ -380,7 +382,7 @@ export function PlannerShell({
       && optimisticRange
       && optimisticRoute.sourceDay === range.day
       && optimisticRoute.sourceView === serverView
-      && optimisticRange.days.every((day) => stripDays.includes(day)),
+      && optimisticRange.days.every((day) => loadedDays.includes(day)),
   );
   const displayedRange = canUseOptimisticRange && optimisticRange
     ? optimisticRange
@@ -415,6 +417,27 @@ export function PlannerShell({
     });
     return () => cancelAnimationFrame(frame);
   }, [optimisticRoute, today]);
+  // Back and forward use the same local snapshot whenever it already contains
+  // the requested dates. A route outside this week still refreshes from server.
+  useEffect(() => {
+    const syncHistoryRoute = () => {
+      const params = new URLSearchParams(window.location.search);
+      const day = params.get("date") ?? today;
+      const requestedView = params.get("view");
+      const view: PlannerView = requestedView === "week" || requestedView === "two-days"
+        ? requestedView
+        : "day";
+      const nextRange = plannerRange(today, day, view, weekStartsOn);
+      if (!nextRange.days.every((nextDay) => loadedDays.includes(nextDay))) {
+        router.refresh();
+        return;
+      }
+      setNavigationTarget(null);
+      setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+    };
+    window.addEventListener("popstate", syncHistoryRoute);
+    return () => window.removeEventListener("popstate", syncHistoryRoute);
+  }, [loadedDays, range.day, router, serverView, today, weekStartsOn]);
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of scheduled) {
@@ -450,17 +473,19 @@ export function PlannerShell({
   function navigate(day: string, view: PlannerView = serverView) {
     if (routeStillLoading || (day === range.day && view === serverView)) return;
     const nextRange = plannerRange(today, day, view, weekStartsOn);
-    setNavigationTarget({ day, view });
-    if (nextRange.days.every((nextDay) => stripDays.includes(nextDay))) {
+    const isLoadedRoute = nextRange.days.every((nextDay) => loadedDays.includes(nextDay));
+    if (isLoadedRoute) {
+      // Day, 2 days, and Week are different presentations of the same local
+      // weekly snapshot. Update them without an RSC request, so there is no
+      // loading boundary or browser fallback between views.
+      window.history.pushState(null, "", href(day, view));
+      setNavigationTarget(null);
       setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+      setMobile("planner");
+      return;
     }
-    const update = () =>
-      startTransition(() => router.push(href(day, view), { scroll: false }));
-    const viewDocument = document as Document & {
-      startViewTransition?: (updateCallback: () => void) => unknown;
-    };
-    if (viewDocument.startViewTransition) viewDocument.startViewTransition(update);
-    else update();
+    setNavigationTarget({ day, view });
+    startTransition(() => router.push(href(day, view), { scroll: false }));
     setMobile("planner");
   }
   function changeView(view: PlannerView) {
@@ -684,16 +709,18 @@ export function PlannerShell({
             </Link>
           )}
           <div className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`} data-view={displayedView} aria-busy={showRoutePending}>
-            {!isRangeView && (
-              <DateStrip
-                onMove={(direction) =>
-                  navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
-                }
-              >
-                {stripDays.map(renderDate)}
-              </DateStrip>
-            )}
-            {renderTimeline()}
+            <div className="planner-view-content">
+              {!isRangeView && (
+                <DateStrip
+                  onMove={(direction) =>
+                    navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
+                  }
+                >
+                  {stripDays.map(renderDate)}
+                </DateStrip>
+              )}
+              {renderTimeline()}
+            </div>
           </div>
         </section>
       </div>
