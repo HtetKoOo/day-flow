@@ -359,6 +359,17 @@ export function PlannerShell({
     ) >= 18;
   const currentView = range.week ? "week" : range.twoDays ? "two-days" : "day";
   const isRangeView = range.week || range.twoDays;
+  const [optimisticDay, setOptimisticDay] = useState<{
+    source: string;
+    day: string;
+  } | null>(null);
+  const displayedDay = isRangeView || optimisticDay?.source !== range.day
+    ? range.day
+    : optimisticDay.day;
+  const displayedDays = useMemo(
+    () => isRangeView ? range.days : [displayedDay],
+    [displayedDay, isRangeView, range.days],
+  );
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of scheduled) {
@@ -369,8 +380,8 @@ export function PlannerShell({
     return byDay;
   }, [scheduled]);
   const selectedScheduled = useMemo(
-    () => scheduled.filter((task) => range.days.includes(task.scheduled_date)),
-    [range.days, scheduled],
+    () => scheduled.filter((task) => displayedDays.includes(task.scheduled_date)),
+    [displayedDays, scheduled],
   );
   const timeAxis = useMemo(
     () => isRangeView ? buildRangeTimeAxis(selectedScheduled, range.week) : undefined,
@@ -387,7 +398,7 @@ export function PlannerShell({
     return `/planner?date=${day}${view !== "day" ? `&view=${view}` : ""}`;
   }
   function changeView(view: "day" | "two-days" | "week") {
-    const destination = href(range.day, view);
+    const destination = href(displayedDay, view);
     const update = () =>
       startTransition(() => router.push(destination, { scroll: false }));
     const viewDocument = document as Document & {
@@ -402,7 +413,7 @@ export function PlannerShell({
   }
   function open(
     task: InboxTask | null = null,
-    date = range.day,
+    date = displayedDay,
     time?: string,
   ) {
     returnFocus.current = document.activeElement as HTMLElement;
@@ -433,9 +444,23 @@ export function PlannerShell({
         key={day}
         href={href(day, currentView)}
         className="date-cell"
-        aria-current={day === range.day ? "date" : undefined}
+        aria-current={day === displayedDay ? "date" : undefined}
         data-today={day === today}
         aria-label={`${format(parseISO(day), "EEEE, MMMM d")}${day === today ? ", today" : ""}, ${incomplete ? "task preview unavailable" : `${dayTasks.length} tasks`}`}
+        onClick={(event) => {
+          if (
+            isRangeView ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) return;
+          event.preventDefault();
+          if (day === displayedDay) return;
+          setOptimisticDay({ source: range.day, day });
+          startTransition(() => router.push(href(day, currentView), { scroll: false }));
+        }}
       >
         <span>{format(parseISO(day), "EEE")}</span>
         <strong>{format(parseISO(day), "d")}</strong>
@@ -484,12 +509,12 @@ export function PlannerShell({
         </button>
         <div className="calendar-navigation">
           <div className="date-navigation">
-            <h1>{format(parseISO(range.day), "MMM yyyy")}</h1>
+            <h1>{format(parseISO(displayedDay), "MMM yyyy")}</h1>
             <Link
               className="icon-button"
               aria-label="Previous week"
               href={href(
-                dateKey(addDays(parseISO(range.day), -7)),
+                dateKey(addDays(parseISO(displayedDay), -7)),
                 currentView,
               )}
             >
@@ -498,7 +523,7 @@ export function PlannerShell({
             <Link
               className="icon-button"
               aria-label="Next week"
-              href={href(dateKey(addDays(parseISO(range.day), 7)), currentView)}
+              href={href(dateKey(addDays(parseISO(displayedDay), 7)), currentView)}
             >
               <ChevronRight size={18} />
             </Link>
@@ -574,7 +599,7 @@ export function PlannerShell({
           </InboxDropZone>
         </aside>
         <section className="planner-main" data-view={currentView}>
-          {evening && range.day === today && (
+          {evening && displayedDay === today && (
             <Link
               className="tomorrow-shortcut"
               href={href(dateKey(addDays(parseISO(today), 1)))}
@@ -587,7 +612,7 @@ export function PlannerShell({
               <DateStrip
                 onMove={(direction) =>
                   router.push(
-                    href(dateKey(addDays(parseISO(range.day), direction * 7))),
+                    href(dateKey(addDays(parseISO(displayedDay), direction * 7)), currentView),
                     { scroll: false },
                   )
                 }
@@ -611,7 +636,7 @@ export function PlannerShell({
           className="mobile-create"
           aria-label="Add task"
           onClick={() =>
-            open(null, range.day, mobile === "planner" ? "09:00" : undefined)
+            open(null, displayedDay, mobile === "planner" ? "09:00" : undefined)
           }
         >
           <Plus size={24} />
@@ -634,7 +659,7 @@ export function PlannerShell({
           }}
           onSaved={(date) => {
             setMobile(date ? "planner" : "inbox");
-            if (date && !range.days.includes(date))
+            if (date && !displayedDays.includes(date))
               router.push(href(date, currentView), { scroll: false });
           }}
           returnFocus={returnFocus}
@@ -674,7 +699,7 @@ export function PlannerShell({
         <div
           className={`selected-timelines ${range.week ? "week-timelines" : range.twoDays ? "two-day-timelines" : ""}`}
         >
-          {range.days.map((day) => (
+          {displayedDays.map((day) => (
             <section
               key={day}
               className={`timeline-day ${isRangeView ? "range-day" : "day-timeline"}`}
