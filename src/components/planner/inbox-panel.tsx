@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { saveInboxTask } from "@/app/planner/actions";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, LoaderCircle } from "lucide-react";
 import { taskColor } from "@/lib/tasks/colors";
 import { TaskDragHandle } from "./drag-schedule";
 import type { InboxTask } from "@/lib/tasks/types";
@@ -76,8 +76,8 @@ export function InboxPanel({
         <input id="add-task" aria-label="New Inbox task" placeholder="Add a task…"
           value={title} onChange={(event) => setTitle(event.target.value)}
           maxLength={200} readOnly={adding} aria-describedby={error ? "inbox-add-error" : undefined} />
-        <button type="submit" aria-label="Add to Inbox" disabled={adding || !title.trim()}>
-          <Plus size={22} />
+        <button type="submit" aria-label="Add to Inbox" aria-busy={adding} disabled={adding || !title.trim()}>
+          {adding ? <LoaderCircle className="planner-spinner" size={22} /> : <Plus size={22} />}
         </button>
       </form>
       {error && <p id="inbox-add-error" role="alert" className="form-error">{error}</p>}

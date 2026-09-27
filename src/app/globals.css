@@ -3389,3 +3389,31 @@ button,
   opacity: 0 !important;
   transform: scale(0.985) !important;
 }
+
+/* Navigation gives immediate feedback while a new server range is loading.
+   Controls that simply open an editor remain instant and do not pretend to load. */
+.planner-spinner {
+  animation: dayflow-control-spin 720ms linear infinite;
+}
+.planner-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.planner-stage.is-route-pending .timeline-scroll {
+  opacity: 0.56;
+  transition: opacity 120ms ease-out;
+}
+.planner-stage.is-route-pending::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  cursor: progress;
+}
+@keyframes dayflow-control-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .planner-spinner { animation: none; }
+}

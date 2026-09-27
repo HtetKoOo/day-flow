@@ -13,13 +13,14 @@ import {
   Plus,
   CalendarDays,
   Inbox,
+  LoaderCircle,
 } from "lucide-react";
 import { InboxPanel } from "@/components/planner/inbox-panel";
 import { TaskEditor } from "@/components/planner/task-editor";
 import { DateStrip } from "@/components/planner/date-strip";
 import { Timeline, timelineMarker, timelineTaskHeight } from "@/components/planner/timeline";
 import { completeTask, scheduleTask } from "@/app/planner/actions";
-import { dateKey, minutes, type plannerRange } from "@/lib/tasks/schedule";
+import { dateKey, minutes, plannerRange } from "@/lib/tasks/schedule";
 import { clockTime } from "@/lib/tasks/agenda";
 import { taskColor } from "@/lib/tasks/colors";
 import type { InboxTask, ScheduledTask, TaskResult } from "@/lib/tasks/types";
@@ -186,6 +187,7 @@ export type PlannerProps = {
   scheduledCount: number;
   today: string;
   range: ReturnType<typeof plannerRange>;
+  weekStartsOn: number;
 };
 export function PlannerShell({
   stripDays,
@@ -198,6 +200,7 @@ export function PlannerShell({
   scheduledCount,
   today,
   range,
+  weekStartsOn,
 }: PlannerProps) {
   const router = useRouter();
   const [editor, setEditor] = useState<{
@@ -357,19 +360,44 @@ export function PlannerShell({
         hourCycle: "h23",
       }).format(new Date(minute * 60000)),
     ) >= 18;
-  const currentView = range.week ? "week" : range.twoDays ? "two-days" : "day";
-  const isRangeView = range.week || range.twoDays;
-  const [optimisticDay, setOptimisticDay] = useState<{
-    source: string;
+  type PlannerView = "day" | "two-days" | "week";
+  const serverView: PlannerView = range.week ? "week" : range.twoDays ? "two-days" : "day";
+  const [optimisticRoute, setOptimisticRoute] = useState<{
+    sourceDay: string;
+    sourceView: PlannerView;
     day: string;
+    view: PlannerView;
   } | null>(null);
-  const displayedDay = isRangeView || optimisticDay?.source !== range.day
-    ? range.day
-    : optimisticDay.day;
-  const displayedDays = useMemo(
-    () => isRangeView ? range.days : [displayedDay],
-    [displayedDay, isRangeView, range.days],
+  const [navigationTarget, setNavigationTarget] = useState<{
+    day: string;
+    view: PlannerView;
+  } | null>(null);
+  const optimisticRange = optimisticRoute
+    ? plannerRange(today, optimisticRoute.day, optimisticRoute.view, weekStartsOn)
+    : null;
+  const canUseOptimisticRange = Boolean(
+    optimisticRoute
+      && optimisticRange
+      && optimisticRoute.sourceDay === range.day
+      && optimisticRoute.sourceView === serverView
+      && optimisticRange.days.every((day) => stripDays.includes(day)),
   );
+  const displayedRange = canUseOptimisticRange && optimisticRange
+    ? optimisticRange
+    : range;
+  const displayedView: PlannerView = displayedRange.week
+    ? "week"
+    : displayedRange.twoDays
+      ? "two-days"
+      : "day";
+  const displayedDay = displayedRange.day;
+  const displayedDays = displayedRange.days;
+  const isRangeView = displayedRange.week || displayedRange.twoDays;
+  const routeStillLoading = Boolean(
+    navigationTarget
+      && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
+  );
+  const showRoutePending = routeStillLoading && !canUseOptimisticRange;
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of scheduled) {
@@ -384,8 +412,8 @@ export function PlannerShell({
     [displayedDays, scheduled],
   );
   const timeAxis = useMemo(
-    () => isRangeView ? buildRangeTimeAxis(selectedScheduled, range.week) : undefined,
-    [isRangeView, range.week, selectedScheduled],
+    () => isRangeView ? buildRangeTimeAxis(selectedScheduled, displayedRange.week) : undefined,
+    [displayedRange.week, isRangeView, selectedScheduled],
   );
   const inboxOpen = useSyncExternalStore(subscribeInbox, readInbox, () => true);
   function toggleInbox() {
@@ -397,19 +425,40 @@ export function PlannerShell({
   function href(day: string, view = "day") {
     return `/planner?date=${day}${view !== "day" ? `&view=${view}` : ""}`;
   }
-  function changeView(view: "day" | "two-days" | "week") {
-    const destination = href(displayedDay, view);
+  function isNavigatingTo(day: string, view: PlannerView) {
+    return routeStillLoading
+      && navigationTarget?.day === day
+      && navigationTarget.view === view;
+  }
+  function navigate(day: string, view: PlannerView = serverView) {
+    if (routeStillLoading || (day === range.day && view === serverView)) return;
+    const nextRange = plannerRange(today, day, view, weekStartsOn);
+    setNavigationTarget({ day, view });
+    if (nextRange.days.every((nextDay) => stripDays.includes(nextDay))) {
+      setOptimisticRoute({ sourceDay: range.day, sourceView: serverView, day, view });
+    }
     const update = () =>
-      startTransition(() => router.push(destination, { scroll: false }));
+      startTransition(() => router.push(href(day, view), { scroll: false }));
     const viewDocument = document as Document & {
       startViewTransition?: (updateCallback: () => void) => unknown;
     };
-    if (viewDocument.startViewTransition) {
-      viewDocument.startViewTransition(update);
-    } else {
-      update();
-    }
+    if (viewDocument.startViewTransition) viewDocument.startViewTransition(update);
+    else update();
     setMobile("planner");
+  }
+  function changeView(view: PlannerView) {
+    navigate(displayedDay, view);
+  }
+  function interceptNavigation(
+    event: React.MouseEvent<HTMLAnchorElement>,
+    day: string,
+    view: PlannerView,
+  ) {
+    if (
+      event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+    ) return;
+    event.preventDefault();
+    navigate(day, view);
   }
   function open(
     task: InboxTask | null = null,
@@ -442,7 +491,7 @@ export function PlannerShell({
     return (
       <Link
         key={day}
-        href={href(day, currentView)}
+        href={href(day, displayedView)}
         className="date-cell"
         aria-current={day === displayedDay ? "date" : undefined}
         data-today={day === today}
@@ -458,8 +507,7 @@ export function PlannerShell({
           ) return;
           event.preventDefault();
           if (day === displayedDay) return;
-          setOptimisticDay({ source: range.day, day });
-          startTransition(() => router.push(href(day, currentView), { scroll: false }));
+          navigate(day, displayedView);
         }}
       >
         <span>{format(parseISO(day), "EEE")}</span>
@@ -513,50 +561,61 @@ export function PlannerShell({
             <Link
               className="icon-button"
               aria-label="Previous week"
-              href={href(
-                dateKey(addDays(parseISO(displayedDay), -7)),
-                currentView,
-              )}
+              aria-busy={isNavigatingTo(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
+              href={href(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
+              onClick={(event) => interceptNavigation(event, dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
             >
-              <ChevronLeft size={18} />
+              {isNavigatingTo(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)
+                ? <LoaderCircle className="planner-spinner" size={18} />
+                : <ChevronLeft size={18} />}
             </Link>
             <Link
               className="icon-button"
               aria-label="Next week"
-              href={href(dateKey(addDays(parseISO(displayedDay), 7)), currentView)}
+              aria-busy={isNavigatingTo(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
+              href={href(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
+              onClick={(event) => interceptNavigation(event, dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
             >
-              <ChevronRight size={18} />
+              {isNavigatingTo(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)
+                ? <LoaderCircle className="planner-spinner" size={18} />
+                : <ChevronRight size={18} />}
             </Link>
           </div>
-          <Link className="text-button" href={href(today, currentView)}>
+          <Link
+            className="text-button planner-today"
+            href={href(today, displayedView)}
+            aria-busy={isNavigatingTo(today, displayedView)}
+            onClick={(event) => interceptNavigation(event, today, displayedView)}
+          >
             Today
+            {isNavigatingTo(today, displayedView) && <LoaderCircle className="planner-spinner" size={15} />}
           </Link>
         </div>
         <nav className="view-switch" aria-label="Planner views">
           <button
             type="button"
             onClick={() => changeView("day")}
-            disabled={pending}
-            aria-busy={pending}
-            aria-current={currentView === "day" ? "page" : undefined}
+            disabled={routeStillLoading}
+            aria-busy={isNavigatingTo(displayedDay, "day")}
+            aria-current={displayedView === "day" ? "page" : undefined}
           >
             Day
           </button>
           <button
             type="button"
             onClick={() => changeView("two-days")}
-            disabled={pending}
-            aria-busy={pending}
-            aria-current={range.twoDays ? "page" : undefined}
+            disabled={routeStillLoading}
+            aria-busy={isNavigatingTo(displayedDay, "two-days")}
+            aria-current={displayedView === "two-days" ? "page" : undefined}
           >
             2 days
           </button>
           <button
             type="button"
             onClick={() => changeView("week")}
-            disabled={pending}
-            aria-busy={pending}
-            aria-current={range.week ? "page" : undefined}
+            disabled={routeStillLoading}
+            aria-busy={isNavigatingTo(displayedDay, "week")}
+            aria-current={displayedView === "week" ? "page" : undefined}
           >
             Week
           </button>
@@ -598,23 +657,20 @@ export function PlannerShell({
             />
           </InboxDropZone>
         </aside>
-        <section className="planner-main" data-view={currentView}>
+        <section className="planner-main" data-view={displayedView}>
           {evening && displayedDay === today && (
             <Link
               className="tomorrow-shortcut"
-              href={href(dateKey(addDays(parseISO(today), 1)))}
+              href={href(dateKey(addDays(parseISO(today), 1)), displayedView)}
             >
               Plan tomorrow →
             </Link>
           )}
-          <div className="planner-stage" data-view={currentView}>
+          <div className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`} data-view={displayedView} aria-busy={showRoutePending}>
             {!isRangeView && (
               <DateStrip
                 onMove={(direction) =>
-                  router.push(
-                    href(dateKey(addDays(parseISO(displayedDay), direction * 7)), currentView),
-                    { scroll: false },
-                  )
+                  navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
                 }
               >
                 {stripDays.map(renderDate)}
@@ -660,7 +716,7 @@ export function PlannerShell({
           onSaved={(date) => {
             setMobile(date ? "planner" : "inbox");
             if (date && !displayedDays.includes(date))
-              router.push(href(date, currentView), { scroll: false });
+              navigate(date, displayedView);
           }}
           returnFocus={returnFocus}
         />
@@ -697,7 +753,7 @@ export function PlannerShell({
     return (
       <div className={`timeline-scroll ${isRangeView ? "range-scroll" : ""}`}>
         <div
-          className={`selected-timelines ${range.week ? "week-timelines" : range.twoDays ? "two-day-timelines" : ""}`}
+          className={`selected-timelines ${displayedRange.week ? "week-timelines" : displayedRange.twoDays ? "two-day-timelines" : ""}`}
         >
           {displayedDays.map((day) => (
             <section
@@ -716,7 +772,7 @@ export function PlannerShell({
                 onAdd={(time) => open(null, day, time)}
                 onComplete={complete}
                 pending={pending}
-                compact={range.week}
+                compact={displayedRange.week}
                 draggingTask={dragTask}
                 dragTime={dragTarget?.day === day ? dragTarget.time : null}
                 dragPosition={dragTarget?.day === day ? dragTarget.top : null}
