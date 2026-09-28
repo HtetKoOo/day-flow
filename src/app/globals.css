@@ -18,6 +18,10 @@
   --destructive: #ac3f48;
   --sidebar: #f2f0f5;
   --shadow: 0 20px 80px #253c2812;
+  --radius-surface: 28px;
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-chip: 10px;
 }
 .dark {
   color-scheme: dark;
@@ -37,6 +41,10 @@
   --destructive: #ffadb0;
   --sidebar: #1e1e23;
   --shadow: 0 20px 80px #0004;
+  --radius-surface: 28px;
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-chip: 10px;
 }
 @theme inline {
   --color-background: var(--background);
@@ -349,7 +357,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   background: var(--task-bg);
   color: var(--task-fg);
   padding: 15px 13px;
@@ -837,7 +845,7 @@
   max-height: 90dvh;
   overflow-y: auto;
   border: 1px solid var(--border);
-  border-radius: 32px;
+  border-radius: var(--radius-surface);
   background: var(--card);
   box-shadow: var(--shadow);
   padding: 30px;
@@ -913,7 +921,7 @@
   display: flex;
   gap: 6px;
   background: var(--secondary);
-  border-radius: 17px;
+  border-radius: var(--radius-card);
   padding: 5px;
   margin: 0 0 20px;
 }
@@ -924,7 +932,7 @@
   justify-content: center;
   gap: 8px;
   border: 0;
-  border-radius: 13px;
+  border-radius: var(--radius-control);
   padding: 12px 10px;
   color: var(--muted-foreground);
   font-size: 16px;
@@ -942,21 +950,75 @@
   margin-bottom: 18px;
 }
 .editor-row label {
+  display: grid;
+  gap: 8px;
   font-size: 16px;
   color: var(--muted-foreground);
 }
-.editor-row input {
+.editor-row input:not([type="hidden"]) {
   display: block;
   width: 100%;
   min-width: 0;
-  margin-top: 8px;
+  margin-top: 0;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   background: var(--background);
   color: var(--foreground);
   padding: 12px;
   font-size: 16px;
 }
+.date-time-picker-trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--background);
+  color: var(--foreground);
+  padding: 12px;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.date-time-picker-trigger:hover,
+.date-time-picker-trigger:focus-visible { border-color: var(--primary); outline: 0; }
+.date-time-picker-trigger svg { flex: 0 0 auto; color: var(--muted-foreground); }
+.date-picker-popover,
+.time-picker-popover {
+  z-index: 200;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: 0 18px 44px #00000052;
+}
+.date-picker-popover { width: 292px; padding: 12px; }
+.date-picker-month { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.date-picker-month strong { font-size: 14px; }
+.date-picker-month button { display: grid; width: 31px; height: 31px; place-items: center; border: 0; border-radius: var(--radius-chip); background: transparent; color: var(--foreground); }
+.date-picker-month button:hover { background: var(--secondary); }
+.date-picker-weekdays,
+.date-picker-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.date-picker-weekdays { margin-bottom: 5px; color: var(--muted-foreground); font-size: 11px; }
+.date-picker-weekdays span { padding: 5px 0; }
+.date-picker-days button { width: 36px; height: 34px; border: 0; border-radius: var(--radius-chip); background: transparent; color: var(--foreground); font-size: 13px; }
+.date-picker-days button:hover:not(:disabled) { background: var(--secondary); }
+.date-picker-days button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.date-picker-days button[data-outside="true"] { color: var(--muted-foreground); opacity: .45; }
+.date-picker-days button:disabled { cursor: not-allowed; color: var(--muted-foreground); opacity: .25; }
+.time-picker-popover { width: 312px; padding: 12px; }
+.time-picker-heading { margin: 2px 2px 10px; color: var(--muted-foreground); font-size: 13px; }
+.time-picker-columns { display: grid; grid-template-columns: 1fr 1fr .9fr; gap: 8px; }
+.time-picker-column > span { display: block; margin: 0 5px 6px; color: var(--muted-foreground); font-size: 11px; }
+.time-picker-column > div { display: grid; max-height: 212px; gap: 3px; overflow-y: auto; overscroll-behavior: contain; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--background); touch-action: pan-y; }
+.time-picker-column button { min-height: 31px; border: 0; border-radius: var(--radius-chip); background: transparent; color: var(--foreground); font-size: 13px; font-variant-numeric: tabular-nums; }
+.time-picker-column button:hover { background: var(--secondary); }
+.time-picker-column button[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 18%, var(--background)); color: var(--primary); }
+.time-picker-period > div { align-content: start; overflow: hidden; }
+.time-picker-confirm { width: 100%; margin-top: 10px; border: 0; border-radius: var(--radius-control); background: var(--primary); color: var(--primary-foreground); padding: 9px; font-size: 13px; }
 .duration-editor {
   border-bottom: 1px solid var(--border);
   padding: 4px 0 18px;
@@ -976,7 +1038,7 @@
   flex: 1 1 0;
   min-width: 0;
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: var(--radius-chip);
   background: var(--background);
   color: var(--muted-foreground);
   padding: 8px 6px;
@@ -1002,7 +1064,7 @@
   align-items: center;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--background);
 }
 .duration-stepper button {
@@ -1034,7 +1096,7 @@
   display: block;
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: var(--radius-control);
   background: color-mix(in srgb, var(--background) 72%, transparent);
   color: var(--foreground);
   padding: 12px;
@@ -1070,7 +1132,7 @@
 .confirm-panel {
   font-size: 16px;
   padding: 14px;
-  border-radius: 17px;
+  border-radius: var(--radius-card);
   background: var(--secondary);
   margin-top: 16px;
 }
@@ -1312,7 +1374,7 @@
   .task-title-input {
     font-size: 19px;
   }
-  .editor-row input {
+  .editor-row input:not([type="hidden"]) {
     font-size: 16px;
     padding: 11px 8px;
   }
@@ -1506,19 +1568,29 @@ body {
 .app-header > .brand {
   margin-right: auto;
 }
-.inbox-toggle {
+.sidebar-switch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border: 0;
-  border-radius: 24px;
-  color: var(--primary);
+  gap: 4px;
+  padding: 5px;
+  border-radius: 30px;
   background: var(--secondary);
 }
-.inbox-toggle[aria-expanded="true"] {
-  background: var(--primary);
-  color: var(--primary-foreground);
+.sidebar-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 24px;
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 16px;
+  white-space: nowrap;
+}
+.sidebar-switch button[aria-pressed="true"] {
+  color: var(--foreground);
+  background: var(--card);
 }
 .planner-workspace {
   flex: 1;
@@ -1798,7 +1870,7 @@ body {
   .app-header .view-switch {
     width: auto;
   }
-  .inbox-toggle {
+  .sidebar-switch {
     display: none;
   }
   .planner-workspace {
@@ -1891,15 +1963,6 @@ body {
 }
 .planner-app .app-header {
   background: var(--background);
-}
-.inbox-toggle,
-.inbox-toggle[aria-expanded="true"] {
-  color: var(--foreground);
-  background: transparent;
-}
-.inbox-toggle[aria-expanded="true"] {
-  background: var(--secondary);
-  color: var(--primary);
 }
 button,
 .view-switch a,
@@ -2073,16 +2136,21 @@ button,
 .app-header .calendar-navigation {
   flex: 1;
   justify-content: flex-start;
-  gap: 18px;
   min-width: 0;
 }
 .app-header .date-navigation {
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 .app-header .date-navigation h1 {
+  flex: 0 0 88px;
   font-size: 18px;
   white-space: nowrap;
-  margin: 0 8px 0 0;
+  margin: 0 6px 0 0;
+}
+.app-header .planner-today {
+  min-width: 56px;
+  justify-content: center;
 }
 .app-header .view-switch {
   flex-shrink: 0;
@@ -2231,20 +2299,21 @@ button,
 .planner-app .inbox-sidebar {
   border-right: none !important;
 }
-.inbox-toggle-count {
+.sidebar-switch-count {
   display: inline-flex;
-  min-width: 22px;
-  height: 22px;
+  min-width: 20px;
+  height: 20px;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
-  border-radius: 12px;
+  padding: 0 5px;
+  border-radius: 999px;
   background: var(--secondary);
   color: var(--muted-foreground);
   font-size: 12px;
 }
-.inbox-toggle[aria-expanded="true"] .inbox-toggle-count {
-  background: var(--card);
+.sidebar-switch button[aria-pressed="true"] .sidebar-switch-count {
+  background: var(--secondary);
+  color: var(--foreground);
 }
 /* Keep the selected week as the only date header; view modes control the agenda below it. */
 .planner-app .app-header,
@@ -2268,7 +2337,7 @@ button,
   background: var(--background) !important;
   box-shadow: none !important;
 }
-.inbox-toggle {
+.sidebar-switch {
   box-shadow: none !important;
 }
 .selected-timelines {
@@ -2514,22 +2583,83 @@ button,
   color: var(--primary);
   background: var(--secondary);
 }
+.planner-side-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 0 0 14px;
+  padding: 4px;
+  border-radius: var(--radius-card);
+  background: var(--secondary);
+}
+.planner-side-tabs button {
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted-foreground);
+  padding: 9px 8px;
+  font-size: 14px;
+}
+.planner-side-tabs button[aria-selected="true"] {
+  background: var(--card);
+  color: var(--foreground);
+}
+.routine-panel { min-height: 100%; }
+.routine-add {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--primary);
+  padding: 13px;
+  font-size: 15px;
+}
+.routine-list { display: grid; gap: 9px; margin-top: 12px; }
+.routine-card {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  background: var(--card);
+  color: var(--primary);
+  text-align: left;
+}
+.routine-card:hover { border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); background: color-mix(in srgb, var(--primary) 7%, var(--card)); }
+.routine-card > svg:last-child { color: var(--muted-foreground); }
+.routine-card > div { display: grid; gap: 3px; min-width: 0; }
+.routine-card strong { color: var(--foreground); font-size: 15px; }
+.routine-card span, .routine-card small { color: var(--muted-foreground); font-size: 12px; }
+.routine-empty { display: grid; gap: 10px; padding: 28px 10px; color: var(--muted-foreground); text-align: center; font-size: 14px; }
+.routine-empty svg { margin: auto; color: var(--primary); }
+.routine-description { margin: 10px 0 0; color: var(--muted-foreground); }
+.routine-days { margin: 21px 0 18px; }
+.routine-days > span { display: block; margin-bottom: 9px; color: var(--muted-foreground); font-size: 14px; }
+.routine-days > div { display: flex; gap: 6px; }
+.routine-days button { flex: 1; border: 1px solid var(--border); border-radius: var(--radius-chip); background: var(--background); color: var(--muted-foreground); padding: 9px 0; font-size: 12px; }
+.routine-days button[aria-pressed="true"] { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 15%, var(--background)); color: var(--foreground); }
+.routine-end-date { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -5px 0 18px; color: var(--muted-foreground); font-size: 14px; }
+.routine-end-date label { display: flex; align-items: center; gap: 8px; }
+.routine-end-date input[type="date"] { min-width: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--background); color: var(--foreground); padding: 8px; }
+.routine-notes { display: block; width: 100%; margin-top: 18px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--background); color: var(--foreground); padding: 12px; resize: vertical; }
 @media (min-width: 761px) {
   .planner-app .app-header {
     display: grid;
-    grid-template-columns: 292px minmax(0, 1fr) auto auto;
-    transition: grid-template-columns 260ms var(--ease-calm);
+    grid-template-columns: max-content minmax(0, 1fr) auto auto;
   }
-  .app-header .inbox-toggle {
+  .app-header .sidebar-switch {
     justify-self: start;
-  }
-  .planner-app[data-inbox-open="false"] .app-header {
-    grid-template-columns: 140px minmax(0, 1fr) auto auto;
   }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
-  .planner-app[data-inbox-open="true"] .app-header {
-    grid-template-columns: 246px minmax(0, 1fr) auto auto;
+  .planner-app .app-header {
     column-gap: 12px;
   }
   .app-header .calendar-navigation {
@@ -2538,9 +2668,6 @@ button,
   .app-header .view-switch button {
     padding-inline: 10px;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .planner-app .app-header { transition: none; }
 }
 
 /* A quiet visual handoff when the planner expands between Day, 2 days, and Week. */
@@ -2575,7 +2702,7 @@ button,
 
 /* The timeline is a calm route through the day; the Inbox remains a task list. */
 .planner-stage {
-  border-radius: 38px;
+  border-radius: var(--radius-surface) var(--radius-surface) 0 0;
 }
 .planner-stage .timeline-scroll {
   padding: 20px 28px 34px;
@@ -2654,6 +2781,17 @@ button,
   color: var(--muted-foreground);
   font-size: 14px;
 }
+.agenda-routine-label {
+  color: color-mix(in srgb, var(--muted-foreground) 82%, var(--primary));
+  font-size: 12px;
+}
+.agenda-card.is-routine .timeline-marker {
+  opacity: 0.88;
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--task-dot) 13%, transparent);
+}
+.agenda-card.is-routine .agenda-body {
+  opacity: 0.9;
+}
 .agenda-card.has-overlap,
 .agenda-card.is-drop-conflict {
   border: 0;
@@ -2717,7 +2855,7 @@ button,
 }
 @media (max-width: 760px) {
   .planner-stage {
-    border-radius: 28px;
+    border-radius: 28px 28px 0 0;
   }
   .planner-stage .timeline-scroll {
     padding: 14px 12px 22px;
@@ -3387,9 +3525,13 @@ button,
   animation: dayflow-control-spin 720ms linear infinite;
 }
 .planner-today {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 40px;
+  pointer-events: auto;
 }
 .planner-stage.is-route-pending::after {
   content: "";

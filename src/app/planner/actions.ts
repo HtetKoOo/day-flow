@@ -113,6 +113,62 @@ export async function scheduleTask(input: unknown): Promise<TaskResult> {
   };
 }
 
+export async function createRoutine(input: unknown): Promise<TaskResult> {
+  const { supabase, user } = await requireUser();
+  const { routineInput } = await import("@/lib/validation/routine");
+  const parsed = routineInput.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0].message };
+  const routine = parsed.data;
+  const { data: created, error } = await supabase
+    .from("recurring_tasks")
+    .insert({
+      user_id: user.id,
+      title: routine.title,
+      notes: routine.notes,
+      start_time: routine.start_time,
+      duration_minutes: routine.duration_minutes,
+      frequency: "weekly",
+      interval: 1,
+      days_of_week: routine.days_of_week,
+      starts_on: routine.starts_on,
+      ends_on: routine.ends_on,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return { ok: false, message: "Couldn’t save this routine. Please try again." };
+
+  revalidatePath("/planner");
+  return { ok: true, message: "Weekly routine added." };
+}
+
+export async function updateRoutine(id: string, input: unknown): Promise<TaskResult> {
+  const { supabase, user } = await requireUser();
+  const { routineInput } = await import("@/lib/validation/routine");
+  if (!taskId.safeParse(id).success) return { ok: false, message: "Invalid routine." };
+  const parsed = routineInput.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0].message };
+  const routine = parsed.data;
+  const { data, error } = await supabase
+    .from("recurring_tasks")
+    .update({
+      title: routine.title,
+      notes: routine.notes,
+      start_time: routine.start_time,
+      duration_minutes: routine.duration_minutes,
+      days_of_week: routine.days_of_week,
+      starts_on: routine.starts_on,
+      ends_on: routine.ends_on,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id")
+    .single();
+  if (error || !data) return { ok: false, message: "Couldn’t update this routine. Please try again." };
+
+  revalidatePath("/planner");
+  return { ok: true, message: "Routine updated." };
+}
+
 export async function saveTask(
   id: string | null,
   input: unknown,

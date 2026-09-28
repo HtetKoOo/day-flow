@@ -219,8 +219,8 @@ export function Timeline({
           )}
           <DraggableTaskCard
             task={task}
-            disabled={pending || compact}
-            className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
+            disabled={pending || compact || Boolean(task.is_routine)}
+            className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${task.is_routine ? "is-routine" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
             data-color={taskColor(task.color)}
             data-timeline-segment
             data-timeline-segment-kind="task"
@@ -249,6 +249,7 @@ export function Timeline({
             >
               <span className="agenda-time">
                 {task.start_time.slice(0, 5)}–{endTime(task.start_time, task.duration_minutes)}
+                {task.is_routine && <span className="agenda-routine-label">· Routine</span>}
               </span>
               <strong>{task.title}</strong>
             </button>
@@ -261,15 +262,17 @@ export function Timeline({
                 <Link2 size={16} aria-hidden="true" />
               </span>
             )}
-            <button
-              className="completion-button"
-              aria-label={`${task.is_completed ? "Reopen" : "Complete"} ${task.title}`}
-              aria-pressed={task.is_completed}
-              disabled={pending}
-              onClick={() => onComplete(task)}
-            >
-              {task.is_completed && <Check size={14} />}
-            </button>
+            {!task.is_routine && (
+              <button
+                className="completion-button"
+                aria-label={`${task.is_completed ? "Reopen" : "Complete"} ${task.title}`}
+                aria-pressed={task.is_completed}
+                disabled={pending}
+                onClick={() => onComplete(task)}
+              >
+                {task.is_completed && <Check size={14} />}
+              </button>
+            )}
           </DraggableTaskCard>
         </div>;
       })}

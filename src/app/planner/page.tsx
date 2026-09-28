@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { plannerRange } from "@/lib/tasks/schedule";
 import { PlannerShell } from "@/components/planner/planner-shell";
+import type { Routine } from "@/lib/tasks/routines";
+import { routineOccurrencesBetween } from "@/lib/tasks/routines";
 type TaskRow = {
   id: string;
   title: string;
@@ -47,6 +49,11 @@ export default async function Planner({
   const view = params.view === "week" || params.view === "two-days"
     ? params.view
     : "day";
+  const routinesRequest = supabase
+    .from("recurring_tasks")
+    .select("id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active")
+    .eq("is_active", true)
+    .order("start_time");
   const { data, error } = await supabase.rpc("planner_snapshot", {
     p_selected_date: requestedDate.success ? requestedDate.data : null,
     p_view: view,
@@ -136,17 +143,33 @@ export default async function Planner({
   const loadedDays = snapshot.loaded_through && snapshot.loaded_through > strip.to
     ? [...strip.days, snapshot.loaded_through]
     : strip.days;
+  const { data: routines } = await routinesRequest;
+  const activeRoutines = (routines ?? []) as Routine[];
+  const routineBlocks = activeRoutines.flatMap((routine) =>
+    routineOccurrencesBetween(routine, strip.from, loadedDays[loadedDays.length - 1]).map((date) => ({
+      id: `routine-${routine.id}-${date}`,
+      title: routine.title,
+      notes: routine.notes,
+      duration_minutes: routine.duration_minutes,
+      is_completed: false,
+      is_routine: true,
+      routine_id: routine.id,
+      color: "sage",
+      scheduled_date: date,
+      start_time: routine.start_time,
+    })),
+  );
   return (
     <PlannerShell
       timezone={profile.timezone}
       tasks={snapshot.inbox.map(toTask)}
       inboxError={snapshot.inbox_error}
       total={snapshot.inbox_count}
-      scheduled={snapshot.scheduled.map((row) => ({
+      scheduled={[...snapshot.scheduled.map((row) => ({
         ...toTask(row),
         scheduled_date: row.scheduled_date as string,
         start_time: row.start_time as string,
-      }))}
+      })), ...routineBlocks]}
       scheduleError={snapshot.scheduled_error}
       scheduledCount={snapshot.scheduled_count}
       today={today}
@@ -154,6 +177,7 @@ export default async function Planner({
       stripDays={strip.days}
       loadedDays={loadedDays}
       weekStartsOn={profile.week_starts_on}
+      routines={activeRoutines}
     />
   );
 }

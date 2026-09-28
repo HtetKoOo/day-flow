@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { InboxPanel } from "@/components/planner/inbox-panel";
 import { TaskEditor } from "@/components/planner/task-editor";
+import { RoutinePanel } from "@/components/planner/routine-panel";
+import { RoutineEditor } from "@/components/planner/routine-editor";
 import { DateStrip } from "@/components/planner/date-strip";
 import { Timeline, timelineMarker, timelineTaskHeight } from "@/components/planner/timeline";
 import { completeTask, scheduleTask } from "@/app/planner/actions";
@@ -25,6 +27,7 @@ import { clockTime } from "@/lib/tasks/agenda";
 import { taskColor } from "@/lib/tasks/colors";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { InboxTask, ScheduledTask, TaskResult } from "@/lib/tasks/types";
+import type { Routine } from "@/lib/tasks/routines";
 
 /* DragOverlay starts at the source element's rectangle. Compensate for the
  * point where the pointer grabbed it so the circular overlay is centred under
@@ -190,9 +193,9 @@ export type PlannerProps = {
   today: string;
   range: ReturnType<typeof plannerRange>;
   weekStartsOn: number;
+  routines: Routine[];
 };
 export function PlannerShell({
-  stripDays,
   loadedDays,
   timezone,
   tasks,
@@ -204,6 +207,7 @@ export function PlannerShell({
   today,
   range,
   weekStartsOn,
+  routines,
 }: PlannerProps) {
   const router = useRouter();
   const [editor, setEditor] = useState<{
@@ -212,6 +216,9 @@ export function PlannerShell({
     time?: string;
   } | null>(null);
   const [mobile, setMobile] = useState("planner");
+  const [sidebarMode, setSidebarMode] = useState<"inbox" | "routines">("inbox");
+  const [routineEditorOpen, setRoutineEditorOpen] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [notice, setNotice] = useState<TaskResult | null>(null);
   const [pending, startTransition] = useTransition();
   const [dragTask, setDragTask] = useState<InboxTask | null>(null);
@@ -517,16 +524,31 @@ export function PlannerShell({
     day: string;
     view: PlannerView;
   } | null>(null);
+  const isLoadedPlannerRoute = useCallback((day: string, view: PlannerView) => {
+    const routeRange = plannerRange(today, day, view, weekStartsOn);
+    // Day view includes the weekly date strip, so moving across a week needs
+    // the strip's entire snapshot, not only the selected day.
+    const requiredDays = view === "day"
+      ? plannerRange(today, day, "week", weekStartsOn).days
+      : routeRange.days;
+    return requiredDays.every((requiredDay) => loadedDays.includes(requiredDay));
+  }, [loadedDays, today, weekStartsOn]);
   const localRange = localRoute
     ? plannerRange(today, localRoute.day, localRoute.view, weekStartsOn)
     : null;
   const canUseLocalRange = Boolean(
-    localRange
-      && localRange.days.every((day) => loadedDays.includes(day)),
+    localRange && localRoute && isLoadedPlannerRoute(localRoute.day, localRoute.view),
   );
+  const routeStillLoading = Boolean(
+    navigationTarget
+      && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
+  );
+  const pendingRange = routeStillLoading && navigationTarget
+    ? plannerRange(today, navigationTarget.day, navigationTarget.view, weekStartsOn)
+    : null;
   const displayedRange = canUseLocalRange && localRange
     ? localRange
-    : range;
+    : pendingRange ?? range;
   const displayedView: PlannerView = displayedRange.week
     ? "week"
     : displayedRange.twoDays
@@ -535,11 +557,13 @@ export function PlannerShell({
   const displayedDay = displayedRange.day;
   const displayedDays = displayedRange.days;
   const isRangeView = displayedRange.week || displayedRange.twoDays;
-  const routeStillLoading = Boolean(
-    navigationTarget
-      && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
-  );
   const showRoutePending = routeStillLoading && !canUseLocalRange;
+  const displayedStripDays = plannerRange(
+    today,
+    displayedDay,
+    "week",
+    weekStartsOn,
+  ).days;
   // Back and forward use the same local snapshot whenever it already contains
   // the requested dates. A route outside this week still refreshes from server.
   useEffect(() => {
@@ -550,8 +574,7 @@ export function PlannerShell({
       const view: PlannerView = requestedView === "week" || requestedView === "two-days"
         ? requestedView
         : "day";
-      const nextRange = plannerRange(today, day, view, weekStartsOn);
-      if (!nextRange.days.every((nextDay) => loadedDays.includes(nextDay))) {
+      if (!isLoadedPlannerRoute(day, view)) {
         router.refresh();
         return;
       }
@@ -560,7 +583,7 @@ export function PlannerShell({
     };
     window.addEventListener("popstate", syncHistoryRoute);
     return () => window.removeEventListener("popstate", syncHistoryRoute);
-  }, [loadedDays, range.day, router, serverView, today, weekStartsOn]);
+  }, [isLoadedPlannerRoute, range.day, router, serverView, today]);
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of displayScheduled) {
@@ -579,11 +602,30 @@ export function PlannerShell({
     [displayedRange.week, isRangeView, selectedScheduled],
   );
   const inboxOpen = useSyncExternalStore(subscribeInbox, readInbox, () => true);
-  function toggleInbox() {
+  function setInboxVisibility(open: boolean) {
     try {
-      localStorage.setItem("dayflow-inbox", inboxOpen ? "closed" : "open");
+      localStorage.setItem("dayflow-inbox", open ? "open" : "closed");
     } catch {}
     window.dispatchEvent(new Event("dayflow-inbox-change"));
+  }
+  function selectSidebar(mode: "inbox" | "routines") {
+    if (isMobile) {
+      if (mobile === "inbox" && sidebarMode === mode) {
+        setMobile("planner");
+        setInboxVisibility(false);
+        return;
+      }
+      setSidebarMode(mode);
+      setMobile("inbox");
+      setInboxVisibility(true);
+      return;
+    }
+    if (inboxOpen && sidebarMode === mode) {
+      setInboxVisibility(false);
+      return;
+    }
+    setSidebarMode(mode);
+    setInboxVisibility(true);
   }
   function href(day: string, view = "day") {
     return `/planner?date=${day}${view !== "day" ? `&view=${view}` : ""}`;
@@ -595,9 +637,7 @@ export function PlannerShell({
   }
   function navigate(day: string, view: PlannerView = serverView) {
     if (routeStillLoading || (day === displayedDay && view === displayedView)) return;
-    const nextRange = plannerRange(today, day, view, weekStartsOn);
-    const isLoadedRoute = nextRange.days.every((nextDay) => loadedDays.includes(nextDay));
-    if (isLoadedRoute) {
+    if (isLoadedPlannerRoute(day, view)) {
       // Day, 2 days, and Week are different presentations of the same local
       // weekly snapshot. Update them without an RSC request, so there is no
       // loading boundary or browser fallback between views.
@@ -607,32 +647,38 @@ export function PlannerShell({
       setMobile("planner");
       return;
     }
-    // This route needs data outside the local snapshot. Stop rendering the
-    // previous local route before requesting it from the server.
+    // A new week needs a fresh snapshot. Keep the current shell mounted and
+    // show the target range immediately while the App Router loads its data.
     setLocalRoute(null);
     setNavigationTarget({ day, view });
-    startTransition(() => router.push(href(day, view), { scroll: false }));
     setMobile("planner");
+    startTransition(() => router.push(href(day, view), { scroll: false }));
   }
   function changeView(view: PlannerView) {
     navigate(displayedDay, view);
-  }
-  function interceptNavigation(
-    event: React.MouseEvent<HTMLAnchorElement>,
-    day: string,
-    view: PlannerView,
-  ) {
-    if (
-      event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
-    ) return;
-    event.preventDefault();
-    navigate(day, view);
   }
   function open(
     task: InboxTask | null = null,
     date = displayedDay,
     time?: string,
   ) {
+    // Routine blocks are calculated from their weekly rule, so they do not
+    // have a task row that the task editor can save. Open that rule directly
+    // instead of passing its virtual ID to saveTask.
+    if (task?.is_routine) {
+      const routine = routines.find((item) => item.id === task.routine_id);
+      if (routine) {
+        setEditingRoutine(routine);
+        setRoutineEditorOpen(true);
+      } else {
+        selectSidebar("routines");
+        setNotice({
+          ok: false,
+          message: "Couldn’t find that routine. Refresh and try again.",
+        });
+      }
+      return;
+    }
     returnFocus.current = document.activeElement as HTMLElement;
     setEditor({ task, date, time });
   }
@@ -712,52 +758,63 @@ export function PlannerShell({
       onDragEnd={finishDrag}>
     <main className="planner-app" data-inbox-open={inboxOpen}>
       <header className="app-header">
-        <button
-          className="inbox-toggle"
-          aria-label="Toggle Inbox"
-          aria-expanded={inboxOpen}
-          aria-controls="planner-inbox"
-          onClick={toggleInbox}
-        >
-          <Inbox size={20} />
-          <span>Inbox</span>
-          {displayTotal > 0 && <span className="inbox-toggle-count">{displayTotal}</span>}
-        </button>
+        <nav className="view-switch sidebar-switch" aria-label="Sidebar panels">
+          <button
+            type="button"
+            className="text-button"
+            aria-pressed={inboxOpen && sidebarMode === "inbox"}
+            aria-controls="planner-inbox"
+            onClick={() => selectSidebar("inbox")}
+          >
+            <Inbox size={19} />
+            <span>Tasks</span>
+            {displayTotal > 0 && <span className="sidebar-switch-count">{displayTotal}</span>}
+          </button>
+          <button
+            type="button"
+            className="text-button"
+            aria-pressed={inboxOpen && sidebarMode === "routines"}
+            aria-controls="planner-inbox"
+            onClick={() => selectSidebar("routines")}
+          >
+            <CalendarDays size={19} />
+            <span>Routines</span>
+          </button>
+        </nav>
         <div className="calendar-navigation">
           <div className="date-navigation">
             <h1>{format(parseISO(displayedDay), "MMM yyyy")}</h1>
-            <Link
+            <button
+              type="button"
               className="icon-button"
               aria-label="Previous week"
               aria-busy={isNavigatingTo(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
-              href={href(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
-              onClick={(event) => interceptNavigation(event, dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
+              onClick={() => navigate(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)}
             >
               {isNavigatingTo(dateKey(addDays(parseISO(displayedDay), -7)), displayedView)
                 ? <LoaderCircle className="planner-spinner" size={18} />
                 : <ChevronLeft size={18} />}
-            </Link>
-            <Link
+            </button>
+            <button
+              type="button"
+              className="text-button planner-today"
+              onClick={() => navigate(today, displayedView)}
+              aria-current={displayedDay === today ? "date" : undefined}
+            >
+              Today
+            </button>
+            <button
+              type="button"
               className="icon-button"
               aria-label="Next week"
               aria-busy={isNavigatingTo(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
-              href={href(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
-              onClick={(event) => interceptNavigation(event, dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
+              onClick={() => navigate(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)}
             >
               {isNavigatingTo(dateKey(addDays(parseISO(displayedDay), 7)), displayedView)
                 ? <LoaderCircle className="planner-spinner" size={18} />
                 : <ChevronRight size={18} />}
-            </Link>
+            </button>
           </div>
-          <Link
-            className="text-button planner-today"
-            href={href(today, displayedView)}
-            aria-busy={isNavigatingTo(today, displayedView)}
-            onClick={(event) => interceptNavigation(event, today, displayedView)}
-          >
-            Today
-            {isNavigatingTo(today, displayedView) && <LoaderCircle className="planner-spinner" size={15} />}
-          </Link>
         </div>
         <nav className="view-switch" aria-label="Planner views">
           <button
@@ -814,15 +871,36 @@ export function PlannerShell({
           inert={isMobile ? mobile !== "inbox" : !inboxOpen}
         >
           <InboxDropZone className="inbox-content">
-            <InboxPanel
-              tasks={displayTasks}
-              total={displayTotal}
-              loadError={inboxError}
-              pending={pending}
-              onComplete={complete}
-              onEdit={(task) => open(task)}
-              onRetry={() => router.refresh()}
-            />
+            {sidebarMode === "inbox" ? (
+              <InboxPanel
+                tasks={displayTasks}
+                total={displayTotal}
+                loadError={inboxError}
+                pending={pending}
+                onComplete={complete}
+                onEdit={(task) => {
+                  if (task.is_routine) {
+                    selectSidebar("routines");
+                    setNotice({ ok: true, message: "Manage this weekly routine from the Routines tab." });
+                    return;
+                  }
+                  open(task);
+                }}
+                onRetry={() => router.refresh()}
+              />
+            ) : (
+              <RoutinePanel
+                routines={routines}
+                onAdd={() => {
+                  setEditingRoutine(null);
+                  setRoutineEditorOpen(true);
+                }}
+                onEdit={(routine) => {
+                  setEditingRoutine(routine);
+                  setRoutineEditorOpen(true);
+                }}
+              />
+            )}
           </InboxDropZone>
         </aside>
         <section className="planner-main" data-view={displayedView}>
@@ -842,7 +920,7 @@ export function PlannerShell({
                     navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
                   }
                 >
-                  {stripDays.map(renderDate)}
+                  {displayedStripDays.map(renderDate)}
                 </DateStrip>
               )}
               {renderTimeline()}
@@ -868,11 +946,18 @@ export function PlannerShell({
           <Plus size={24} />
         </button>
         <button
-          aria-pressed={mobile === "inbox"}
-          onClick={() => setMobile("inbox")}
+          aria-pressed={mobile === "inbox" && sidebarMode === "inbox"}
+          onClick={() => selectSidebar("inbox")}
         >
           <Inbox size={20} />
-          Inbox {displayTotal > 0 && <span>{displayTotal}</span>}
+          Tasks {displayTotal > 0 && <span>{displayTotal}</span>}
+        </button>
+        <button
+          aria-pressed={mobile === "inbox" && sidebarMode === "routines"}
+          onClick={() => selectSidebar("routines")}
+        >
+          <CalendarDays size={20} />
+          Routines
         </button>
       </nav>
       {editor && (
@@ -889,6 +974,14 @@ export function PlannerShell({
               navigate(date, displayedView);
           }}
           returnFocus={returnFocus}
+        />
+      )}
+      {routineEditorOpen && (
+        <RoutineEditor
+          date={displayedDay}
+          routine={editingRoutine}
+          onClose={() => setRoutineEditorOpen(false)}
+          onSaved={() => router.refresh()}
         />
       )}
     </main>

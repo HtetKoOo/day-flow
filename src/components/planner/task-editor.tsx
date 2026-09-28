@@ -12,6 +12,7 @@ import {
   Plus,
 } from "lucide-react";
 import { saveTask, deleteTask } from "@/app/planner/actions";
+import { DatePicker, TimePicker } from "@/components/planner/date-time-picker";
 import { taskColors, taskColor } from "@/lib/tasks/colors";
 import type { InboxTask } from "@/lib/tasks/types";
 
@@ -213,23 +214,18 @@ export function TaskEditor({
                 <div className="editor-row">
                   <label>
                     Date
-                    <input
-                      type="date"
+                    <DatePicker
                       name="date"
                       defaultValue={time ? date : task?.scheduled_date ?? date}
-                      required
+                      label="Choose task date"
                     />
                   </label>
                   <label>
                     Start time
-                    <input
-                      type="time"
+                    <TimePicker
                       name="time"
-                      defaultValue={
-                        time ?? task?.start_time?.slice(0, 5) ?? "09:00"
-                      }
-                      step={300}
-                      required
+                      defaultValue={time ?? task?.start_time?.slice(0, 5) ?? "09:00"}
+                      label="Choose task start time"
                     />
                   </label>
                 </div>
