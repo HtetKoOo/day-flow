@@ -21,6 +21,7 @@ import { RoutinePanel } from "@/components/planner/routine-panel";
 import { RoutineEditor } from "@/components/planner/routine-editor";
 import { DateStrip } from "@/components/planner/date-strip";
 import { Timeline, timelineMarker, timelineTaskHeight } from "@/components/planner/timeline";
+import { plannerHref, type PlannerView, usePlannerNavigation } from "@/components/planner/use-planner-navigation";
 import { completeTask, scheduleTask } from "@/app/planner/actions";
 import { dateKey, minutes, plannerRange } from "@/lib/tasks/schedule";
 import { clockTime } from "@/lib/tasks/agenda";
@@ -514,76 +515,28 @@ export function PlannerShell({
         hourCycle: "h23",
       }).format(new Date(minute * 60000)),
     ) >= 18;
-  type PlannerView = "day" | "two-days" | "week";
-  const serverView: PlannerView = range.week ? "week" : range.twoDays ? "two-days" : "day";
-  const [localRoute, setLocalRoute] = useState<{
-    day: string;
-    view: PlannerView;
-  } | null>(null);
-  const [navigationTarget, setNavigationTarget] = useState<{
-    day: string;
-    view: PlannerView;
-  } | null>(null);
-  const isLoadedPlannerRoute = useCallback((day: string, view: PlannerView) => {
-    const routeRange = plannerRange(today, day, view, weekStartsOn);
-    // Day view includes the weekly date strip, so moving across a week needs
-    // the strip's entire snapshot, not only the selected day.
-    const requiredDays = view === "day"
-      ? plannerRange(today, day, "week", weekStartsOn).days
-      : routeRange.days;
-    return requiredDays.every((requiredDay) => loadedDays.includes(requiredDay));
-  }, [loadedDays, today, weekStartsOn]);
-  const localRange = localRoute
-    ? plannerRange(today, localRoute.day, localRoute.view, weekStartsOn)
-    : null;
-  const canUseLocalRange = Boolean(
-    localRange && localRoute && isLoadedPlannerRoute(localRoute.day, localRoute.view),
-  );
-  const routeStillLoading = Boolean(
-    navigationTarget
-      && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
-  );
-  const pendingRange = routeStillLoading && navigationTarget
-    ? plannerRange(today, navigationTarget.day, navigationTarget.view, weekStartsOn)
-    : null;
-  const displayedRange = canUseLocalRange && localRange
-    ? localRange
-    : pendingRange ?? range;
-  const displayedView: PlannerView = displayedRange.week
-    ? "week"
-    : displayedRange.twoDays
-      ? "two-days"
-      : "day";
-  const displayedDay = displayedRange.day;
-  const displayedDays = displayedRange.days;
-  const isRangeView = displayedRange.week || displayedRange.twoDays;
-  const showRoutePending = routeStillLoading && !canUseLocalRange;
-  const displayedStripDays = plannerRange(
-    today,
+  const {
+    displayedRange,
+    displayedView,
     displayedDay,
-    "week",
+    displayedDays,
+    displayedStripDays,
+    isRangeView,
+    isNavigatingTo,
+    navigate,
+    routeStillLoading,
+    showRoutePending,
+  } = usePlannerNavigation({
+    today,
+    range,
+    loadedDays,
     weekStartsOn,
-  ).days;
-  // Back and forward use the same local snapshot whenever it already contains
-  // the requested dates. A route outside this week still refreshes from server.
-  useEffect(() => {
-    const syncHistoryRoute = () => {
-      const params = new URLSearchParams(window.location.search);
-      const day = params.get("date") ?? today;
-      const requestedView = params.get("view");
-      const view: PlannerView = requestedView === "week" || requestedView === "two-days"
-        ? requestedView
-        : "day";
-      if (!isLoadedPlannerRoute(day, view)) {
-        router.refresh();
-        return;
-      }
-      setNavigationTarget(null);
-      setLocalRoute({ day, view });
-    };
-    window.addEventListener("popstate", syncHistoryRoute);
-    return () => window.removeEventListener("popstate", syncHistoryRoute);
-  }, [isLoadedPlannerRoute, range.day, router, serverView, today]);
+    router,
+  });
+  function changeView(view: PlannerView) {
+    navigate(displayedDay, view);
+  }
+  const href = plannerHref;
   const scheduledByDay = useMemo(() => {
     const byDay = new Map<string, ScheduledTask[]>();
     for (const task of displayScheduled) {
@@ -626,36 +579,6 @@ export function PlannerShell({
     }
     setSidebarMode(mode);
     setInboxVisibility(true);
-  }
-  function href(day: string, view = "day") {
-    return `/planner?date=${day}${view !== "day" ? `&view=${view}` : ""}`;
-  }
-  function isNavigatingTo(day: string, view: PlannerView) {
-    return routeStillLoading
-      && navigationTarget?.day === day
-      && navigationTarget.view === view;
-  }
-  function navigate(day: string, view: PlannerView = serverView) {
-    if (routeStillLoading || (day === displayedDay && view === displayedView)) return;
-    if (isLoadedPlannerRoute(day, view)) {
-      // Day, 2 days, and Week are different presentations of the same local
-      // weekly snapshot. Update them without an RSC request, so there is no
-      // loading boundary or browser fallback between views.
-      window.history.pushState(null, "", href(day, view));
-      setNavigationTarget(null);
-      setLocalRoute({ day, view });
-      setMobile("planner");
-      return;
-    }
-    // A new week needs a fresh snapshot. Keep the current shell mounted and
-    // show the target range immediately while the App Router loads its data.
-    setLocalRoute(null);
-    setNavigationTarget({ day, view });
-    setMobile("planner");
-    startTransition(() => router.push(href(day, view), { scroll: false }));
-  }
-  function changeView(view: PlannerView) {
-    navigate(displayedDay, view);
   }
   function open(
     task: InboxTask | null = null,
