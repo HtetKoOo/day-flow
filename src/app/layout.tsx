@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { RegisterServiceWorker } from "@/components/pwa/register";
 import "./globals.css";
 import "./planner.css";
+import "./planner-timeline.css";
 import { ThemeProvider } from "@/components/theme-provider";
 export const metadata: Metadata = {
   title: "DayFlow — Plan tomorrow tonight",
