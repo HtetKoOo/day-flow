@@ -7,6 +7,8 @@ export type InboxTask = {
   notes: string;
   duration_minutes: number;
   is_completed: boolean;
+  is_routine?: boolean;
+  routine_id?: string;
 };
 export type TaskResult = { ok: boolean; message: string };
 export type ScheduledTask = InboxTask & {
