@@ -947,7 +947,7 @@
 .planner-route-loading {
   position: absolute;
   z-index: 7;
-  top: 18px;
+  top: 82px;
   right: 20px;
   display: inline-flex;
   align-items: center;
@@ -963,10 +963,16 @@
   font-weight: 600;
   pointer-events: none;
 }
+.planner-stage[data-view="day"] .planner-route-loading {
+  top: 112px;
+}
 @media (max-width: 760px) {
   .planner-route-loading {
-    top: 12px;
+    top: 64px;
     right: 12px;
+  }
+  .planner-stage[data-view="day"] .planner-route-loading {
+    top: 94px;
   }
 }
 @keyframes dayflow-control-spin {
