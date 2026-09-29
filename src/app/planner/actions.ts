@@ -126,6 +126,8 @@ export async function createRoutine(input: unknown): Promise<TaskResult> {
       user_id: user.id,
       title: routine.title,
       notes: routine.notes,
+      color: routine.color,
+      icon: routine.icon,
       start_time: routine.start_time,
       duration_minutes: routine.duration_minutes,
       frequency: "weekly",
@@ -163,6 +165,8 @@ export async function updateRoutine(
     .update({
       title: routine.title,
       notes: routine.notes,
+      color: routine.color,
+      icon: routine.icon,
       start_time: routine.start_time,
       duration_minutes: routine.duration_minutes,
       days_of_week: routine.days_of_week,

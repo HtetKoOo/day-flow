@@ -1,4 +1,5 @@
 import { format, parseISO, addDays } from "date-fns";
+import type { TaskIconName } from "@/lib/tasks/icons";
 
 export type Routine = {
   id: string;
@@ -10,6 +11,8 @@ export type Routine = {
   starts_on: string;
   ends_on?: string | null;
   is_active: boolean;
+  color?: string;
+  icon?: TaskIconName;
 };
 
 export const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

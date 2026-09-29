@@ -1236,3 +1236,263 @@ button,
     white-space: nowrap;
   }
 }
+
+/* Public portfolio demo. It intentionally reuses planner primitives without
+   connecting to a user session or persisting any visitor action. */
+.demo-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--background));
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 650;
+}
+.demo-reset {
+  width: 34px;
+  height: 34px;
+  color: var(--primary);
+}
+.demo-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  text-decoration: none;
+}
+.demo-notice {
+  position: fixed;
+  z-index: 30;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(390px, calc(100vw - 48px));
+  padding: 12px 14px 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  color: var(--foreground);
+  font-size: 14px;
+}
+.demo-notice button {
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 22px;
+  line-height: 1;
+}
+.demo-sidebar-label {
+  margin: 0 0 14px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .demo-login {
+    font-size: 0;
+  }
+  .demo-login svg {
+    width: 20px;
+    height: 20px;
+  }
+  .demo-notice {
+    right: 16px;
+    bottom: 82px;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* Preview palette for the public demo. Once approved, these values can become
+   the shared task-color tokens used by the authenticated planner. */
+.dark .demo-planner [data-color="sage"] {
+  --task-bg: #397a58;
+  --task-fg: #effff2;
+  --task-dot: #a3ec76;
+}
+.dark .demo-planner [data-color="teal"] {
+  --task-bg: #087c74;
+  --task-fg: #e9fffb;
+  --task-dot: #5ce0cf;
+}
+.dark .demo-planner [data-color="sky"] {
+  --task-bg: #286fb2;
+  --task-fg: #edf8ff;
+  --task-dot: #78c6ff;
+}
+.dark .demo-planner [data-color="lavender"] {
+  --task-bg: #6747a7;
+  --task-fg: #f7f0ff;
+  --task-dot: #c2a4ff;
+}
+.dark .demo-planner [data-color="rose"] {
+  --task-bg: #a43f67;
+  --task-fg: #fff0f5;
+  --task-dot: #ff9ec0;
+}
+.dark .demo-planner [data-color="peach"] {
+  --task-bg: #a95238;
+  --task-fg: #fff3ed;
+  --task-dot: #ffb08b;
+}
+.dark .demo-planner [data-color="amber"] {
+  --task-bg: #8d6a12;
+  --task-fg: #fffbea;
+  --task-dot: #ffdc68;
+}
+.dark .demo-planner [data-color="stone"] {
+  --task-bg: #596270;
+  --task-fg: #f4f7fb;
+  --task-dot: #b7c3d2;
+}
+.demo-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #0008;
+}
+.demo-editor {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.demo-editor-label {
+  display: block;
+  margin: 18px 0 9px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+.demo-icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.demo-icon-picker label {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted-foreground);
+}
+.demo-icon-picker input,
+.color-dot input {
+  position: absolute;
+  opacity: 0;
+}
+.demo-icon-picker label:has(input:checked) {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 15%, var(--background));
+  color: var(--primary);
+}
+.demo-editor select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--background);
+  color: var(--foreground);
+}
+.demo-editor-hint {
+  margin: 18px 0 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.demo-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.demo-editor .color-dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.demo-editor .color-dot svg {
+  opacity: 0;
+}
+.demo-editor .color-dot:has(input:checked) {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+.demo-editor .color-dot:has(input:checked) svg {
+  opacity: 1;
+}
+.demo-primary-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font: inherit;
+  font-weight: 650;
+}
+
+.demo-planner .routine-card[data-color] > svg {
+  color: var(--task-dot);
+}
+.demo-weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.demo-weekdays label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-chip);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.demo-weekdays input {
+  accent-color: var(--primary);
+}
+
+@media (min-width: 761px) {
+  .demo-editor-backdrop {
+    justify-items: end;
+    padding: 0;
+    background: #15131b52;
+  }
+  .demo-editor {
+    width: min(460px, 42vw);
+    max-height: 100dvh;
+    min-height: 100dvh;
+    border-width: 0 0 0 1px;
+    border-radius: 28px 0 0 28px;
+    padding: 28px;
+    animation: sheet-slide-in-right 0.2s ease-out;
+  }
+}
+@media (max-width: 760px) {
+  .demo-editor-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+  .demo-editor {
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 29px 29px 0 0;
+    padding: 23px 23px max(24px, env(safe-area-inset-bottom));
+    animation: sheet-slide-up 0.2s ease-out;
+  }
+}

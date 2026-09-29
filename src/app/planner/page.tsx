@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { plannerRange } from "@/lib/tasks/schedule";
 import { PlannerShell } from "@/components/planner/planner-shell";
 import type { Routine } from "@/lib/tasks/routines";
+import type { TaskIconName } from "@/lib/tasks/icons";
 import { routineOccurrencesBetween } from "@/lib/tasks/routines";
 type TaskRow = {
   id: string;
@@ -12,6 +13,7 @@ type TaskRow = {
   duration_minutes: number;
   is_completed: boolean;
   color?: string;
+  icon?: TaskIconName | null;
   scheduled_date?: string | null;
   start_time?: string | null;
 };
@@ -33,6 +35,7 @@ function toTask(row: TaskRow) {
     duration_minutes: row.duration_minutes,
     is_completed: row.is_completed,
     color: row.color ?? "sage",
+    icon: row.icon ?? undefined,
     scheduled_date: row.scheduled_date ?? null,
     start_time: row.start_time ?? null,
   };
@@ -53,7 +56,7 @@ export default async function Planner({
   const routinesRequest = supabase
     .from("recurring_tasks")
     .select(
-      "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active",
+      "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active,color,icon",
     )
     .eq("is_active", true)
     .order("start_time");
@@ -171,7 +174,8 @@ export default async function Planner({
       is_completed: false,
       is_routine: true,
       routine_id: routine.id,
-      color: "sage",
+      color: routine.color ?? "sage",
+      icon: routine.icon,
       scheduled_date: date,
       start_time: routine.start_time,
     })),

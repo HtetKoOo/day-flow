@@ -5,15 +5,10 @@ import { Dialog } from "radix-ui";
 import { CalendarClock, Check, X } from "lucide-react";
 import { createRoutine, updateRoutine } from "@/app/planner/actions";
 import { DatePicker, TimePicker } from "@/components/planner/date-time-picker";
+import { DurationPicker } from "@/components/planner/duration-picker";
 import { weekdayLabels, type Routine } from "@/lib/tasks/routines";
-
-const presets = [30, 60, 90, 120];
-const durationLabel = (minutes: number) =>
-  minutes < 60
-    ? `${minutes}m`
-    : minutes % 60
-      ? `${Math.floor(minutes / 60)}h ${minutes % 60}m`
-      : `${minutes / 60}h`;
+import { taskColor, taskPickerColorOptions } from "@/lib/tasks/colors";
+import { taskIcon, taskIconNames, type TaskIconName } from "@/lib/tasks/icons";
 
 export function RoutineEditor({
   date,
@@ -30,6 +25,8 @@ export function RoutineEditor({
     routine?.days_of_week ?? [1, 2, 3, 4, 5],
   );
   const [duration, setDuration] = useState(routine?.duration_minutes ?? 60);
+  const [color, setColor] = useState(taskColor(routine?.color));
+  const [icon, setIcon] = useState<TaskIconName>(routine?.icon ?? "focus");
   const [hasEndDate, setHasEndDate] = useState(Boolean(routine?.ends_on));
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -41,6 +38,8 @@ export function RoutineEditor({
       const values = {
         title: form.get("title"),
         notes: form.get("notes") ?? "",
+        color,
+        icon,
         start_time: form.get("time"),
         starts_on: form.get("starts_on"),
         ends_on: hasEndDate ? form.get("ends_on") : null,
@@ -92,6 +91,47 @@ export function RoutineEditor({
                 maxLength={200}
                 autoFocus
               />
+              <div
+                className="color-picker"
+                role="group"
+                aria-label="Routine color"
+              >
+                {taskPickerColorOptions(color).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    data-color={value}
+                    className="color-dot"
+                    aria-label={value[0].toUpperCase() + value.slice(1)}
+                    aria-pressed={color === value}
+                    title={value}
+                    onClick={() => setColor(value)}
+                  >
+                    {color === value && <Check size={17} strokeWidth={3} />}
+                  </button>
+                ))}
+              </div>
+              <div
+                className="icon-picker"
+                role="group"
+                aria-label="Routine icon"
+              >
+                {taskIconNames.map((value) => {
+                  const Icon = taskIcon(value)!;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-label={value}
+                      aria-pressed={icon === value}
+                      title={value}
+                      onClick={() => setIcon(value)}
+                    >
+                      <Icon size={19} />
+                    </button>
+                  );
+                })}
+              </div>
               <div className="routine-days" role="group" aria-label="Repeat on">
                 <span>Repeat every</span>
                 <div>
@@ -151,47 +191,11 @@ export function RoutineEditor({
                   />
                 )}
               </div>
-              <div className="duration-editor">
-                <span className="duration-heading">
-                  <CalendarClock size={16} /> Duration
-                </span>
-                <div className="duration-presets">
-                  {presets.map((minutes) => (
-                    <button
-                      key={minutes}
-                      type="button"
-                      aria-pressed={duration === minutes}
-                      onClick={() => setDuration(minutes)}
-                    >
-                      {durationLabel(minutes)}
-                    </button>
-                  ))}
-                </div>
-                <div className="duration-stepper">
-                  <span>Custom</span>
-                  <div>
-                    <button
-                      type="button"
-                      aria-label="Reduce duration by 15 minutes"
-                      onClick={() =>
-                        setDuration((value) => Math.max(5, value - 15))
-                      }
-                    >
-                      −
-                    </button>
-                    <output>{durationLabel(duration)}</output>
-                    <button
-                      type="button"
-                      aria-label="Increase duration by 15 minutes"
-                      onClick={() =>
-                        setDuration((value) => Math.min(1440, value + 15))
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <DurationPicker
+                duration={duration}
+                onChange={setDuration}
+                Icon={CalendarClock}
+              />
               <textarea
                 className="routine-notes"
                 name="notes"

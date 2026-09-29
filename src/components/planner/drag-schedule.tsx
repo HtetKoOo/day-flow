@@ -93,6 +93,7 @@ type DraggableTaskCardProps = Omit<
 > & {
   task: InboxTask;
   disabled: boolean;
+  allowControlsWhenDragDisabled?: boolean;
   children: ReactNode;
 };
 
@@ -104,6 +105,7 @@ type DraggableTaskCardProps = Omit<
 export function DraggableTaskCard({
   task,
   disabled,
+  allowControlsWhenDragDisabled = false,
   children,
   ...props
 }: DraggableTaskCardProps) {
@@ -115,8 +117,8 @@ export function DraggableTaskCard({
   return (
     <article
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
+      {...(disabled && allowControlsWhenDragDisabled ? {} : attributes)}
+      {...(disabled && allowControlsWhenDragDisabled ? {} : listeners)}
       {...props}
       data-draggable={disabled ? undefined : "true"}
       data-dragging={isDragging || undefined}

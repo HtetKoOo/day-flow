@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { taskColors } from "@/lib/tasks/colors";
+import { taskIconNames } from "@/lib/tasks/icons";
 import { minutes } from "@/lib/tasks/schedule";
 export const editorInput = z
   .object({
@@ -7,6 +8,7 @@ export const editorInput = z
     notes: z.string().max(10000).default(""),
     duration_minutes: z.coerce.number().int().min(5).max(1440),
     color: z.enum(taskColors),
+    icon: z.enum(taskIconNames).nullable(),
     scheduled_date: z.iso.date().nullable(),
     start_time: z
       .string()
