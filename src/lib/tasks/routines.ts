@@ -15,10 +15,17 @@ export type Routine = {
 export const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function routineDaysLabel(days: number[]) {
-  return days.slice().sort((a, b) => a - b).map((day) => weekdayLabels[day]).join(" · ");
+  return days
+    .slice()
+    .sort((a, b) => a - b)
+    .map((day) => weekdayLabels[day])
+    .join(" · ");
 }
 
-export function routineOccurrences(routine: Pick<Routine, "days_of_week" | "starts_on">, count = 84) {
+export function routineOccurrences(
+  routine: Pick<Routine, "days_of_week" | "starts_on">,
+  count = 84,
+) {
   const start = parseISO(routine.starts_on);
   return Array.from({ length: count }, (_, index) => addDays(start, index))
     .filter((date) => routine.days_of_week.includes(date.getDay()))
@@ -26,7 +33,9 @@ export function routineOccurrences(routine: Pick<Routine, "days_of_week" | "star
 }
 
 export function routineOccurrencesBetween(
-  routine: Pick<Routine, "days_of_week" | "starts_on"> & { ends_on?: string | null },
+  routine: Pick<Routine, "days_of_week" | "starts_on"> & {
+    ends_on?: string | null;
+  },
   from: string,
   to: string,
 ) {
@@ -34,8 +43,13 @@ export function routineOccurrencesBetween(
   const last = routine.ends_on && routine.ends_on < to ? routine.ends_on : to;
   if (first > last) return [];
   const dates: string[] = [];
-  for (let date = parseISO(first); format(date, "yyyy-MM-dd") <= last; date = addDays(date, 1)) {
-    if (routine.days_of_week.includes(date.getDay())) dates.push(format(date, "yyyy-MM-dd"));
+  for (
+    let date = parseISO(first);
+    format(date, "yyyy-MM-dd") <= last;
+    date = addDays(date, 1)
+  ) {
+    if (routine.days_of_week.includes(date.getDay()))
+      dates.push(format(date, "yyyy-MM-dd"));
   }
   return dates;
 }

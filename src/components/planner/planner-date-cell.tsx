@@ -24,7 +24,15 @@ export function PlannerDateCell({
   onNavigate: (day: string) => void;
 }) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (isRangeView || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (
+      isRangeView ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
     event.preventDefault();
     if (day !== displayedDay) onNavigate(day);
   }
@@ -41,10 +49,16 @@ export function PlannerDateCell({
       <span>{format(parseISO(day), "EEE")}</span>
       <strong>{format(parseISO(day), "d")}</strong>
       <span className="date-dots" aria-hidden="true">
-        {incomplete ? <span>·</span> : <>
-          {tasks.slice(0, 3).map((task) => <i key={task.id} data-color={taskColor(task.color)} />)}
-          {tasks.length > 3 && <small>+{tasks.length - 3}</small>}
-        </>}
+        {incomplete ? (
+          <span>·</span>
+        ) : (
+          <>
+            {tasks.slice(0, 3).map((task) => (
+              <i key={task.id} data-color={taskColor(task.color)} />
+            ))}
+            {tasks.length > 3 && <small>+{tasks.length - 3}</small>}
+          </>
+        )}
       </span>
     </Link>
   );

@@ -41,13 +41,17 @@ export function PlannerTimelineContent({
     return (
       <div role="alert" className="empty-schedule">
         <p>We couldn’t load your plans.</p>
-        <button className="text-button" onClick={onRetry}>Try again</button>
+        <button className="text-button" onClick={onRetry}>
+          Try again
+        </button>
       </div>
     );
   }
   return (
     <div className={`timeline-scroll ${isRangeView ? "range-scroll" : ""}`}>
-      <div className={`selected-timelines ${isWeek ? "week-timelines" : isTwoDays ? "two-day-timelines" : ""}`}>
+      <div
+        className={`selected-timelines ${isWeek ? "week-timelines" : isTwoDays ? "two-day-timelines" : ""}`}
+      >
         {days.map((day) => (
           <section
             key={day}
@@ -55,7 +59,9 @@ export function PlannerTimelineContent({
             aria-label={format(parseISO(day), "EEEE, MMMM d")}
             style={{ viewTransitionName: `dayflow-column-${day}` }}
           >
-            {isRangeView && <div className="range-date-header">{renderDate(day)}</div>}
+            {isRangeView && (
+              <div className="range-date-header">{renderDate(day)}</div>
+            )}
             <Timeline
               day={day}
               tasks={scheduledByDay.get(day) ?? []}

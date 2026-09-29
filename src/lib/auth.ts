@@ -11,6 +11,9 @@ export async function requireUser() {
   const email = claims.email;
   return {
     supabase,
-    user: { id: claims.sub, email: typeof email === "string" ? email : undefined },
+    user: {
+      id: claims.sub,
+      email: typeof email === "string" ? email : undefined,
+    },
   };
 }

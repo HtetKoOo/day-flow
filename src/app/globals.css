@@ -985,8 +985,14 @@
   text-align: left;
 }
 .date-time-picker-trigger:hover,
-.date-time-picker-trigger:focus-visible { border-color: var(--primary); outline: 0; }
-.date-time-picker-trigger svg { flex: 0 0 auto; color: var(--muted-foreground); }
+.date-time-picker-trigger:focus-visible {
+  border-color: var(--primary);
+  outline: 0;
+}
+.date-time-picker-trigger svg {
+  flex: 0 0 auto;
+  color: var(--muted-foreground);
+}
 .date-picker-popover,
 .time-picker-popover {
   z-index: 200;
@@ -995,30 +1001,135 @@
   background: var(--card);
   box-shadow: 0 18px 44px #00000052;
 }
-.date-picker-popover { width: 292px; padding: 12px; }
-.date-picker-month { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-.date-picker-month strong { font-size: 14px; }
-.date-picker-month button { display: grid; width: 31px; height: 31px; place-items: center; border: 0; border-radius: var(--radius-chip); background: transparent; color: var(--foreground); }
-.date-picker-month button:hover { background: var(--secondary); }
+.date-picker-popover {
+  width: 292px;
+  padding: 12px;
+}
+.date-picker-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.date-picker-month strong {
+  font-size: 14px;
+}
+.date-picker-month button {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--foreground);
+}
+.date-picker-month button:hover {
+  background: var(--secondary);
+}
 .date-picker-weekdays,
-.date-picker-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
-.date-picker-weekdays { margin-bottom: 5px; color: var(--muted-foreground); font-size: 11px; }
-.date-picker-weekdays span { padding: 5px 0; }
-.date-picker-days button { width: 36px; height: 34px; border: 0; border-radius: var(--radius-chip); background: transparent; color: var(--foreground); font-size: 13px; }
-.date-picker-days button:hover:not(:disabled) { background: var(--secondary); }
-.date-picker-days button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
-.date-picker-days button[data-outside="true"] { color: var(--muted-foreground); opacity: .45; }
-.date-picker-days button:disabled { cursor: not-allowed; color: var(--muted-foreground); opacity: .25; }
-.time-picker-popover { width: 312px; padding: 12px; }
-.time-picker-heading { margin: 2px 2px 10px; color: var(--muted-foreground); font-size: 13px; }
-.time-picker-columns { display: grid; grid-template-columns: 1fr 1fr .9fr; gap: 8px; }
-.time-picker-column > span { display: block; margin: 0 5px 6px; color: var(--muted-foreground); font-size: 11px; }
-.time-picker-column > div { display: grid; max-height: 212px; gap: 3px; overflow-y: auto; overscroll-behavior: contain; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--background); touch-action: pan-y; }
-.time-picker-column button { min-height: 31px; border: 0; border-radius: var(--radius-chip); background: transparent; color: var(--foreground); font-size: 13px; font-variant-numeric: tabular-nums; }
-.time-picker-column button:hover { background: var(--secondary); }
-.time-picker-column button[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 18%, var(--background)); color: var(--primary); }
-.time-picker-period > div { align-content: start; overflow: hidden; }
-.time-picker-confirm { width: 100%; margin-top: 10px; border: 0; border-radius: var(--radius-control); background: var(--primary); color: var(--primary-foreground); padding: 9px; font-size: 13px; }
+.date-picker-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  text-align: center;
+}
+.date-picker-weekdays {
+  margin-bottom: 5px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.date-picker-weekdays span {
+  padding: 5px 0;
+}
+.date-picker-days button {
+  width: 36px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 13px;
+}
+.date-picker-days button:hover:not(:disabled) {
+  background: var(--secondary);
+}
+.date-picker-days button[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.date-picker-days button[data-outside="true"] {
+  color: var(--muted-foreground);
+  opacity: 0.45;
+}
+.date-picker-days button:disabled {
+  cursor: not-allowed;
+  color: var(--muted-foreground);
+  opacity: 0.25;
+}
+.time-picker-popover {
+  width: 312px;
+  padding: 12px;
+}
+.time-picker-heading {
+  margin: 2px 2px 10px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.time-picker-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.9fr;
+  gap: 8px;
+}
+.time-picker-column > span {
+  display: block;
+  margin: 0 5px 6px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.time-picker-column > div {
+  display: grid;
+  max-height: 212px;
+  gap: 3px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--background);
+  touch-action: pan-y;
+}
+.time-picker-column button {
+  min-height: 31px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.time-picker-column button:hover {
+  background: var(--secondary);
+}
+.time-picker-column button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--primary) 18%, var(--background));
+  color: var(--primary);
+}
+.time-picker-period > div {
+  align-content: start;
+  overflow: hidden;
+}
+.time-picker-confirm {
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 9px;
+  font-size: 13px;
+}
 .duration-editor {
   border-bottom: 1px solid var(--border);
   padding: 4px 0 18px;
@@ -1101,7 +1212,9 @@
   color: var(--foreground);
   padding: 12px;
   resize: vertical;
-  transition: border-color 0.16s ease, background 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
 }
 .notes-input textarea::placeholder {
   color: var(--muted-foreground);

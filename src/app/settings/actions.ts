@@ -19,20 +19,28 @@ export async function changePassword(
     .safeParse(Object.fromEntries(form));
 
   if (!input.success || input.data.password !== input.data.confirmPassword) {
-    return { message: "Use matching new passwords with at least 8 characters." };
+    return {
+      message: "Use matching new passwords with at least 8 characters.",
+    };
   }
 
   const { supabase, user } = await requireUser();
-  if (!user.email) return { message: "Your account does not have an email address." };
+  if (!user.email)
+    return { message: "Your account does not have an email address." };
 
-  const { error: currentPasswordError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: input.data.currentPassword,
+  const { error: currentPasswordError } =
+    await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: input.data.currentPassword,
+    });
+  if (currentPasswordError)
+    return { message: "Your current password is incorrect." };
+
+  const { error } = await supabase.auth.updateUser({
+    password: input.data.password,
   });
-  if (currentPasswordError) return { message: "Your current password is incorrect." };
-
-  const { error } = await supabase.auth.updateUser({ password: input.data.password });
-  if (error) return { message: "Unable to change your password. Please try again." };
+  if (error)
+    return { message: "Unable to change your password. Please try again." };
 
   return { message: "Password updated." };
 }

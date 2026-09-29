@@ -216,7 +216,9 @@ export function TaskEditor({
                     Date
                     <DatePicker
                       name="date"
-                      defaultValue={time ? date : task?.scheduled_date ?? date}
+                      defaultValue={
+                        time ? date : (task?.scheduled_date ?? date)
+                      }
                       label="Choose task date"
                     />
                   </label>
@@ -224,13 +226,19 @@ export function TaskEditor({
                     Start time
                     <TimePicker
                       name="time"
-                      defaultValue={time ?? task?.start_time?.slice(0, 5) ?? "09:00"}
+                      defaultValue={
+                        time ?? task?.start_time?.slice(0, 5) ?? "09:00"
+                      }
                       label="Choose task start time"
                     />
                   </label>
                 </div>
               )}
-              <div className="duration-editor" role="group" aria-label="Task duration">
+              <div
+                className="duration-editor"
+                role="group"
+                aria-label="Task duration"
+              >
                 <span className="duration-heading">
                   <Clock3 size={16} /> Duration
                 </span>
@@ -262,7 +270,9 @@ export function TaskEditor({
                     >
                       <Minus size={16} />
                     </button>
-                    <output aria-live="polite">{durationLabel(duration)}</output>
+                    <output aria-live="polite">
+                      {durationLabel(duration)}
+                    </output>
                     <button
                       type="button"
                       aria-label="Increase duration by 15 minutes"

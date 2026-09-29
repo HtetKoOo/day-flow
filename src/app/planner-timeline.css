@@ -58,7 +58,10 @@
   background: var(--task-bg);
   color: var(--task-fg);
   box-shadow: 0 10px 24px color-mix(in srgb, var(--task-dot) 18%, transparent);
-  transition: height 360ms var(--ease-calm), transform 220ms var(--ease-calm), box-shadow 220ms var(--ease-calm);
+  transition:
+    height 360ms var(--ease-calm),
+    transform 220ms var(--ease-calm),
+    box-shadow 220ms var(--ease-calm);
 }
 .agenda-card.is-moment .timeline-marker {
   width: 64px;
@@ -99,7 +102,9 @@
 }
 .agenda-card.has-overlap .timeline-marker,
 .agenda-card.is-drop-conflict .timeline-marker {
-  box-shadow: 0 0 0 3px #ff9279, 0 10px 24px #ff927944;
+  box-shadow:
+    0 0 0 3px #ff9279,
+    0 10px 24px #ff927944;
 }
 .agenda-conflict {
   grid-column: 4;
@@ -524,7 +529,11 @@
 }
 .agenda-card .agenda-body,
 .agenda-card .completion-button {
-  transition: transform 180ms var(--ease-calm), box-shadow 180ms var(--ease-calm), text-shadow 180ms var(--ease-calm), border-color 180ms var(--ease-calm);
+  transition:
+    transform 180ms var(--ease-calm),
+    box-shadow 180ms var(--ease-calm),
+    text-shadow 180ms var(--ease-calm),
+    border-color 180ms var(--ease-calm);
 }
 
 /* Hover selects the whole timeline row, matching the calm contextual surface
@@ -545,7 +554,9 @@
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
   opacity: 0;
   transform: scale(0.985);
-  transition: opacity 180ms var(--ease-calm), transform 220ms var(--ease-calm);
+  transition:
+    opacity 180ms var(--ease-calm),
+    transform 220ms var(--ease-calm);
   content: "";
   pointer-events: none;
 }
@@ -575,7 +586,10 @@
   background: color-mix(in srgb, var(--secondary) 88%, transparent);
   color: var(--primary);
   cursor: pointer;
-  transition: transform 180ms var(--ease-calm), background-color 180ms var(--ease-calm), box-shadow 180ms var(--ease-calm);
+  transition:
+    transform 180ms var(--ease-calm),
+    background-color 180ms var(--ease-calm),
+    box-shadow 180ms var(--ease-calm);
 }
 .agenda-gap > span:not(.timeline-connector):not(.agenda-gap-add) {
   display: block;
@@ -590,7 +604,10 @@
   white-space: nowrap;
 }
 .week-timelines .agenda-compact .agenda-gap-add,
-.week-timelines .agenda-compact .agenda-gap > span:not(.timeline-connector):not(.agenda-gap-add) {
+.week-timelines
+  .agenda-compact
+  .agenda-gap
+  > span:not(.timeline-connector):not(.agenda-gap-add) {
   display: none;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -607,11 +624,14 @@
     transition: opacity 180ms var(--ease-calm);
   }
   .planner-stage[data-view="day"] .agenda-card[data-draggable="true"]:hover,
-  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:hover {
+  .planner-stage[data-view="two-days"]
+    .agenda-card[data-draggable="true"]:hover {
     opacity: 1;
   }
-  .planner-stage[data-view="day"] .agenda-card[data-draggable="true"]:hover::before,
-  .planner-stage[data-view="two-days"] .agenda-card[data-draggable="true"]:hover::before {
+  .planner-stage[data-view="day"]
+    .agenda-card[data-draggable="true"]:hover::before,
+  .planner-stage[data-view="two-days"]
+    .agenda-card[data-draggable="true"]:hover::before {
     opacity: 1;
     transform: scale(1);
   }
@@ -624,46 +644,126 @@
 
 /* A free interval carries the eye from the preceding task colour into the
    following one. The values mirror the node backgrounds in each theme. */
-.timeline-connector[data-from-color="sage"] { --timeline-connector-from: #c9f3bd; }
-.timeline-connector[data-from-color="mint"] { --timeline-connector-from: #bdf5d9; }
-.timeline-connector[data-from-color="teal"] { --timeline-connector-from: #b8f1f3; }
-.timeline-connector[data-from-color="sky"] { --timeline-connector-from: #c7e9ff; }
-.timeline-connector[data-from-color="lavender"] { --timeline-connector-from: #ded3ff; }
-.timeline-connector[data-from-color="lilac"] { --timeline-connector-from: #f0d4fc; }
-.timeline-connector[data-from-color="rose"] { --timeline-connector-from: #ffcfdc; }
-.timeline-connector[data-from-color="peach"] { --timeline-connector-from: #ffd5bb; }
-.timeline-connector[data-from-color="amber"] { --timeline-connector-from: #fff0ad; }
-.timeline-connector[data-from-color="stone"] { --timeline-connector-from: #dce8fa; }
-.timeline-connector[data-to-color="sage"] { --timeline-connector-to: #c9f3bd; }
-.timeline-connector[data-to-color="mint"] { --timeline-connector-to: #bdf5d9; }
-.timeline-connector[data-to-color="teal"] { --timeline-connector-to: #b8f1f3; }
-.timeline-connector[data-to-color="sky"] { --timeline-connector-to: #c7e9ff; }
-.timeline-connector[data-to-color="lavender"] { --timeline-connector-to: #ded3ff; }
-.timeline-connector[data-to-color="lilac"] { --timeline-connector-to: #f0d4fc; }
-.timeline-connector[data-to-color="rose"] { --timeline-connector-to: #ffcfdc; }
-.timeline-connector[data-to-color="peach"] { --timeline-connector-to: #ffd5bb; }
-.timeline-connector[data-to-color="amber"] { --timeline-connector-to: #fff0ad; }
-.timeline-connector[data-to-color="stone"] { --timeline-connector-to: #dce8fa; }
-.dark .timeline-connector[data-from-color="sage"] { --timeline-connector-from: #3e704c; }
-.dark .timeline-connector[data-from-color="mint"] { --timeline-connector-from: #1f7960; }
-.dark .timeline-connector[data-from-color="teal"] { --timeline-connector-from: #1b7075; }
-.dark .timeline-connector[data-from-color="sky"] { --timeline-connector-from: #286fa6; }
-.dark .timeline-connector[data-from-color="lavender"] { --timeline-connector-from: #6b4ba3; }
-.dark .timeline-connector[data-from-color="lilac"] { --timeline-connector-from: #8b438c; }
-.dark .timeline-connector[data-from-color="rose"] { --timeline-connector-from: #a44564; }
-.dark .timeline-connector[data-from-color="peach"] { --timeline-connector-from: #a95036; }
-.dark .timeline-connector[data-from-color="amber"] { --timeline-connector-from: #8d701c; }
-.dark .timeline-connector[data-from-color="stone"] { --timeline-connector-from: #405d85; }
-.dark .timeline-connector[data-to-color="sage"] { --timeline-connector-to: #3e704c; }
-.dark .timeline-connector[data-to-color="mint"] { --timeline-connector-to: #1f7960; }
-.dark .timeline-connector[data-to-color="teal"] { --timeline-connector-to: #1b7075; }
-.dark .timeline-connector[data-to-color="sky"] { --timeline-connector-to: #286fa6; }
-.dark .timeline-connector[data-to-color="lavender"] { --timeline-connector-to: #6b4ba3; }
-.dark .timeline-connector[data-to-color="lilac"] { --timeline-connector-to: #8b438c; }
-.dark .timeline-connector[data-to-color="rose"] { --timeline-connector-to: #a44564; }
-.dark .timeline-connector[data-to-color="peach"] { --timeline-connector-to: #a95036; }
-.dark .timeline-connector[data-to-color="amber"] { --timeline-connector-to: #8d701c; }
-.dark .timeline-connector[data-to-color="stone"] { --timeline-connector-to: #405d85; }
+.timeline-connector[data-from-color="sage"] {
+  --timeline-connector-from: #c9f3bd;
+}
+.timeline-connector[data-from-color="mint"] {
+  --timeline-connector-from: #bdf5d9;
+}
+.timeline-connector[data-from-color="teal"] {
+  --timeline-connector-from: #b8f1f3;
+}
+.timeline-connector[data-from-color="sky"] {
+  --timeline-connector-from: #c7e9ff;
+}
+.timeline-connector[data-from-color="lavender"] {
+  --timeline-connector-from: #ded3ff;
+}
+.timeline-connector[data-from-color="lilac"] {
+  --timeline-connector-from: #f0d4fc;
+}
+.timeline-connector[data-from-color="rose"] {
+  --timeline-connector-from: #ffcfdc;
+}
+.timeline-connector[data-from-color="peach"] {
+  --timeline-connector-from: #ffd5bb;
+}
+.timeline-connector[data-from-color="amber"] {
+  --timeline-connector-from: #fff0ad;
+}
+.timeline-connector[data-from-color="stone"] {
+  --timeline-connector-from: #dce8fa;
+}
+.timeline-connector[data-to-color="sage"] {
+  --timeline-connector-to: #c9f3bd;
+}
+.timeline-connector[data-to-color="mint"] {
+  --timeline-connector-to: #bdf5d9;
+}
+.timeline-connector[data-to-color="teal"] {
+  --timeline-connector-to: #b8f1f3;
+}
+.timeline-connector[data-to-color="sky"] {
+  --timeline-connector-to: #c7e9ff;
+}
+.timeline-connector[data-to-color="lavender"] {
+  --timeline-connector-to: #ded3ff;
+}
+.timeline-connector[data-to-color="lilac"] {
+  --timeline-connector-to: #f0d4fc;
+}
+.timeline-connector[data-to-color="rose"] {
+  --timeline-connector-to: #ffcfdc;
+}
+.timeline-connector[data-to-color="peach"] {
+  --timeline-connector-to: #ffd5bb;
+}
+.timeline-connector[data-to-color="amber"] {
+  --timeline-connector-to: #fff0ad;
+}
+.timeline-connector[data-to-color="stone"] {
+  --timeline-connector-to: #dce8fa;
+}
+.dark .timeline-connector[data-from-color="sage"] {
+  --timeline-connector-from: #3e704c;
+}
+.dark .timeline-connector[data-from-color="mint"] {
+  --timeline-connector-from: #1f7960;
+}
+.dark .timeline-connector[data-from-color="teal"] {
+  --timeline-connector-from: #1b7075;
+}
+.dark .timeline-connector[data-from-color="sky"] {
+  --timeline-connector-from: #286fa6;
+}
+.dark .timeline-connector[data-from-color="lavender"] {
+  --timeline-connector-from: #6b4ba3;
+}
+.dark .timeline-connector[data-from-color="lilac"] {
+  --timeline-connector-from: #8b438c;
+}
+.dark .timeline-connector[data-from-color="rose"] {
+  --timeline-connector-from: #a44564;
+}
+.dark .timeline-connector[data-from-color="peach"] {
+  --timeline-connector-from: #a95036;
+}
+.dark .timeline-connector[data-from-color="amber"] {
+  --timeline-connector-from: #8d701c;
+}
+.dark .timeline-connector[data-from-color="stone"] {
+  --timeline-connector-from: #405d85;
+}
+.dark .timeline-connector[data-to-color="sage"] {
+  --timeline-connector-to: #3e704c;
+}
+.dark .timeline-connector[data-to-color="mint"] {
+  --timeline-connector-to: #1f7960;
+}
+.dark .timeline-connector[data-to-color="teal"] {
+  --timeline-connector-to: #1b7075;
+}
+.dark .timeline-connector[data-to-color="sky"] {
+  --timeline-connector-to: #286fa6;
+}
+.dark .timeline-connector[data-to-color="lavender"] {
+  --timeline-connector-to: #6b4ba3;
+}
+.dark .timeline-connector[data-to-color="lilac"] {
+  --timeline-connector-to: #8b438c;
+}
+.dark .timeline-connector[data-to-color="rose"] {
+  --timeline-connector-to: #a44564;
+}
+.dark .timeline-connector[data-to-color="peach"] {
+  --timeline-connector-to: #a95036;
+}
+.dark .timeline-connector[data-to-color="amber"] {
+  --timeline-connector-to: #8d701c;
+}
+.dark .timeline-connector[data-to-color="stone"] {
+  --timeline-connector-to: #405d85;
+}
 
 /* Dragging uses the same marker language as the timeline. The draggable
    marker follows the pointer; the smaller ring stays on the timeline spine
@@ -840,8 +940,12 @@
   pointer-events: none;
 }
 @keyframes dayflow-control-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .planner-spinner { animation: none; }
+  .planner-spinner {
+    animation: none;
+  }
 }

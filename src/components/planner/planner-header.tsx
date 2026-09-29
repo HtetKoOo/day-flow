@@ -49,7 +49,9 @@ export function PlannerHeader({
         >
           <Inbox size={19} />
           <span>Tasks</span>
-          {displayTotal > 0 && <span className="sidebar-switch-count">{displayTotal}</span>}
+          {displayTotal > 0 && (
+            <span className="sidebar-switch-count">{displayTotal}</span>
+          )}
         </button>
         <button
           type="button"
@@ -72,9 +74,11 @@ export function PlannerHeader({
             aria-busy={isNavigatingTo(previous, displayedView)}
             onClick={() => navigate(previous, displayedView)}
           >
-            {isNavigatingTo(previous, displayedView)
-              ? <LoaderCircle className="planner-spinner" size={18} />
-              : <ChevronLeft size={18} />}
+            {isNavigatingTo(previous, displayedView) ? (
+              <LoaderCircle className="planner-spinner" size={18} />
+            ) : (
+              <ChevronLeft size={18} />
+            )}
           </button>
           <button
             type="button"
@@ -91,9 +95,11 @@ export function PlannerHeader({
             aria-busy={isNavigatingTo(next, displayedView)}
             onClick={() => navigate(next, displayedView)}
           >
-            {isNavigatingTo(next, displayedView)
-              ? <LoaderCircle className="planner-spinner" size={18} />
-              : <ChevronRight size={18} />}
+            {isNavigatingTo(next, displayedView) ? (
+              <LoaderCircle className="planner-spinner" size={18} />
+            ) : (
+              <ChevronRight size={18} />
+            )}
           </button>
         </div>
       </div>
@@ -107,7 +113,9 @@ export function PlannerHeader({
             aria-busy={isNavigatingTo(displayedDay, view)}
             aria-current={displayedView === view ? "page" : undefined}
           >
-            {view === "two-days" ? "2 days" : view[0].toUpperCase() + view.slice(1)}
+            {view === "two-days"
+              ? "2 days"
+              : view[0].toUpperCase() + view.slice(1)}
           </button>
         ))}
       </nav>
