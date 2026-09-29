@@ -38,6 +38,8 @@ function toTask(row: TaskRow) {
   };
 }
 export const dynamic = "force-dynamic";
+// Keep authenticated planner reads close to the Supabase project in Singapore.
+export const preferredRegion = "sin1";
 export default async function Planner({
   searchParams,
 }: {

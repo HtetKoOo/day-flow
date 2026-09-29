@@ -7,7 +7,8 @@ import {
   useState,
   useTransition,
 } from "react";
-import { plannerRange } from "@/lib/tasks/schedule";
+import { addDays, parseISO } from "date-fns";
+import { dateKey, plannerRange } from "@/lib/tasks/schedule";
 
 export type PlannerView = "day" | "two-days" | "week";
 type Route = { day: string; view: PlannerView };
@@ -15,6 +16,7 @@ type PlannerRange = ReturnType<typeof plannerRange>;
 type AppRouter = {
   push: (href: string, options?: { scroll?: boolean }) => void;
   refresh: () => void;
+  prefetch: (href: string) => void;
 };
 
 export function plannerHref(day: string, view: PlannerView = "day") {
@@ -95,6 +97,23 @@ export function usePlannerNavigation({
     () => plannerRange(today, displayedDay, "week", weekStartsOn).days,
     [displayedDay, today, weekStartsOn],
   );
+
+  // Planner data is dynamic, but its RSC payload can still be fetched while
+  // the user is reading the current range. The arrows move by one week, so
+  // warm those two likely destinations (and Today when it differs) before a
+  // click. Navigation then uses the Router Cache instead of waiting to begin
+  // a new Supabase snapshot request.
+  useEffect(() => {
+    const destinations = [
+      dateKey(addDays(parseISO(displayedDay), -7)),
+      dateKey(addDays(parseISO(displayedDay), 7)),
+      today,
+    ];
+    for (const day of new Set(destinations)) {
+      if (day !== displayedDay)
+        router.prefetch(plannerHref(day, displayedView));
+    }
+  }, [displayedDay, displayedView, router, today]);
 
   useEffect(() => {
     const syncHistoryRoute = () => {
