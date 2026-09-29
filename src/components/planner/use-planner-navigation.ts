@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { plannerRange } from "@/lib/tasks/schedule";
 
 export type PlannerView = "day" | "two-days" | "week";
@@ -31,33 +37,51 @@ export function usePlannerNavigation({
   const [localRoute, setLocalRoute] = useState<Route | null>(null);
   const [navigationTarget, setNavigationTarget] = useState<Route | null>(null);
   const [isTransitioning, startTransition] = useTransition();
-  const serverView: PlannerView = range.week ? "week" : range.twoDays ? "two-days" : "day";
+  const serverView: PlannerView = range.week
+    ? "week"
+    : range.twoDays
+      ? "two-days"
+      : "day";
 
-  const isLoadedPlannerRoute = useCallback((day: string, view: PlannerView) => {
-    const routeRange = plannerRange(today, day, view, weekStartsOn);
-    // Day view also renders a weekly strip, so it must have that full strip.
-    const requiredDays = view === "day"
-      ? plannerRange(today, day, "week", weekStartsOn).days
-      : routeRange.days;
-    return requiredDays.every((requiredDay) => loadedDays.includes(requiredDay));
-  }, [loadedDays, today, weekStartsOn]);
+  const isLoadedPlannerRoute = useCallback(
+    (day: string, view: PlannerView) => {
+      const routeRange = plannerRange(today, day, view, weekStartsOn);
+      // Day view also renders a weekly strip, so it must have that full strip.
+      const requiredDays =
+        view === "day"
+          ? plannerRange(today, day, "week", weekStartsOn).days
+          : routeRange.days;
+      return requiredDays.every((requiredDay) =>
+        loadedDays.includes(requiredDay),
+      );
+    },
+    [loadedDays, today, weekStartsOn],
+  );
 
   const localRange = localRoute
     ? plannerRange(today, localRoute.day, localRoute.view, weekStartsOn)
     : null;
   const canUseLocalRange = Boolean(
-    localRange && localRoute && isLoadedPlannerRoute(localRoute.day, localRoute.view),
+    localRange &&
+    localRoute &&
+    isLoadedPlannerRoute(localRoute.day, localRoute.view),
   );
   const routeStillLoading = Boolean(
-    navigationTarget
-      && (navigationTarget.day !== range.day || navigationTarget.view !== serverView),
+    navigationTarget &&
+    (navigationTarget.day !== range.day ||
+      navigationTarget.view !== serverView),
   );
-  const pendingRange = routeStillLoading && navigationTarget
-    ? plannerRange(today, navigationTarget.day, navigationTarget.view, weekStartsOn)
-    : null;
-  const displayedRange = canUseLocalRange && localRange
-    ? localRange
-    : pendingRange ?? range;
+  const pendingRange =
+    routeStillLoading && navigationTarget
+      ? plannerRange(
+          today,
+          navigationTarget.day,
+          navigationTarget.view,
+          weekStartsOn,
+        )
+      : null;
+  const displayedRange =
+    canUseLocalRange && localRange ? localRange : (pendingRange ?? range);
   const displayedView: PlannerView = displayedRange.week
     ? "week"
     : displayedRange.twoDays
@@ -77,9 +101,10 @@ export function usePlannerNavigation({
       const params = new URLSearchParams(window.location.search);
       const day = params.get("date") ?? today;
       const requestedView = params.get("view");
-      const view: PlannerView = requestedView === "week" || requestedView === "two-days"
-        ? requestedView
-        : "day";
+      const view: PlannerView =
+        requestedView === "week" || requestedView === "two-days"
+          ? requestedView
+          : "day";
       if (!isLoadedPlannerRoute(day, view)) {
         router.refresh();
         return;
@@ -91,24 +116,39 @@ export function usePlannerNavigation({
     return () => window.removeEventListener("popstate", syncHistoryRoute);
   }, [isLoadedPlannerRoute, range.day, router, serverView, today]);
 
-  const navigate = useCallback((day: string, view: PlannerView = serverView) => {
-    if (routeStillLoading || (day === displayedDay && view === displayedView)) return;
-    if (isLoadedPlannerRoute(day, view)) {
-      window.history.pushState(null, "", plannerHref(day, view));
-      setNavigationTarget(null);
-      setLocalRoute({ day, view });
-      return;
-    }
-    setLocalRoute(null);
-    setNavigationTarget({ day, view });
-    startTransition(() => router.push(plannerHref(day, view), { scroll: false }));
-  }, [displayedDay, displayedView, isLoadedPlannerRoute, routeStillLoading, router, serverView]);
+  const navigate = useCallback(
+    (day: string, view: PlannerView = serverView) => {
+      if (routeStillLoading || (day === displayedDay && view === displayedView))
+        return;
+      if (isLoadedPlannerRoute(day, view)) {
+        window.history.pushState(null, "", plannerHref(day, view));
+        setNavigationTarget(null);
+        setLocalRoute({ day, view });
+        return;
+      }
+      setLocalRoute(null);
+      setNavigationTarget({ day, view });
+      startTransition(() =>
+        router.push(plannerHref(day, view), { scroll: false }),
+      );
+    },
+    [
+      displayedDay,
+      displayedView,
+      isLoadedPlannerRoute,
+      routeStillLoading,
+      router,
+      serverView,
+    ],
+  );
 
-  const isNavigatingTo = useCallback((day: string, view: PlannerView) => (
-    routeStillLoading
-      && navigationTarget?.day === day
-      && navigationTarget.view === view
-  ), [navigationTarget, routeStillLoading]);
+  const isNavigatingTo = useCallback(
+    (day: string, view: PlannerView) =>
+      routeStillLoading &&
+      navigationTarget?.day === day &&
+      navigationTarget.view === view,
+    [navigationTarget, routeStillLoading],
+  );
 
   return {
     displayedRange,

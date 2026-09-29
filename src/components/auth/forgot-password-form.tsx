@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function ForgotPasswordForm() {
-  const [state, action, pending] = useActionState(requestPasswordReset, { message: "" });
+  const [state, action, pending] = useActionState(requestPasswordReset, {
+    message: "",
+  });
 
   return (
     <form action={action} className="mt-8 space-y-5">
@@ -21,7 +23,10 @@ export function ForgotPasswordForm() {
       <p role="status" className="text-sm text-muted-foreground">
         {state.message}
       </p>
-      <Link className="block text-center text-sm text-primary underline-offset-4 hover:underline" href="/login">
+      <Link
+        className="block text-center text-sm text-primary underline-offset-4 hover:underline"
+        href="/login"
+      >
         Back to sign in
       </Link>
     </form>

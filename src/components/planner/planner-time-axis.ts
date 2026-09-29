@@ -10,7 +10,8 @@ export function buildRangeTimeAxis(tasks: ScheduledTask[], compact: boolean) {
   const start = 6 * 60;
   const end = 22 * 60;
   const slotHeights = new Map<number, number>();
-  for (let minute = start; minute < end; minute += 15) slotHeights.set(minute, 12);
+  for (let minute = start; minute < end; minute += 15)
+    slotHeights.set(minute, 12);
 
   for (const task of tasks) {
     const taskStart = Math.max(start, minutes(task.start_time));
@@ -18,9 +19,13 @@ export function buildRangeTimeAxis(tasks: ScheduledTask[], compact: boolean) {
     const first = Math.floor(taskStart / 15) * 15;
     const last = Math.ceil(taskEnd / 15) * 15;
     const slots = Math.max(1, (last - first) / 15);
-    const minimumPerSlot = timelineTaskHeight(task.duration_minutes, compact) / slots;
+    const minimumPerSlot =
+      timelineTaskHeight(task.duration_minutes, compact) / slots;
     for (let minute = first; minute < last; minute += 15) {
-      slotHeights.set(minute, Math.max(slotHeights.get(minute) ?? 12, minimumPerSlot));
+      slotHeights.set(
+        minute,
+        Math.max(slotHeights.get(minute) ?? 12, minimumPerSlot),
+      );
     }
   }
 

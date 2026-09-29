@@ -6,7 +6,11 @@ import type { InboxTask, TaskResult } from "@/lib/tasks/types";
 
 type UndoAction = { kind: "schedule" | "completion"; task: InboxTask };
 
-type ScheduleUpdater = (task: InboxTask, day: string | null, time: string | null) => void;
+type ScheduleUpdater = (
+  task: InboxTask,
+  day: string | null,
+  time: string | null,
+) => void;
 
 /** Coordinates optimistic scheduling with server confirmation, errors, and undo. */
 export function usePlannerTaskActions({
@@ -25,44 +29,51 @@ export function usePlannerTaskActions({
     setUndoAction(null);
   }, []);
 
-  const persistSchedule = useCallback((
-    task: InboxTask,
-    day: string | null,
-    time: string | null,
-    undo = false,
-  ) => {
-    setNotice(null);
-    setUndoAction(null);
-    applySchedule(task, day, time);
-    startTransition(async () => {
-      try {
-        const result = await scheduleTask({
-          id: task.id,
-          scheduled_date: day,
-          start_time: time,
-          duration_minutes: task.duration_minutes,
-        });
-        setNotice(result);
-        if (result.ok) {
-          publishSchedule(task, day, time);
-          setUndoAction(undo ? null : { kind: "schedule", task });
-        } else {
+  const persistSchedule = useCallback(
+    (
+      task: InboxTask,
+      day: string | null,
+      time: string | null,
+      undo = false,
+    ) => {
+      setNotice(null);
+      setUndoAction(null);
+      applySchedule(task, day, time);
+      startTransition(async () => {
+        try {
+          const result = await scheduleTask({
+            id: task.id,
+            scheduled_date: day,
+            start_time: time,
+            duration_minutes: task.duration_minutes,
+          });
+          setNotice(result);
+          if (result.ok) {
+            publishSchedule(task, day, time);
+            setUndoAction(undo ? null : { kind: "schedule", task });
+          } else {
+            applySchedule(
+              { ...task, scheduled_date: day, start_time: time },
+              task.scheduled_date ?? null,
+              task.start_time ?? null,
+            );
+          }
+        } catch {
           applySchedule(
             { ...task, scheduled_date: day, start_time: time },
             task.scheduled_date ?? null,
             task.start_time ?? null,
           );
+          setNotice({
+            ok: false,
+            message:
+              "Couldn’t confirm the schedule. Refresh to check before retrying.",
+          });
         }
-      } catch {
-        applySchedule(
-          { ...task, scheduled_date: day, start_time: time },
-          task.scheduled_date ?? null,
-          task.start_time ?? null,
-        );
-        setNotice({ ok: false, message: "Couldn’t confirm the schedule. Refresh to check before retrying." });
-      }
-    });
-  }, [applySchedule, publishSchedule]);
+      });
+    },
+    [applySchedule, publishSchedule],
+  );
 
   const complete = useCallback((task: InboxTask, undo = false) => {
     setNotice(null);
@@ -76,7 +87,10 @@ export function usePlannerTaskActions({
         setNotice(result);
         if (result.ok && !undo) setUndoAction({ kind: "completion", task });
       } catch {
-        setNotice({ ok: false, message: "Couldn’t confirm that change. Refresh and try again." });
+        setNotice({
+          ok: false,
+          message: "Couldn’t confirm that change. Refresh and try again.",
+        });
       }
     });
   }, []);

@@ -22,7 +22,11 @@ export function PlannerMobileNavigation({
         <CalendarDays size={20} />
         Planner
       </button>
-      <button className="mobile-create" aria-label="Add task" onClick={onCreate}>
+      <button
+        className="mobile-create"
+        aria-label="Add task"
+        onClick={onCreate}
+      >
         <Plus size={24} />
       </button>
       <button

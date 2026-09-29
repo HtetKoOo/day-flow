@@ -23,10 +23,19 @@ export async function updatePassword(
 
   const supabase = await createClient();
   const { data, error: userError } = await supabase.auth.getUser();
-  if (userError || !data.user) return { message: "This reset link is invalid or expired. Request a new one." };
+  if (userError || !data.user)
+    return {
+      message: "This reset link is invalid or expired. Request a new one.",
+    };
 
-  const { error } = await supabase.auth.updateUser({ password: input.data.password });
-  if (error) return { message: "Unable to update your password. Request a new link and try again." };
+  const { error } = await supabase.auth.updateUser({
+    password: input.data.password,
+  });
+  if (error)
+    return {
+      message:
+        "Unable to update your password. Request a new link and try again.",
+    };
 
   redirect("/planner");
 }

@@ -44,16 +44,22 @@ function subscribeClock(callback: () => void) {
 export function usePlannerShellState(timezone: string) {
   const [mobile, setMobile] = useState("planner");
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>("inbox");
-  const isMobile = useSyncExternalStore(subscribeMobile, readMobile, () => false);
+  const isMobile = useSyncExternalStore(
+    subscribeMobile,
+    readMobile,
+    () => false,
+  );
   const inboxOpen = useSyncExternalStore(subscribeInbox, readInbox, () => true);
   const minute = useSyncExternalStore(subscribeClock, readClock, () => 0);
-  const evening = minute > 0 && Number(
-    new Intl.DateTimeFormat("en-GB", {
-      timeZone: timezone,
-      hour: "2-digit",
-      hourCycle: "h23",
-    }).format(new Date(minute * 60000)),
-  ) >= 18;
+  const evening =
+    minute > 0 &&
+    Number(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: timezone,
+        hour: "2-digit",
+        hourCycle: "h23",
+      }).format(new Date(minute * 60000)),
+    ) >= 18;
 
   function setInboxVisibility(open: boolean) {
     try {
@@ -82,5 +88,13 @@ export function usePlannerShellState(timezone: string) {
     setInboxVisibility(true);
   }
 
-  return { mobile, setMobile, sidebarMode, isMobile, inboxOpen, evening, selectSidebar };
+  return {
+    mobile,
+    setMobile,
+    sidebarMode,
+    isMobile,
+    inboxOpen,
+    evening,
+    selectSidebar,
+  };
 }

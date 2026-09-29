@@ -10,7 +10,9 @@ export default function ForgotPasswordPage() {
   return (
     <main className="mx-auto max-w-md px-6 py-20">
       <p className="eyebrow">✦ DAYFLOW</p>
-      <h1 className="mt-6 text-4xl font-semibold tracking-tight">Reset your password.</h1>
+      <h1 className="mt-6 text-4xl font-semibold tracking-tight">
+        Reset your password.
+      </h1>
       <p className="mt-4 text-muted-foreground">
         Enter your email and we’ll send a secure reset link.
       </p>

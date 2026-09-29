@@ -1,6 +1,12 @@
 "use client";
 
-import { useDraggable, useDroppable, pointerWithin, closestCenter, type CollisionDetection } from "@dnd-kit/core";
+import {
+  useDraggable,
+  useDroppable,
+  pointerWithin,
+  closestCenter,
+  type CollisionDetection,
+} from "@dnd-kit/core";
 import { GripVertical } from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { useEffect, useRef } from "react";
@@ -17,22 +23,44 @@ export const scheduleCollision: CollisionDetection = (args) => {
     const row = node.getBoundingClientRect();
     const pointer = args.pointerCoordinates;
     return pointer
-      ? pointer.x >= bounds.left && pointer.x <= bounds.right && pointer.y >= bounds.top && pointer.y <= bounds.bottom
+      ? pointer.x >= bounds.left &&
+          pointer.x <= bounds.right &&
+          pointer.y >= bounds.top &&
+          pointer.y <= bounds.bottom
       : row.bottom > bounds.top && row.top < bounds.bottom;
   });
   const visible = { ...args, droppableContainers: containers };
-  return args.pointerCoordinates ? pointerWithin(visible) : closestCenter(visible);
+  return args.pointerCoordinates
+    ? pointerWithin(visible)
+    : closestCenter(visible);
 };
 
-export function TaskDragHandle({ task, disabled }: { task: InboxTask; disabled: boolean }) {
+export function TaskDragHandle({
+  task,
+  disabled,
+}: {
+  task: InboxTask;
+  disabled: boolean;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: task.id, data: { task }, disabled,
+    id: task.id,
+    data: { task },
+    disabled,
   });
-  return <button type="button" ref={setNodeRef} {...attributes} {...listeners}
-    className="task-drag-handle" aria-label={`Drag ${task.title} to schedule`}
-    disabled={disabled} data-dragging={isDragging}>
-    <GripVertical size={18} />
-  </button>;
+  return (
+    <button
+      type="button"
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="task-drag-handle"
+      aria-label={`Drag ${task.title} to schedule`}
+      disabled={disabled}
+      data-dragging={isDragging}
+    >
+      <GripVertical size={18} />
+    </button>
+  );
 }
 
 /** The Inbox is a drop destination too: dropping a scheduled task here
@@ -59,7 +87,10 @@ export function InboxDropZone({
   );
 }
 
-type DraggableTaskCardProps = Omit<ComponentPropsWithoutRef<"article">, "children"> & {
+type DraggableTaskCardProps = Omit<
+  ComponentPropsWithoutRef<"article">,
+  "children"
+> & {
   task: InboxTask;
   disabled: boolean;
   children: ReactNode;
@@ -95,26 +126,60 @@ export function DraggableTaskCard({
   );
 }
 
-function TimeTarget({ day, time, duration }: { day: string; time: string; duration: number }) {
+function TimeTarget({
+  day,
+  time,
+  duration,
+}: {
+  day: string;
+  time: string;
+  duration: number;
+}) {
   const [hours, minutes] = time.split(":").map(Number);
   const disabled = hours * 60 + minutes + duration > 1440;
   const { setNodeRef, isOver } = useDroppable({
-    id: `schedule-${day}-${time}`, data: { day, time }, disabled,
+    id: `schedule-${day}-${time}`,
+    data: { day, time },
+    disabled,
   });
-  return <div ref={setNodeRef} className="schedule-drop-time" data-over={isOver}
-    aria-disabled={disabled}>{time}{isOver && <span> · Drop here</span>}</div>;
+  return (
+    <div
+      ref={setNodeRef}
+      className="schedule-drop-time"
+      data-over={isOver}
+      aria-disabled={disabled}
+    >
+      {time}
+      {isOver && <span> · Drop here</span>}
+    </div>
+  );
 }
 
-export function ScheduleTargets({ day, duration }: { day: string; duration: number }) {
+export function ScheduleTargets({
+  day,
+  duration,
+}: {
+  day: string;
+  duration: number;
+}) {
   const scroll = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const target = scroll.current?.children[18] as HTMLElement | undefined;
-    if (scroll.current && target) scroll.current.scrollTop = target.offsetTop - scroll.current.offsetTop;
+    if (scroll.current && target)
+      scroll.current.scrollTop = target.offsetTop - scroll.current.offsetTop;
   }, []);
-  return <div ref={scroll} className="schedule-drop-times" aria-label={`Schedule on ${day}`}>
-    {Array.from({ length: 48 }, (_, index) => {
-      const time = `${String(Math.floor(index / 2)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`;
-      return <TimeTarget key={time} day={day} time={time} duration={duration} />;
-    })}
-  </div>;
+  return (
+    <div
+      ref={scroll}
+      className="schedule-drop-times"
+      aria-label={`Schedule on ${day}`}
+    >
+      {Array.from({ length: 48 }, (_, index) => {
+        const time = `${String(Math.floor(index / 2)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`;
+        return (
+          <TimeTarget key={time} day={day} time={time} duration={duration} />
+        );
+      })}
+    </div>
+  );
 }

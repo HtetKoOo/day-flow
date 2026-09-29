@@ -24,13 +24,26 @@ export const centerOverlayOnCursor: Modifier = ({
   transform,
 }) => {
   const pointer = activatorEvent as MouseEvent | null;
-  if (!pointer || typeof pointer.clientX !== "number" || !activeNodeRect || !overlayNodeRect) {
+  if (
+    !pointer ||
+    typeof pointer.clientX !== "number" ||
+    !activeNodeRect ||
+    !overlayNodeRect
+  ) {
     return transform;
   }
   return {
     ...transform,
-    x: transform.x + pointer.clientX - activeNodeRect.left - overlayNodeRect.width / 2,
-    y: transform.y + pointer.clientY - activeNodeRect.top - overlayNodeRect.height / 2,
+    x:
+      transform.x +
+      pointer.clientX -
+      activeNodeRect.left -
+      overlayNodeRect.width / 2,
+    y:
+      transform.y +
+      pointer.clientY -
+      activeNodeRect.top -
+      overlayNodeRect.height / 2,
   };
 };
 
@@ -41,12 +54,18 @@ type VisualDropTarget = { minute: number; top: number };
  * The agenda compresses long free intervals. Resolve the pointer within its
  * visible card or gap, then project the snapped wall-clock time back there.
  */
-function visualDropTarget(day: string, pointerY: number): VisualDropTarget | null {
-  const agenda = [...document.querySelectorAll<HTMLElement>("[data-timeline-day]")]
-    .find((element) => element.dataset.timelineDay === day);
+function visualDropTarget(
+  day: string,
+  pointerY: number,
+): VisualDropTarget | null {
+  const agenda = [
+    ...document.querySelectorAll<HTMLElement>("[data-timeline-day]"),
+  ].find((element) => element.dataset.timelineDay === day);
   if (!agenda) return null;
 
-  const segments = [...agenda.querySelectorAll<HTMLElement>("[data-timeline-segment]")]
+  const segments = [
+    ...agenda.querySelectorAll<HTMLElement>("[data-timeline-segment]"),
+  ]
     .map((element) => {
       const start = element.dataset.start;
       const end = element.dataset.end;
@@ -58,7 +77,16 @@ function visualDropTarget(day: string, pointerY: number): VisualDropTarget | nul
         kind: element.dataset.timelineSegmentKind ?? "gap",
       };
     })
-    .filter((segment): segment is { start: number; end: number; rect: DOMRect; kind: string } => Boolean(segment))
+    .filter(
+      (
+        segment,
+      ): segment is {
+        start: number;
+        end: number;
+        rect: DOMRect;
+        kind: string;
+      } => Boolean(segment),
+    )
     .sort((left, right) => left.rect.top - right.rect.top);
   if (!segments.length) return null;
 
@@ -71,8 +99,10 @@ function visualDropTarget(day: string, pointerY: number): VisualDropTarget | nul
   let bottom = agendaRect.bottom;
   const containsPointer = (segment: (typeof segments)[number]) =>
     pointerY >= segment.rect.top && pointerY <= segment.rect.bottom;
-  const activeSegment = segments.find((segment) => segment.kind === "task" && containsPointer(segment))
-    ?? segments.find(containsPointer);
+  const activeSegment =
+    segments.find(
+      (segment) => segment.kind === "task" && containsPointer(segment),
+    ) ?? segments.find(containsPointer);
   if (activeSegment) {
     start = activeSegment.start;
     end = activeSegment.end;
@@ -101,7 +131,10 @@ function visualDropTarget(day: string, pointerY: number): VisualDropTarget | nul
   if (end <= start || bottom <= top) return null;
   const ratio = Math.max(0, Math.min(1, (pointerY - top) / (bottom - top)));
   const minute = Math.round((start + ratio * (end - start)) / 15) * 15;
-  const snappedRatio = Math.max(0, Math.min(1, (minute - start) / (end - start)));
+  const snappedRatio = Math.max(
+    0,
+    Math.min(1, (minute - start) / (end - start)),
+  );
   return { minute, top: top + snappedRatio * (bottom - top) - agendaRect.top };
 }
 
@@ -111,7 +144,11 @@ export function usePlannerDrag({
   onStart,
 }: {
   pending: boolean;
-  onSchedule: (task: InboxTask, day: string | null, time: string | null) => void;
+  onSchedule: (
+    task: InboxTask,
+    day: string | null,
+    time: string | null,
+  ) => void;
   onStart: () => void;
 }) {
   const [dragTask, setDragTask] = useState<InboxTask | null>(null);
@@ -123,7 +160,9 @@ export function usePlannerDrag({
   const pointerInitiatedDrag = useRef(false);
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 240, tolerance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 240, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor),
   );
 
@@ -146,19 +185,33 @@ export function usePlannerDrag({
       setDragTarget(null);
       return;
     }
-    const pointerY = dragPointer.current?.y ?? activeRect.top + activeRect.height / 2;
+    const pointerY =
+      dragPointer.current?.y ?? activeRect.top + activeRect.height / 2;
     const visualTarget = visualDropTarget(day, pointerY);
-    const ratio = Math.max(0, Math.min(1, (pointerY - surface.top) / surface.height));
+    const ratio = Math.max(
+      0,
+      Math.min(1, (pointerY - surface.top) / surface.height),
+    );
     const earliest = 6 * 60;
     const latest = 22 * 60 - task.duration_minutes;
-    const minute = Math.max(earliest, Math.min(
-      latest,
-      visualTarget?.minute ?? Math.round((earliest + ratio * (22 * 60 - earliest)) / 15) * 15,
-    ));
-    const target = { day, time: clockTime(minute), top: visualTarget?.top ?? ratio * surface.height };
+    const minute = Math.max(
+      earliest,
+      Math.min(
+        latest,
+        visualTarget?.minute ??
+          Math.round((earliest + ratio * (22 * 60 - earliest)) / 15) * 15,
+      ),
+    );
+    const target = {
+      day,
+      time: clockTime(minute),
+      top: visualTarget?.top ?? ratio * surface.height,
+    };
     dragTargetRef.current = target;
     setDragTarget((current) =>
-      current?.day === target.day && current.time === target.time && Math.abs(current.top - target.top) < 0.5
+      current?.day === target.day &&
+      current.time === target.time &&
+      Math.abs(current.top - target.top) < 0.5
         ? current
         : target,
     );
@@ -188,7 +241,8 @@ export function usePlannerDrag({
   function onDragStart(event: DragStartEvent) {
     pointerInitiatedDrag.current = "clientX" in event.activatorEvent;
     const pointer = event.activatorEvent as PointerEvent;
-    dragPointer.current = typeof pointer.clientY === "number" ? { y: pointer.clientY } : null;
+    dragPointer.current =
+      typeof pointer.clientY === "number" ? { y: pointer.clientY } : null;
     dragTargetRef.current = null;
     queuedDragMove.current = null;
     setDragTask(event.active.data.current?.task as InboxTask);
@@ -196,7 +250,8 @@ export function usePlannerDrag({
   }
 
   function clearDrag() {
-    if (dragMoveFrame.current !== null) cancelAnimationFrame(dragMoveFrame.current);
+    if (dragMoveFrame.current !== null)
+      cancelAnimationFrame(dragMoveFrame.current);
     dragMoveFrame.current = null;
     queuedDragMove.current = null;
     dragTargetRef.current = null;
@@ -217,7 +272,8 @@ export function usePlannerDrag({
     if (shouldClearPointerFocus) {
       requestAnimationFrame(() => {
         const active = document.activeElement;
-        if (active instanceof HTMLElement && active.closest("[data-draggable]")) active.blur();
+        if (active instanceof HTMLElement && active.closest("[data-draggable]"))
+          active.blur();
       });
     }
     flushDragMove();
@@ -233,5 +289,13 @@ export function usePlannerDrag({
     if (target) onSchedule(task, target.day, target.time);
   }
 
-  return { sensors, dragTask, dragTarget, onDragStart, onDragMove, onDragEnd, onDragCancel };
+  return {
+    sensors,
+    dragTask,
+    dragTarget,
+    onDragStart,
+    onDragMove,
+    onDragEnd,
+    onDragCancel,
+  };
 }

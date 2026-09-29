@@ -46,12 +46,13 @@ export default async function Planner({
   const params = await searchParams;
   const { supabase } = await requireUser();
   const requestedDate = z.iso.date().safeParse(params.date);
-  const view = params.view === "week" || params.view === "two-days"
-    ? params.view
-    : "day";
+  const view =
+    params.view === "week" || params.view === "two-days" ? params.view : "day";
   const routinesRequest = supabase
     .from("recurring_tasks")
-    .select("id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active")
+    .select(
+      "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active",
+    )
     .eq("is_active", true)
     .order("start_time");
   const { data, error } = await supabase.rpc("planner_snapshot", {
@@ -59,7 +60,11 @@ export default async function Planner({
     p_view: view,
   });
   let snapshot = data
-    ? { ...(data as Omit<PlannerSnapshot, "inbox_error" | "scheduled_error">), inbox_error: false, scheduled_error: false }
+    ? {
+        ...(data as Omit<PlannerSnapshot, "inbox_error" | "scheduled_error">),
+        inbox_error: false,
+        scheduled_error: false,
+      }
     : null;
   let snapshotError = error;
   // Keep the planner available while a deployment is waiting for its database
@@ -82,7 +87,12 @@ export default async function Planner({
         view,
         profile.week_starts_on,
       );
-      const strip = plannerRange(today, range.day, "week", profile.week_starts_on);
+      const strip = plannerRange(
+        today,
+        range.day,
+        "week",
+        profile.week_starts_on,
+      );
       const [inboxResult, scheduledResult] = await Promise.all([
         supabase
           .from("tasks")
@@ -140,13 +150,18 @@ export default async function Planner({
     profile.week_starts_on,
   );
   const strip = plannerRange(today, range.day, "week", profile.week_starts_on);
-  const loadedDays = snapshot.loaded_through && snapshot.loaded_through > strip.to
-    ? [...strip.days, snapshot.loaded_through]
-    : strip.days;
+  const loadedDays =
+    snapshot.loaded_through && snapshot.loaded_through > strip.to
+      ? [...strip.days, snapshot.loaded_through]
+      : strip.days;
   const { data: routines } = await routinesRequest;
   const activeRoutines = (routines ?? []) as Routine[];
   const routineBlocks = activeRoutines.flatMap((routine) =>
-    routineOccurrencesBetween(routine, strip.from, loadedDays[loadedDays.length - 1]).map((date) => ({
+    routineOccurrencesBetween(
+      routine,
+      strip.from,
+      loadedDays[loadedDays.length - 1],
+    ).map((date) => ({
       id: `routine-${routine.id}-${date}`,
       title: routine.title,
       notes: routine.notes,
@@ -165,11 +180,14 @@ export default async function Planner({
       tasks={snapshot.inbox.map(toTask)}
       inboxError={snapshot.inbox_error}
       total={snapshot.inbox_count}
-      scheduled={[...snapshot.scheduled.map((row) => ({
-        ...toTask(row),
-        scheduled_date: row.scheduled_date as string,
-        start_time: row.start_time as string,
-      })), ...routineBlocks]}
+      scheduled={[
+        ...snapshot.scheduled.map((row) => ({
+          ...toTask(row),
+          scheduled_date: row.scheduled_date as string,
+          start_time: row.start_time as string,
+        })),
+        ...routineBlocks,
+      ]}
       scheduleError={snapshot.scheduled_error}
       scheduledCount={snapshot.scheduled_count}
       today={today}

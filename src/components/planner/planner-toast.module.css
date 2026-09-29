@@ -15,16 +15,33 @@
   font-size: 15px;
   animation: arrive 220ms ease-out;
 }
-.toast > span { min-width: 0; overflow-wrap: anywhere; }
-.toast button { flex-shrink: 0; }
-.toast[data-error="true"] > span { color: var(--destructive); }
+.toast > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.toast button {
+  flex-shrink: 0;
+}
+.toast[data-error="true"] > span {
+  color: var(--destructive);
+}
 @keyframes arrive {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @media (max-width: 760px) {
-  .toast { bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .toast {
+    bottom: calc(90px + env(safe-area-inset-bottom));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .toast { animation: none; }
+  .toast {
+    animation: none;
+  }
 }

@@ -10,9 +10,15 @@ import { TaskEditor } from "@/components/planner/task-editor";
 import { RoutineEditor } from "@/components/planner/routine-editor";
 import { DateStrip } from "@/components/planner/date-strip";
 import { timelineMarker } from "@/components/planner/timeline";
-import { plannerHref, usePlannerNavigation } from "@/components/planner/use-planner-navigation";
+import {
+  plannerHref,
+  usePlannerNavigation,
+} from "@/components/planner/use-planner-navigation";
 import { usePlannerTaskDisplay } from "@/components/planner/use-planner-task-display";
-import { centerOverlayOnCursor, usePlannerDrag } from "@/components/planner/use-planner-drag";
+import {
+  centerOverlayOnCursor,
+  usePlannerDrag,
+} from "@/components/planner/use-planner-drag";
 import { usePlannerShellState } from "@/components/planner/use-planner-shell-state";
 import { usePlannerTaskActions } from "@/components/planner/use-planner-task-actions";
 import { buildRangeTimeAxis } from "@/components/planner/planner-time-axis";
@@ -134,11 +140,17 @@ export function PlannerShell({
     return byDay;
   }, [displayScheduled]);
   const selectedScheduled = useMemo(
-    () => displayScheduled.filter((task) => displayedDays.includes(task.scheduled_date)),
+    () =>
+      displayScheduled.filter((task) =>
+        displayedDays.includes(task.scheduled_date),
+      ),
     [displayScheduled, displayedDays],
   );
   const timeAxis = useMemo(
-    () => isRangeView ? buildRangeTimeAxis(selectedScheduled, displayedRange.week) : undefined,
+    () =>
+      isRangeView
+        ? buildRangeTimeAxis(selectedScheduled, displayedRange.week)
+        : undefined,
     [displayedRange.week, isRangeView, selectedScheduled],
   );
   function open(
@@ -166,7 +178,8 @@ export function PlannerShell({
     returnFocus.current = document.activeElement as HTMLElement;
     setEditor({ task, date, time });
   }
-  const incompleteDatePreview = scheduleError || scheduledCount > scheduled.length;
+  const incompleteDatePreview =
+    scheduleError || scheduledCount > scheduled.length;
   const renderDate = (day: string) => (
     <PlannerDateCell
       key={day}
@@ -181,156 +194,171 @@ export function PlannerShell({
     />
   );
   return (
-    <DndContext id="dayflow-planner-drag" sensors={sensors}
+    <DndContext
+      id="dayflow-planner-drag"
+      sensors={sensors}
       collisionDetection={scheduleCollision}
       onDragStart={onDragStart}
       onDragMove={onDragMove}
       onDragCancel={onDragCancel}
-      onDragEnd={onDragEnd}>
-    <main className="planner-app" data-inbox-open={inboxOpen}>
-      <PlannerHeader
-        displayedDay={displayedDay}
-        displayedView={displayedView}
-        today={today}
-        inboxOpen={inboxOpen}
-        sidebarMode={sidebarMode}
-        displayTotal={displayTotal}
-        routeStillLoading={routeStillLoading}
-        selectSidebar={selectSidebar}
-        navigate={navigate}
-        isNavigatingTo={isNavigatingTo}
-      />
-      {notice && (
-        <PlannerToast
-          notice={notice}
-          pending={pending}
-          onDismiss={dismissNotice}
-          onUndo={undo}
-        />
-      )}
-      <div
-        className="planner-workspace"
-        data-mobile-panel={mobile}
-        data-inbox-open={inboxOpen}
-      >
-        <PlannerSidebar
-          mobile={mobile}
-          isMobile={isMobile}
+      onDragEnd={onDragEnd}
+    >
+      <main className="planner-app" data-inbox-open={inboxOpen}>
+        <PlannerHeader
+          displayedDay={displayedDay}
+          displayedView={displayedView}
+          today={today}
           inboxOpen={inboxOpen}
           sidebarMode={sidebarMode}
-          tasks={displayTasks}
-          total={displayTotal}
-          loadError={inboxError}
-          pending={pending}
-          routines={routines}
-          onComplete={complete}
-          onEditTask={(task) => {
-            if (task.is_routine) {
-              selectSidebar("routines");
-              showNotice({ ok: true, message: "Manage this weekly routine from the Routines tab." });
-              return;
-            }
-            open(task);
-          }}
-          onRetry={() => router.refresh()}
-          onAddRoutine={() => {
-            setEditingRoutine(null);
-            setRoutineEditorOpen(true);
-          }}
-          onEditRoutine={(routine) => {
-            setEditingRoutine(routine);
-            setRoutineEditorOpen(true);
-          }}
+          displayTotal={displayTotal}
+          routeStillLoading={routeStillLoading}
+          selectSidebar={selectSidebar}
+          navigate={navigate}
+          isNavigatingTo={isNavigatingTo}
         />
-        <section className="planner-main" data-view={displayedView}>
-          {evening && displayedDay === today && (
-            <Link
-              className="tomorrow-shortcut"
-              href={href(dateKey(addDays(parseISO(today), 1)), displayedView)}
+        {notice && (
+          <PlannerToast
+            notice={notice}
+            pending={pending}
+            onDismiss={dismissNotice}
+            onUndo={undo}
+          />
+        )}
+        <div
+          className="planner-workspace"
+          data-mobile-panel={mobile}
+          data-inbox-open={inboxOpen}
+        >
+          <PlannerSidebar
+            mobile={mobile}
+            isMobile={isMobile}
+            inboxOpen={inboxOpen}
+            sidebarMode={sidebarMode}
+            tasks={displayTasks}
+            total={displayTotal}
+            loadError={inboxError}
+            pending={pending}
+            routines={routines}
+            onComplete={complete}
+            onEditTask={(task) => {
+              if (task.is_routine) {
+                selectSidebar("routines");
+                showNotice({
+                  ok: true,
+                  message: "Manage this weekly routine from the Routines tab.",
+                });
+                return;
+              }
+              open(task);
+            }}
+            onRetry={() => router.refresh()}
+            onAddRoutine={() => {
+              setEditingRoutine(null);
+              setRoutineEditorOpen(true);
+            }}
+            onEditRoutine={(routine) => {
+              setEditingRoutine(routine);
+              setRoutineEditorOpen(true);
+            }}
+          />
+          <section className="planner-main" data-view={displayedView}>
+            {evening && displayedDay === today && (
+              <Link
+                className="tomorrow-shortcut"
+                href={href(dateKey(addDays(parseISO(today), 1)), displayedView)}
+              >
+                Plan tomorrow →
+              </Link>
+            )}
+            <div
+              className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`}
+              data-view={displayedView}
+              aria-busy={showRoutePending}
             >
-              Plan tomorrow →
-            </Link>
-          )}
-          <div className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`} data-view={displayedView} aria-busy={showRoutePending}>
-            <div className="planner-view-content">
-              {!isRangeView && (
-                <DateStrip
-                  onMove={(direction) =>
-                    navigate(dateKey(addDays(parseISO(displayedDay), direction * 7)), displayedView)
-                  }
-                >
-                  {displayedStripDays.map(renderDate)}
-                </DateStrip>
-              )}
-              <PlannerTimelineContent
-                scheduleError={scheduleError}
-                onRetry={() => router.refresh()}
-                isRangeView={isRangeView}
-                isWeek={displayedRange.week}
-                isTwoDays={displayedRange.twoDays}
-                days={displayedDays}
-                scheduledByDay={scheduledByDay}
-                renderDate={renderDate}
-                onEdit={open}
-                onAdd={(day, time) => open(null, day, time)}
-                onComplete={complete}
-                pending={pending}
-                dragTask={dragTask}
-                dragTarget={dragTarget}
-                timeAxis={timeAxis}
-              />
+              <div className="planner-view-content">
+                {!isRangeView && (
+                  <DateStrip
+                    onMove={(direction) =>
+                      navigate(
+                        dateKey(addDays(parseISO(displayedDay), direction * 7)),
+                        displayedView,
+                      )
+                    }
+                  >
+                    {displayedStripDays.map(renderDate)}
+                  </DateStrip>
+                )}
+                <PlannerTimelineContent
+                  scheduleError={scheduleError}
+                  onRetry={() => router.refresh()}
+                  isRangeView={isRangeView}
+                  isWeek={displayedRange.week}
+                  isTwoDays={displayedRange.twoDays}
+                  days={displayedDays}
+                  scheduledByDay={scheduledByDay}
+                  renderDate={renderDate}
+                  onEdit={open}
+                  onAdd={(day, time) => open(null, day, time)}
+                  onComplete={complete}
+                  pending={pending}
+                  dragTask={dragTask}
+                  dragTarget={dragTarget}
+                  timeAxis={timeAxis}
+                />
+              </div>
             </div>
-          </div>
-        </section>
-      </div>
-      <PlannerMobileNavigation
-        mobile={mobile}
-        sidebarMode={sidebarMode}
-        total={displayTotal}
-        onShowPlanner={() => setMobile("planner")}
-        onCreate={() => open(null, displayedDay, mobile === "planner" ? "09:00" : undefined)}
-        onSelectSidebar={selectSidebar}
-      />
-      {editor && (
-        <TaskEditor
-          key={editor.task?.id ?? "new"}
-          {...editor}
-          timezone={timezone}
-          onClose={() => {
-            setEditor(null);
-          }}
-          onSaved={(date) => {
-            setMobile(date ? "planner" : "inbox");
-            if (date && !displayedDays.includes(date))
-              navigate(date, displayedView);
-          }}
-          returnFocus={returnFocus}
+          </section>
+        </div>
+        <PlannerMobileNavigation
+          mobile={mobile}
+          sidebarMode={sidebarMode}
+          total={displayTotal}
+          onShowPlanner={() => setMobile("planner")}
+          onCreate={() =>
+            open(null, displayedDay, mobile === "planner" ? "09:00" : undefined)
+          }
+          onSelectSidebar={selectSidebar}
         />
-      )}
-      {routineEditorOpen && (
-        <RoutineEditor
-          date={displayedDay}
-          routine={editingRoutine}
-          onClose={() => setRoutineEditorOpen(false)}
-          onSaved={() => router.refresh()}
-        />
-      )}
-    </main>
-    <DragOverlay dropAnimation={null} modifiers={[centerOverlayOnCursor]}>
-      {dragTask && (() => {
-        const MarkerIcon = timelineMarker(dragTask).icon;
-        return (
-          <div
-            className="schedule-drag-marker"
-            data-color={taskColor(dragTask.color)}
-            aria-hidden="true"
-          >
-            <MarkerIcon size={22} strokeWidth={2.4} />
-          </div>
-        );
-      })()}
-    </DragOverlay>
+        {editor && (
+          <TaskEditor
+            key={editor.task?.id ?? "new"}
+            {...editor}
+            timezone={timezone}
+            onClose={() => {
+              setEditor(null);
+            }}
+            onSaved={(date) => {
+              setMobile(date ? "planner" : "inbox");
+              if (date && !displayedDays.includes(date))
+                navigate(date, displayedView);
+            }}
+            returnFocus={returnFocus}
+          />
+        )}
+        {routineEditorOpen && (
+          <RoutineEditor
+            date={displayedDay}
+            routine={editingRoutine}
+            onClose={() => setRoutineEditorOpen(false)}
+            onSaved={() => router.refresh()}
+          />
+        )}
+      </main>
+      <DragOverlay dropAnimation={null} modifiers={[centerOverlayOnCursor]}>
+        {dragTask &&
+          (() => {
+            const MarkerIcon = timelineMarker(dragTask).icon;
+            return (
+              <div
+                className="schedule-drag-marker"
+                data-color={taskColor(dragTask.color)}
+                aria-hidden="true"
+              >
+                <MarkerIcon size={22} strokeWidth={2.4} />
+              </div>
+            );
+          })()}
+      </DragOverlay>
     </DndContext>
   );
-
 }
