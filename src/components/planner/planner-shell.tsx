@@ -2,6 +2,7 @@
 import { useMemo, useRef, useState } from "react";
 import { PlannerToast } from "./planner-toast";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { LoaderCircle } from "lucide-react";
 import { scheduleCollision } from "./drag-schedule";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -306,6 +307,16 @@ export function PlannerShell({
                   timeAxis={timeAxis}
                 />
               </div>
+              {showRoutePending && (
+                <div className="planner-route-loading" role="status">
+                  <LoaderCircle
+                    className="planner-spinner"
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  <span>Loading your plan…</span>
+                </div>
+              )}
             </div>
           </section>
         </div>
