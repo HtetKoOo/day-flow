@@ -52,6 +52,7 @@ test("Exactly ten colors are accepted and arbitrary CSS is rejected", () => {
     title: "Read",
     notes: "",
     duration_minutes: "30",
+    icon: null,
     scheduled_date: null,
     start_time: null,
   };
