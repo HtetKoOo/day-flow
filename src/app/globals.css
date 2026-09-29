@@ -110,9 +110,9 @@
   --task-dot: #8ee66d;
 }
 .dark [data-color="sage"] {
-  --task-bg: #3e704c;
-  --task-fg: #efffe5;
-  --task-dot: #a5f36b;
+  --task-bg: #397a58;
+  --task-fg: #effff2;
+  --task-dot: #a3ec76;
 }
 [data-color="mint"] {
   --task-bg: #bdf5d9;
@@ -130,9 +130,9 @@
   --task-dot: #4ed4dc;
 }
 .dark [data-color="teal"] {
-  --task-bg: #1b7075;
-  --task-fg: #e4ffff;
-  --task-dot: #56dde7;
+  --task-bg: #087c74;
+  --task-fg: #e9fffb;
+  --task-dot: #5ce0cf;
 }
 [data-color="sky"] {
   --task-bg: #c7e9ff;
@@ -140,9 +140,9 @@
   --task-dot: #65b9fa;
 }
 .dark [data-color="sky"] {
-  --task-bg: #286fa6;
-  --task-fg: #eaf6ff;
-  --task-dot: #71c7ff;
+  --task-bg: #286fb2;
+  --task-fg: #edf8ff;
+  --task-dot: #78c6ff;
 }
 [data-color="lavender"] {
   --task-bg: #ded3ff;
@@ -150,7 +150,7 @@
   --task-dot: #aa90ff;
 }
 .dark [data-color="lavender"] {
-  --task-bg: #6b4ba3;
+  --task-bg: #6747a7;
   --task-fg: #f6efff;
   --task-dot: #c2a4ff;
 }
@@ -170,9 +170,9 @@
   --task-dot: #f58ba9;
 }
 .dark [data-color="rose"] {
-  --task-bg: #a44564;
-  --task-fg: #fff0f4;
-  --task-dot: #ff95b5;
+  --task-bg: #a43f67;
+  --task-fg: #fff0f5;
+  --task-dot: #ff9ec0;
 }
 [data-color="peach"] {
   --task-bg: #ffd5bb;
@@ -180,9 +180,9 @@
   --task-dot: #ff9d71;
 }
 .dark [data-color="peach"] {
-  --task-bg: #a95036;
-  --task-fg: #fff1e7;
-  --task-dot: #ffad79;
+  --task-bg: #a95238;
+  --task-fg: #fff3ed;
+  --task-dot: #ffb08b;
 }
 [data-color="amber"] {
   --task-bg: #fff0ad;
@@ -190,9 +190,9 @@
   --task-dot: #f4cf45;
 }
 .dark [data-color="amber"] {
-  --task-bg: #8d701c;
+  --task-bg: #8d6a12;
   --task-fg: #fffbed;
-  --task-dot: #ffd655;
+  --task-dot: #ffdc68;
 }
 [data-color="stone"] {
   --task-bg: #dce8fa;
@@ -200,9 +200,9 @@
   --task-dot: #9fbde9;
 }
 .dark [data-color="stone"] {
-  --task-bg: #405d85;
-  --task-fg: #eef5ff;
-  --task-dot: #abc9f6;
+  --task-bg: #596270;
+  --task-fg: #f4f7fb;
+  --task-dot: #b7c3d2;
 }
 
 .eyebrow {
@@ -1130,6 +1130,27 @@
   padding: 9px;
   font-size: 13px;
 }
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.icon-picker button {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--background);
+  color: var(--muted-foreground);
+}
+.icon-picker button[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 15%, var(--background));
+  color: var(--primary);
+}
 .duration-editor {
   border-bottom: 1px solid var(--border);
   padding: 4px 0 18px;
@@ -1666,4 +1687,115 @@ body {
   .timeline-card-body {
     padding: 8px 10px;
   }
+}
+
+/* Editors keep the timetable visible on desktop and become touch-friendly sheets
+   on small screens. This override also keeps both task and routine forms aligned. */
+@keyframes sheet-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes sheet-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (min-width: 761px) {
+  .sheet-overlay {
+    background: #15131b52;
+    backdrop-filter: blur(2px);
+  }
+  .task-sheet {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: min(460px, 42vw);
+    max-height: none;
+    transform: none;
+    border-width: 0 0 0 1px;
+    border-radius: 28px 0 0 28px;
+    padding: 28px;
+    animation: sheet-slide-in-right 0.2s ease-out;
+  }
+}
+@media (max-width: 760px) {
+  .task-sheet {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 94dvh;
+    transform: none;
+    border-radius: 29px 29px 0 0;
+    padding: 12px 23px max(24px, env(safe-area-inset-bottom));
+    animation: sheet-slide-up 0.2s ease-out;
+  }
+  .sheet-handle {
+    display: block;
+    width: 34px;
+    height: 4px;
+    margin: 0 auto 20px;
+    border-radius: 5px;
+    background: var(--input);
+  }
+}
+
+.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #15131b88;
+  backdrop-filter: blur(3px);
+}
+.confirmation-dialog {
+  position: fixed;
+  z-index: 61;
+  top: 50%;
+  left: 50%;
+  width: min(360px, calc(100vw - 40px));
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 22px;
+  animation: fade-in 0.16s ease;
+}
+.confirmation-dialog h2 {
+  font-size: 18px;
+  font-weight: 650;
+}
+.confirmation-dialog p {
+  margin-top: 8px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+.confirmation-danger {
+  border: 0;
+  border-radius: 999px;
+  background: var(--destructive);
+  color: var(--background);
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
 }

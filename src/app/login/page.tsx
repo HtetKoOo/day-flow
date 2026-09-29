@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { hasSupabaseConfig } from "@/lib/env";
 import { LoginForm } from "@/components/auth/login-form";
+import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 export default async function Login({
   searchParams,
@@ -9,6 +10,10 @@ export default async function Login({
 }) {
   const { confirmation } = await searchParams;
   if (!hasSupabaseConfig()) redirect("/setup");
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (typeof data?.claims?.sub === "string") redirect("/planner");
+
   return (
     <main className="mx-auto max-w-md px-6 py-20">
       <p className="eyebrow">✦ DAYFLOW</p>

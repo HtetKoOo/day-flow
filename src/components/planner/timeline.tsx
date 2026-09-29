@@ -12,12 +12,16 @@ import { useDroppable } from "@dnd-kit/core";
 import { endTime, minutes } from "@/lib/tasks/schedule";
 import { agendaTasks, clockTime } from "@/lib/tasks/agenda";
 import { taskColor } from "@/lib/tasks/colors";
+import { taskIcon } from "@/lib/tasks/icons";
 import { DraggableTaskCard } from "./drag-schedule";
 import type { InboxTask, ScheduledTask } from "@/lib/tasks/types";
 
 export function timelineMarker(
-  task: Pick<InboxTask, "title" | "duration_minutes">,
+  task: Pick<InboxTask, "title" | "duration_minutes" | "icon">,
 ) {
+  const selectedIcon = taskIcon(task.icon);
+  if (selectedIcon)
+    return { icon: selectedIcon, moment: task.icon === "sunrise" };
   const title = task.title.toLocaleLowerCase();
   if (/wake|morning/.test(title)) return { icon: Sunrise, moment: true };
   if (/breakfast|lunch|dinner|coffee|meal/.test(title))
@@ -65,6 +69,7 @@ export function Timeline({
   onComplete,
   pending,
   compact = false,
+  disableDrag = false,
   draggingTask = null,
   dragTime = null,
   dragPosition = null,
@@ -77,6 +82,7 @@ export function Timeline({
   onComplete: (task: ScheduledTask) => void;
   pending: boolean;
   compact?: boolean;
+  disableDrag?: boolean;
   draggingTask?: InboxTask | null;
   dragTime?: string | null;
   dragPosition?: number | null;
@@ -277,7 +283,10 @@ export function Timeline({
               ))}
             <DraggableTaskCard
               task={task}
-              disabled={pending || compact || Boolean(task.is_routine)}
+              disabled={
+                pending || compact || disableDrag || Boolean(task.is_routine)
+              }
+              allowControlsWhenDragDisabled={disableDrag}
               className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${task.is_routine ? "is-routine" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
               data-color={taskColor(task.color)}
               data-timeline-segment

@@ -1,5 +1,8 @@
+import type { TaskIconName } from "@/lib/tasks/icons";
+
 export type InboxTask = {
   color?: string;
+  icon?: TaskIconName;
   scheduled_date?: string | null;
   start_time?: string | null;
   id: string;
