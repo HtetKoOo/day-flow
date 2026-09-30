@@ -5,9 +5,21 @@ DayFlow is a personal daily planner for making a calm plan tonight and following
 **Live app:** [day-flow-plan.vercel.app](https://day-flow-plan.vercel.app)
 **Explore the demo:** [day-flow-plan.vercel.app/demo](https://day-flow-plan.vercel.app/demo)
 
+![DayFlow daily planner with Inbox tasks and a visual timeline](public/images/demo-day.png)
+
 ## Live demo
 
 Open [/demo](https://day-flow-plan.vercel.app/demo) to explore a complete sample plan without creating an account. Demo tasks and routines are generated around the viewer’s current date, and every change resets when the visitor leaves the page. Create an account to save personal data.
+
+## Highlights
+
+### Plan the whole week
+
+![DayFlow Week view with recurring routines and scheduled work](public/images/demo-week.png)
+
+### Edit tasks without losing your place
+
+![DayFlow task editor with color, icon, time, and duration controls](public/images/demo-editor.png)
 
 ## What DayFlow does
 
