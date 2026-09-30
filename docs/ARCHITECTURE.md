@@ -13,6 +13,14 @@ A **task** is a user-owned item. It can be in Inbox or scheduled for one date an
 
 Every data row is owned by the signed-in user. Supabase RLS is the security boundary; client-side filtering is only a UI convenience.
 
+## Authentication and email
+
+DayFlow uses Supabase Auth for email/password and Google OAuth sign-in. The browser Google flow redirects through Supabase, then returns to `/auth/confirm`, where the server exchanges the authorization code for a cookie-backed session. Email confirmation and password recovery use the same route with a token hash.
+
+Transactional email is delivered through Resend SMTP, using the verified `mail.htetkooo.dev` subdomain. SMTP credentials live only in the Supabase dashboard. The application does not store or expose the Resend API key.
+
+The deployed callback origin is `https://dayflow.htetkooo.dev`; local development uses `http://localhost:3000`. Both are present in the Supabase Redirect URLs allow list. Google Cloud receives only the Supabase callback URL, `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
+
 ## Planner flow
 
 1. The server loads the requested planner range from `/planner?date=…&view=…`.
@@ -57,7 +65,9 @@ Use `supabase migration repair` only when the remote schema is known to already 
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, and `pnpm build` pass.
 - New migration is reviewed and applied to the intended Supabase project.
 - Vercel has the public Supabase URL and publishable key for the environment.
-- Supabase Auth Site URL and Redirect URLs include the deployed domain.
+- Supabase Auth Site URL is `https://dayflow.htetkooo.dev`, and its Redirect URLs include production and localhost.
+- Resend SMTP has a verified sender, and a password-reset email arrives from `no-reply@mail.htetkooo.dev`.
+- Google OAuth completes from the deployed domain and localhost with a configured test user.
 - Test with two accounts: each account must only see its own tasks and routines.
 - Test a second browser tab: schedule/completion changes should appear without a manual refresh.
 - Smoke-test mobile, Safari, and the deployed production URL.
