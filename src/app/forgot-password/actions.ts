@@ -28,7 +28,12 @@ export async function requestPasswordReset(
   );
 
   if (error)
-    return { message: "Unable to send a reset link. Please try again." };
+    return {
+      message:
+        error.status === 429
+          ? "Too many email requests. Please try again later."
+          : "Unable to send a reset link. Please try again.",
+    };
 
   // Keep this response neutral so an address cannot be used to discover accounts.
   return {

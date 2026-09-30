@@ -1,13 +1,28 @@
 "use client";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { signIn } from "@/app/login/actions";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 export function LoginForm() {
   const [state, action, pending] = useActionState(signIn, { message: "" });
+  const [submittedMode, setSubmittedMode] = useState<"login" | "signup">(
+    "login",
+  );
+
+  function trackSubmission(event: FormEvent<HTMLFormElement>) {
+    const submitter = (event.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement | null;
+    setSubmittedMode(submitter?.value === "signup" ? "signup" : "login");
+  }
+
   return (
-    <form action={action} className="mt-8 space-y-5">
+    <form action={action} className="mt-8 space-y-5" onSubmit={trackSubmission}>
+      <GoogleSignInButton disabled={pending} />
+      <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+        or continue with email
+      </div>
       <label className="block space-y-2">
         <span>Email</span>
         <Input name="email" type="email" autoComplete="email" required />
@@ -24,7 +39,7 @@ export function LoginForm() {
         />
       </label>
       <Button className="w-full" name="mode" value="login" disabled={pending}>
-        {pending ? "Please wait…" : "Sign in"}
+        {pending && submittedMode === "login" ? "Signing in…" : "Sign in"}
       </Button>
       <Link
         className="block text-center text-sm text-primary underline-offset-4 hover:underline"
@@ -39,7 +54,9 @@ export function LoginForm() {
         value="signup"
         disabled={pending}
       >
-        Create account
+        {pending && submittedMode === "signup"
+          ? "Creating account…"
+          : "Create account"}
       </Button>
       <p role="status" className="text-sm text-muted-foreground">
         {state.message}

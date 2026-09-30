@@ -1,5 +1,6 @@
 "use server";
 import { z } from "zod";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 export type LoginState = { message: string };
@@ -20,13 +21,23 @@ export async function signIn(
     };
   const supabase = await createClient();
   const { email, password, mode } = input.data;
+  const origin = (await headers()).get("origin");
   const { error } =
     mode === "signup"
-      ? await supabase.auth.signUp({ email, password })
+      ? await supabase.auth.signUp({
+          email,
+          password,
+          options: origin
+            ? { emailRedirectTo: `${origin}/auth/confirm` }
+            : undefined,
+        })
       : await supabase.auth.signInWithPassword({ email, password });
   if (error)
     return {
-      message: "Unable to continue. Check your details or try again later.",
+      message:
+        error.status === 429
+          ? "Too many email requests. Please try again later."
+          : "Unable to continue. Check your details or try again later.",
     };
   if (mode === "signup")
     return {
