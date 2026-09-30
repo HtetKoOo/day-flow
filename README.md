@@ -2,14 +2,14 @@
 
 DayFlow is a personal daily planner for making a calm plan tonight and following it tomorrow. It combines an Inbox, a visual timetable, recurring weekly routines, and fast Day / 2 days / Week views.
 
-**Live app:** [day-flow-plan.vercel.app](https://day-flow-plan.vercel.app)
-**Explore the demo:** [day-flow-plan.vercel.app/demo](https://day-flow-plan.vercel.app/demo)
+**Live app:** [dayflow.htetkooo.dev](https://dayflow.htetkooo.dev)
+**Explore the demo:** [dayflow.htetkooo.dev/demo](https://dayflow.htetkooo.dev/demo)
 
 ![DayFlow daily planner with Inbox tasks and a visual timeline](public/images/demo-day.png)
 
 ## Live demo
 
-Open [/demo](https://day-flow-plan.vercel.app/demo) to explore a complete sample plan without creating an account. Demo tasks and routines are generated around the viewer’s current date, and every change resets when the visitor leaves the page. Create an account to save personal data.
+Open [/demo](https://dayflow.htetkooo.dev/demo) to explore a complete sample plan without creating an account. Demo tasks and routines are generated around the viewer’s current date, and every change resets when the visitor leaves the page. Create an account to save personal data.
 
 ## Highlights
 
@@ -23,8 +23,8 @@ Open [/demo](https://day-flow-plan.vercel.app/demo) to explore a complete sample
 
 ## What DayFlow does
 
-- Email/password authentication, email confirmation, password reset, and account settings
-- Inbox tasks with title, notes, color, duration, completion, and deletion
+- Email/password and Google authentication, email confirmation, password reset, and account settings
+- Inbox tasks with title, notes, color, icon, duration, completion, and deletion
 - Schedule tasks in the timetable, edit them, or return them to Inbox
 - Drag tasks between Inbox and timetable; drag scheduled tasks to a new time
 - Immediate UI updates with background server confirmation, Undo, browser-tab sync, and Supabase realtime updates
@@ -36,6 +36,7 @@ Open [/demo](https://day-flow-plan.vercel.app/demo) to explore a complete sample
 
 - Next.js App Router, React, TypeScript
 - Supabase Auth, PostgreSQL, Row Level Security, and Realtime
+- Resend SMTP for transactional authentication email and Google OAuth
 - dnd-kit, date-fns, Zod, Radix UI, Lucide
 - Vercel deployment and pnpm
 
@@ -70,13 +71,29 @@ pnpm exec supabase link --project-ref YOUR_PROJECT_REF
 pnpm exec supabase db push
 ```
 
-After deployment, set the Supabase **Site URL** to the production domain and add the same domain to **Redirect URLs**. The email-confirmation template should link to:
+### Authentication configuration
+
+For the deployed application, configure Supabase Auth with the following URLs:
+
+- **Site URL:** `https://dayflow.htetkooo.dev`
+- **Redirect URLs:** `https://dayflow.htetkooo.dev/**` and `http://localhost:3000/**`
+
+The confirmation-email template must use `ConfirmationURL`, so local and production links both return to the correct callback route:
 
 ```html
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">
-  Confirm your email
-</a>
+<a href="{{ .ConfirmationURL }}"> Confirm your email </a>
 ```
+
+Configure a custom SMTP provider before inviting real users. DayFlow uses Resend with a verified sending subdomain and a sender such as `DayFlow <no-reply@mail.htetkooo.dev>`. Store the Resend API key only in Supabase **Authentication → SMTP Settings**; never expose it in application environment variables.
+
+To enable Google sign-in:
+
+1. Create a Web OAuth client in Google Cloud.
+2. Add `https://dayflow.htetkooo.dev` and `http://localhost:3000` as authorized JavaScript origins.
+3. Copy the Supabase Google provider callback URL (`https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`) into Google Cloud's authorized redirect URIs.
+4. Enable Google in Supabase **Authentication → Providers**, then add the Google Client ID and Client Secret there.
+
+Google and Resend secrets belong only in their respective provider dashboards.
 
 For local Supabase development (Docker required):
 
@@ -108,8 +125,9 @@ pnpm build
 3. Set Node.js 24, `pnpm install --frozen-lockfile` as the install command, and `pnpm build` as the build command.
 4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Production and Preview as appropriate.
 5. Apply pending Supabase migrations with `pnpm exec supabase db push`.
-6. Update Supabase Auth Site URL and Redirect URLs to the deployed domain.
-7. Smoke-test signup, password reset, planner navigation, drag/drop, routines, and a second browser tab before release.
+6. Connect `dayflow.htetkooo.dev` in Vercel and configure its DNS records with the domain provider.
+7. Update Supabase Auth Site URL and Redirect URLs, configure Resend SMTP, and enable Google OAuth.
+8. Smoke-test email signup/confirmation, password reset, Google sign-in, planner navigation, drag/drop, routines, and a second browser tab before release.
 
 ## Project map
 

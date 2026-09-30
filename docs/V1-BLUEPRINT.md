@@ -6,8 +6,8 @@ DayFlow helps one person make a realistic plan for tomorrow, then follow that pl
 
 ## V1 shipped scope
 
-- Supabase email/password authentication, confirmation, password reset, protected routes, and settings
-- Inbox tasks: title, notes, duration, color, edit, complete/reopen, and delete
+- Supabase email/password and Google authentication, confirmation, password reset, protected routes, and settings
+- Inbox tasks: title, notes, duration, color, icon, edit, complete/reopen, and delete
 - Timetable scheduling: day/time, free-gap add buttons, task editing, Inbox return, and conflict feedback
 - Drag tasks from Inbox to the timetable and move scheduled tasks to another date/time
 - Day, 2 days, and Week views; Today, arrows, and shareable URL state
@@ -27,11 +27,10 @@ DayFlow helps one person make a realistic plan for tomorrow, then follow that pl
 
 ## V1 release criteria
 
-The release is ready when a user can sign up, reset a password, add an Inbox task, schedule and move it, complete it, create/edit a routine, navigate all planner views, and see changes update in another open tab. Each flow must work on the deployed URL and in Safari/mobile testing.
+The release is ready when a user can sign up, confirm an email, reset a password, sign in with Google, add an Inbox task, schedule and move it, complete it, create/edit a routine, navigate all planner views, and see changes update in another open tab. Each flow must work on the deployed URL and in Safari/mobile testing.
 
 ## Deliberately deferred
 
-- Task icons and categories
 - Calendar integrations and notifications
 - Analytics and reports
 - AI scheduling
