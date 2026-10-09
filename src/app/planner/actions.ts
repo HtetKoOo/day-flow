@@ -187,6 +187,52 @@ export async function updateRoutine(
   return { ok: true, message: "Routine updated." };
 }
 
+export async function setRoutineActive(
+  id: string,
+  isActive: boolean,
+): Promise<TaskResult> {
+  const { supabase, user } = await requireUser();
+  if (!taskId.safeParse(id).success)
+    return { ok: false, message: "Invalid routine." };
+  const { data, error } = await supabase
+    .from("recurring_tasks")
+    .update({ is_active: isActive })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id")
+    .single();
+  if (error || !data)
+    return {
+      ok: false,
+      message: "Couldn’t update this routine. Please try again.",
+    };
+  revalidatePath("/planner");
+  return {
+    ok: true,
+    message: isActive ? "Routine resumed." : "Routine paused.",
+  };
+}
+
+export async function deleteRoutine(id: string): Promise<TaskResult> {
+  const { supabase, user } = await requireUser();
+  if (!taskId.safeParse(id).success)
+    return { ok: false, message: "Invalid routine." };
+  const { data, error } = await supabase
+    .from("recurring_tasks")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id")
+    .single();
+  if (error || !data)
+    return {
+      ok: false,
+      message: "Couldn’t delete this routine. Please try again.",
+    };
+  revalidatePath("/planner");
+  return { ok: true, message: "Routine deleted." };
+}
+
 export async function saveTask(
   id: string | null,
   input: unknown,
@@ -211,7 +257,7 @@ export async function saveTask(
     return {
       ok: false,
       message:
-        "Task colors need the latest database update. Apply the task_colors migration in Supabase, then retry.",
+        "Task appearance needs the latest database update. Apply the pending Supabase migrations, then retry.",
     };
   if (error || !data)
     return {

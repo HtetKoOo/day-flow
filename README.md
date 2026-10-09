@@ -27,7 +27,7 @@ Open [/demo](https://dayflow.htetkooo.dev/demo) to explore a complete sample pla
 - Inbox tasks with title, notes, color, icon, duration, completion, and deletion
 - Schedule tasks in the timetable, edit them, or return them to Inbox
 - Drag tasks between Inbox and timetable; drag scheduled tasks to a new time
-- Immediate UI updates with background server confirmation, Undo, browser-tab sync, and Supabase realtime updates
+- Immediate UI updates with background server confirmation, Undo, and realtime task/routine sync across tabs and devices
 - Day, 2 days, and Week views with URL-based navigation
 - Weekly routines with chosen weekdays, start date, optional end date, start time, duration, and notes
 - Responsive desktop and mobile UI, dark/light/system appearance, and PWA install support
@@ -127,7 +127,7 @@ pnpm build
 5. Apply pending Supabase migrations with `pnpm exec supabase db push`.
 6. Connect `dayflow.htetkooo.dev` in Vercel and configure its DNS records with the domain provider.
 7. Update Supabase Auth Site URL and Redirect URLs, configure Resend SMTP, and enable Google OAuth.
-8. Smoke-test email signup/confirmation, password reset, Google sign-in, planner navigation, drag/drop, routines, and a second browser tab before release.
+8. Smoke-test email signup/confirmation, password reset, Google sign-in, planner navigation, drag/drop, routines, and task/routine edits in a second browser or device before release.
 
 ## Project map
 

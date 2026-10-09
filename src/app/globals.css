@@ -110,8 +110,8 @@
   --task-dot: #8ee66d;
 }
 .dark [data-color="sage"] {
-  --task-bg: #397a58;
-  --task-fg: #effff2;
+  --task-bg: #a3ec76;
+  --task-fg: #1d4d2c;
   --task-dot: #a3ec76;
 }
 [data-color="mint"] {
@@ -120,8 +120,8 @@
   --task-dot: #55dca2;
 }
 .dark [data-color="mint"] {
-  --task-bg: #1f7960;
-  --task-fg: #e4fff3;
+  --task-bg: #60e3ae;
+  --task-fg: #14563f;
   --task-dot: #60e3ae;
 }
 [data-color="teal"] {
@@ -130,8 +130,8 @@
   --task-dot: #4ed4dc;
 }
 .dark [data-color="teal"] {
-  --task-bg: #087c74;
-  --task-fg: #e9fffb;
+  --task-bg: #5ce0cf;
+  --task-fg: #12565c;
   --task-dot: #5ce0cf;
 }
 [data-color="sky"] {
@@ -140,8 +140,8 @@
   --task-dot: #65b9fa;
 }
 .dark [data-color="sky"] {
-  --task-bg: #286fb2;
-  --task-fg: #edf8ff;
+  --task-bg: #78c6ff;
+  --task-fg: #164d78;
   --task-dot: #78c6ff;
 }
 [data-color="lavender"] {
@@ -150,8 +150,8 @@
   --task-dot: #aa90ff;
 }
 .dark [data-color="lavender"] {
-  --task-bg: #6747a7;
-  --task-fg: #f6efff;
+  --task-bg: #c2a4ff;
+  --task-fg: #49337d;
   --task-dot: #c2a4ff;
 }
 [data-color="lilac"] {
@@ -160,8 +160,8 @@
   --task-dot: #e18af0;
 }
 .dark [data-color="lilac"] {
-  --task-bg: #8b438c;
-  --task-fg: #fff0ff;
+  --task-bg: #e895ee;
+  --task-fg: #703682;
   --task-dot: #e895ee;
 }
 [data-color="rose"] {
@@ -170,8 +170,8 @@
   --task-dot: #f58ba9;
 }
 .dark [data-color="rose"] {
-  --task-bg: #a43f67;
-  --task-fg: #fff0f5;
+  --task-bg: #ff9ec0;
+  --task-fg: #7d2949;
   --task-dot: #ff9ec0;
 }
 [data-color="peach"] {
@@ -180,8 +180,8 @@
   --task-dot: #ff9d71;
 }
 .dark [data-color="peach"] {
-  --task-bg: #a95238;
-  --task-fg: #fff3ed;
+  --task-bg: #ffb08b;
+  --task-fg: #79351f;
   --task-dot: #ffb08b;
 }
 [data-color="amber"] {
@@ -190,8 +190,8 @@
   --task-dot: #f4cf45;
 }
 .dark [data-color="amber"] {
-  --task-bg: #8d6a12;
-  --task-fg: #fffbed;
+  --task-bg: #ffdc68;
+  --task-fg: #604b0f;
   --task-dot: #ffdc68;
 }
 [data-color="stone"] {
@@ -200,8 +200,8 @@
   --task-dot: #9fbde9;
 }
 .dark [data-color="stone"] {
-  --task-bg: #596270;
-  --task-fg: #f4f7fb;
+  --task-bg: #b7c3d2;
+  --task-fg: #354f70;
   --task-dot: #b7c3d2;
 }
 
@@ -906,8 +906,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--task-dot);
-  color: #24232b;
+  /* The swatch is the same fill used by a timetable task, so choosing a
+     colour gives an accurate preview in either theme. */
+  background: var(--task-bg);
+  color: var(--task-fg);
   border: 2px solid transparent;
   outline-offset: 3px;
 }
@@ -1728,6 +1730,38 @@ body {
     border-radius: 28px 0 0 28px;
     padding: 28px;
     animation: sheet-slide-in-right 0.2s ease-out;
+  }
+}
+/* At tablet and compact-laptop widths, a narrow side sheet leaves the form
+   cramped even though the page itself has room. Give editing controls a wider
+   working surface and keep the colour/icon choices compact. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .task-sheet {
+    width: min(560px, calc(100vw - 36px));
+    padding: 24px 26px;
+  }
+  .editor-fields {
+    margin-top: 18px;
+  }
+  .color-picker {
+    display: grid;
+    grid-template-columns: repeat(8, 32px);
+    justify-content: space-between;
+    gap: 8px;
+    margin: 18px 0;
+  }
+  .icon-picker {
+    display: grid;
+    grid-template-columns: repeat(8, 40px);
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .icon-picker button {
+    width: 40px;
+    height: 40px;
+  }
+  .editor-row {
+    gap: 12px;
   }
 }
 @media (max-width: 760px) {

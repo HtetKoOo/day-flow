@@ -33,6 +33,7 @@ export function usePlannerTaskDisplay({
     sourceTotal: total,
   }));
   const receivedMessages = useRef(new Set<string>());
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (
     display.sourceTasks !== tasks ||
@@ -105,6 +106,23 @@ export function usePlannerTaskDisplay({
     [],
   );
 
+  // Several database updates can arrive together (for example, a routine
+  // edit affecting the current view). Coalesce them into one server refresh.
+  const refreshPlanner = useCallback(() => {
+    if (refreshTimer.current) return;
+    refreshTimer.current = setTimeout(() => {
+      refreshTimer.current = null;
+      router.refresh();
+    }, 80);
+  }, [router]);
+
+  useEffect(
+    () => () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    },
+    [],
+  );
+
   useEffect(() => {
     const receive = (message: unknown) => {
       if (!message || typeof message !== "object") return;
@@ -149,8 +167,12 @@ export function usePlannerTaskDisplay({
       .channel("dayflow-planner-tasks")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "tasks" },
+        { event: "*", schema: "public", table: "tasks" },
         (payload) => {
+          if (payload.eventType !== "UPDATE") {
+            refreshPlanner();
+            return;
+          }
           const row = payload.new as Partial<InboxTask>;
           if (
             typeof row.id !== "string" ||
@@ -159,7 +181,7 @@ export function usePlannerTaskDisplay({
             typeof row.duration_minutes !== "number" ||
             typeof row.is_completed !== "boolean"
           ) {
-            router.refresh();
+            refreshPlanner();
             return;
           }
           applySchedule(
@@ -169,13 +191,19 @@ export function usePlannerTaskDisplay({
               ? row.start_time.slice(0, 5)
               : null,
           );
+          refreshPlanner();
         },
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "recurring_tasks" },
+        () => refreshPlanner(),
       )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [applySchedule, router]);
+  }, [applySchedule, refreshPlanner]);
 
   return {
     displayTasks: display.tasks,

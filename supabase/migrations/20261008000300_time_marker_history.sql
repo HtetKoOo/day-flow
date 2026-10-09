@@ -1,0 +1,3 @@
+-- This version was applied to the remote project during the time-marker
+-- experiment. Keep its version locally so Supabase can reconcile history.
+-- The experiment is reverted by the following migration.

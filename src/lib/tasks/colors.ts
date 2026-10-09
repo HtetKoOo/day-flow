@@ -14,9 +14,11 @@ export type TaskColor = (typeof taskColors)[number];
 
 export const taskPickerColors = [
   "sage",
+  "mint",
   "teal",
   "sky",
   "lavender",
+  "lilac",
   "rose",
   "peach",
   "amber",

@@ -2,8 +2,13 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { Dialog } from "radix-ui";
-import { CalendarClock, Check, X } from "lucide-react";
-import { createRoutine, updateRoutine } from "@/app/planner/actions";
+import { CalendarClock, Check, Pause, Play, Trash2, X } from "lucide-react";
+import {
+  createRoutine,
+  deleteRoutine,
+  setRoutineActive,
+  updateRoutine,
+} from "@/app/planner/actions";
 import { DatePicker, TimePicker } from "@/components/planner/date-time-picker";
 import { DurationPicker } from "@/components/planner/duration-picker";
 import { weekdayLabels, type Routine } from "@/lib/tasks/routines";
@@ -29,6 +34,7 @@ export function RoutineEditor({
   const [icon, setIcon] = useState<TaskIconName>(routine?.icon ?? "focus");
   const [hasEndDate, setHasEndDate] = useState(Boolean(routine?.ends_on));
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,6 +55,26 @@ export function RoutineEditor({
       const result = routine
         ? await updateRoutine(routine.id, values)
         : await createRoutine(values);
+      if (!result.ok) return setError(result.message);
+      onSaved();
+      onClose();
+    });
+  }
+  function toggleActive() {
+    if (!routine) return;
+    setError("");
+    startTransition(async () => {
+      const result = await setRoutineActive(routine.id, !routine.is_active);
+      if (!result.ok) return setError(result.message);
+      onSaved();
+      onClose();
+    });
+  }
+  function remove() {
+    if (!routine) return;
+    setError("");
+    startTransition(async () => {
+      const result = await deleteRoutine(routine.id);
       if (!result.ok) return setError(result.message);
       onSaved();
       onClose();
@@ -211,13 +237,81 @@ export function RoutineEditor({
               </p>
             )}
             <div className="editor-footer">
-              <span />
+              {routine ? (
+                <div className="editor-secondary-actions">
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label={
+                      routine.is_active ? "Pause routine" : "Resume routine"
+                    }
+                    title={
+                      routine.is_active ? "Pause routine" : "Resume routine"
+                    }
+                    disabled={pending}
+                    onClick={toggleActive}
+                  >
+                    {routine.is_active ? (
+                      <Pause size={18} />
+                    ) : (
+                      <Play size={18} />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-button danger"
+                    aria-label="Delete routine"
+                    title="Delete routine"
+                    disabled={pending}
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ) : (
+                <span />
+              )}
               <button className="primary-button" disabled={pending}>
                 {pending ? "Saving…" : routine ? "Save changes" : "Add routine"}
                 <Check size={17} />
               </button>
             </div>
           </form>
+          <Dialog.Root
+            open={confirmDelete}
+            onOpenChange={(open) =>
+              !open && !pending && setConfirmDelete(false)
+            }
+          >
+            <Dialog.Portal>
+              <Dialog.Overlay className="confirmation-overlay" />
+              <Dialog.Content className="confirmation-dialog">
+                <Dialog.Title>Delete this routine?</Dialog.Title>
+                <Dialog.Description>
+                  Its future timetable blocks will be removed. This can’t be
+                  undone.
+                </Dialog.Description>
+                <div className="confirmation-actions">
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={pending}
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Keep routine
+                  </button>
+                  <button
+                    type="button"
+                    className="confirmation-danger"
+                    disabled={pending}
+                    onClick={remove}
+                  >
+                    Delete routine
+                  </button>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

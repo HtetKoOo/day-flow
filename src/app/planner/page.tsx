@@ -58,7 +58,6 @@ export default async function Planner({
     .select(
       "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active,color,icon",
     )
-    .eq("is_active", true)
     .order("start_time");
   const { data, error } = await supabase.rpc("planner_snapshot", {
     p_selected_date: requestedDate.success ? requestedDate.data : null,
@@ -160,26 +159,28 @@ export default async function Planner({
       ? [...strip.days, snapshot.loaded_through]
       : strip.days;
   const { data: routines } = await routinesRequest;
-  const activeRoutines = (routines ?? []) as Routine[];
-  const routineBlocks = activeRoutines.flatMap((routine) =>
-    routineOccurrencesBetween(
-      routine,
-      strip.from,
-      loadedDays[loadedDays.length - 1],
-    ).map((date) => ({
-      id: `routine-${routine.id}-${date}`,
-      title: routine.title,
-      notes: routine.notes,
-      duration_minutes: routine.duration_minutes,
-      is_completed: false,
-      is_routine: true,
-      routine_id: routine.id,
-      color: routine.color ?? "sage",
-      icon: routine.icon,
-      scheduled_date: date,
-      start_time: routine.start_time,
-    })),
-  );
+  const allRoutines = (routines ?? []) as Routine[];
+  const routineBlocks = allRoutines
+    .filter((routine) => routine.is_active)
+    .flatMap((routine) =>
+      routineOccurrencesBetween(
+        routine,
+        strip.from,
+        loadedDays[loadedDays.length - 1],
+      ).map((date) => ({
+        id: `routine-${routine.id}-${date}`,
+        title: routine.title,
+        notes: routine.notes,
+        duration_minutes: routine.duration_minutes,
+        is_completed: false,
+        is_routine: true,
+        routine_id: routine.id,
+        color: routine.color ?? "sage",
+        icon: routine.icon,
+        scheduled_date: date,
+        start_time: routine.start_time,
+      })),
+    );
   return (
     <PlannerShell
       timezone={profile.timezone}
@@ -201,7 +202,7 @@ export default async function Planner({
       stripDays={strip.days}
       loadedDays={loadedDays}
       weekStartsOn={profile.week_starts_on}
-      routines={activeRoutines}
+      routines={allRoutines}
     />
   );
 }

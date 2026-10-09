@@ -507,6 +507,13 @@
   );
 }
 
+/* Cover only the sub-pixel seam between rows. The connector must not paint
+   into the task capsule above it. */
+.agenda:not(.agenda-time-aligned) .agenda-gap > .timeline-connector {
+  min-height: calc(var(--agenda-gap-height, 26px) + 1px);
+  margin-top: -1px;
+}
+
 /* Scheduled tasks drag from their full visual surface. The remaining controls
    keep their normal click behaviour because the drag sensor starts only after
    deliberate movement. */
@@ -705,64 +712,64 @@
   --timeline-connector-to: #dce8fa;
 }
 .dark .timeline-connector[data-from-color="sage"] {
-  --timeline-connector-from: #3e704c;
+  --timeline-connector-from: #a3ec76;
 }
 .dark .timeline-connector[data-from-color="mint"] {
-  --timeline-connector-from: #1f7960;
+  --timeline-connector-from: #60e3ae;
 }
 .dark .timeline-connector[data-from-color="teal"] {
-  --timeline-connector-from: #1b7075;
+  --timeline-connector-from: #5ce0cf;
 }
 .dark .timeline-connector[data-from-color="sky"] {
-  --timeline-connector-from: #286fa6;
+  --timeline-connector-from: #78c6ff;
 }
 .dark .timeline-connector[data-from-color="lavender"] {
-  --timeline-connector-from: #6b4ba3;
+  --timeline-connector-from: #c2a4ff;
 }
 .dark .timeline-connector[data-from-color="lilac"] {
-  --timeline-connector-from: #8b438c;
+  --timeline-connector-from: #e895ee;
 }
 .dark .timeline-connector[data-from-color="rose"] {
-  --timeline-connector-from: #a44564;
+  --timeline-connector-from: #ff9ec0;
 }
 .dark .timeline-connector[data-from-color="peach"] {
-  --timeline-connector-from: #a95036;
+  --timeline-connector-from: #ffb08b;
 }
 .dark .timeline-connector[data-from-color="amber"] {
-  --timeline-connector-from: #8d701c;
+  --timeline-connector-from: #ffdc68;
 }
 .dark .timeline-connector[data-from-color="stone"] {
-  --timeline-connector-from: #405d85;
+  --timeline-connector-from: #b7c3d2;
 }
 .dark .timeline-connector[data-to-color="sage"] {
-  --timeline-connector-to: #3e704c;
+  --timeline-connector-to: #a3ec76;
 }
 .dark .timeline-connector[data-to-color="mint"] {
-  --timeline-connector-to: #1f7960;
+  --timeline-connector-to: #60e3ae;
 }
 .dark .timeline-connector[data-to-color="teal"] {
-  --timeline-connector-to: #1b7075;
+  --timeline-connector-to: #5ce0cf;
 }
 .dark .timeline-connector[data-to-color="sky"] {
-  --timeline-connector-to: #286fa6;
+  --timeline-connector-to: #78c6ff;
 }
 .dark .timeline-connector[data-to-color="lavender"] {
-  --timeline-connector-to: #6b4ba3;
+  --timeline-connector-to: #c2a4ff;
 }
 .dark .timeline-connector[data-to-color="lilac"] {
-  --timeline-connector-to: #8b438c;
+  --timeline-connector-to: #e895ee;
 }
 .dark .timeline-connector[data-to-color="rose"] {
-  --timeline-connector-to: #a44564;
+  --timeline-connector-to: #ff9ec0;
 }
 .dark .timeline-connector[data-to-color="peach"] {
-  --timeline-connector-to: #a95036;
+  --timeline-connector-to: #ffb08b;
 }
 .dark .timeline-connector[data-to-color="amber"] {
-  --timeline-connector-to: #8d701c;
+  --timeline-connector-to: #ffdc68;
 }
 .dark .timeline-connector[data-to-color="stone"] {
-  --timeline-connector-to: #405d85;
+  --timeline-connector-to: #b7c3d2;
 }
 
 /* Dragging uses the same marker language as the timeline. The draggable
