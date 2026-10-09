@@ -1094,6 +1094,13 @@ button,
   border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
   background: color-mix(in srgb, var(--primary) 7%, var(--card));
 }
+.routine-card.is-paused {
+  opacity: 0.64;
+}
+.editor-secondary-actions {
+  display: flex;
+  gap: 4px;
+}
 .routine-card > svg:last-child {
   color: var(--muted-foreground);
 }
@@ -1313,43 +1320,43 @@ button,
 /* Preview palette for the public demo. Once approved, these values can become
    the shared task-color tokens used by the authenticated planner. */
 .dark .demo-planner [data-color="sage"] {
-  --task-bg: #397a58;
-  --task-fg: #effff2;
+  --task-bg: #a3ec76;
+  --task-fg: #1d4d2c;
   --task-dot: #a3ec76;
 }
 .dark .demo-planner [data-color="teal"] {
-  --task-bg: #087c74;
-  --task-fg: #e9fffb;
+  --task-bg: #5ce0cf;
+  --task-fg: #12565c;
   --task-dot: #5ce0cf;
 }
 .dark .demo-planner [data-color="sky"] {
-  --task-bg: #286fb2;
-  --task-fg: #edf8ff;
+  --task-bg: #78c6ff;
+  --task-fg: #164d78;
   --task-dot: #78c6ff;
 }
 .dark .demo-planner [data-color="lavender"] {
-  --task-bg: #6747a7;
-  --task-fg: #f7f0ff;
+  --task-bg: #c2a4ff;
+  --task-fg: #49337d;
   --task-dot: #c2a4ff;
 }
 .dark .demo-planner [data-color="rose"] {
-  --task-bg: #a43f67;
-  --task-fg: #fff0f5;
+  --task-bg: #ff9ec0;
+  --task-fg: #7d2949;
   --task-dot: #ff9ec0;
 }
 .dark .demo-planner [data-color="peach"] {
-  --task-bg: #a95238;
-  --task-fg: #fff3ed;
+  --task-bg: #ffb08b;
+  --task-fg: #79351f;
   --task-dot: #ffb08b;
 }
 .dark .demo-planner [data-color="amber"] {
-  --task-bg: #8d6a12;
-  --task-fg: #fffbea;
+  --task-bg: #ffdc68;
+  --task-fg: #604b0f;
   --task-dot: #ffdc68;
 }
 .dark .demo-planner [data-color="stone"] {
-  --task-bg: #596270;
-  --task-fg: #f4f7fb;
+  --task-bg: #b7c3d2;
+  --task-fg: #354f70;
   --task-dot: #b7c3d2;
 }
 .demo-editor-backdrop {

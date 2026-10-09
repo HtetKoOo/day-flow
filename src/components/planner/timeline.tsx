@@ -1,12 +1,25 @@
 "use client";
 import {
+  BedDouble,
+  BookOpen,
+  Briefcase,
   Plus,
   Check,
   Link2,
-  Sunrise,
+  CircleDot,
   Coffee,
+  Code2,
+  Dumbbell,
+  Gamepad2,
+  GraduationCap,
+  Languages,
   Moon,
   ListChecks,
+  MonitorPlay,
+  Sunrise,
+  Trophy,
+  UsersRound,
+  Video,
 } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
 import { endTime, minutes } from "@/lib/tasks/schedule";
@@ -24,6 +37,23 @@ export function timelineMarker(
     return { icon: selectedIcon, moment: task.icon === "sunrise" };
   const title = task.title.toLocaleLowerCase();
   if (/wake|morning/.test(title)) return { icon: Sunrise, moment: true };
+  if (/gym|workout|exercise/.test(title))
+    return { icon: Dumbbell, moment: false };
+  if (/table tennis|ping pong/.test(title))
+    return { icon: CircleDot, moment: false };
+  if (/sport|run|football|basketball|volleyball/.test(title))
+    return { icon: Trophy, moment: false };
+  if (/code|develop|program/.test(title)) return { icon: Code2, moment: false };
+  if (/language/.test(title)) return { icon: Languages, moment: false };
+  if (/study|learn/.test(title)) return { icon: BookOpen, moment: false };
+  if (/class|course/.test(title)) return { icon: GraduationCap, moment: false };
+  if (/video.*call|call.*video/.test(title))
+    return { icon: Video, moment: false };
+  if (/meeting/.test(title)) return { icon: UsersRound, moment: false };
+  if (/movie|film/.test(title)) return { icon: MonitorPlay, moment: false };
+  if (/game|gaming/.test(title)) return { icon: Gamepad2, moment: false };
+  if (/nap/.test(title)) return { icon: BedDouble, moment: false };
+  if (/work/.test(title)) return { icon: Briefcase, moment: false };
   if (/breakfast|lunch|dinner|coffee|meal/.test(title))
     return { icon: Coffee, moment: true };
   if (/sleep|bed|night/.test(title)) return { icon: Moon, moment: true };
@@ -33,7 +63,7 @@ export function timelineMarker(
 export function timelineTaskHeight(minutes: number, compact: boolean) {
   const heights = compact
     ? [46, 54, 66, 82, 98, 112, 126]
-    : [54, 66, 88, 110, 132, 150, 168];
+    : [56, 66, 88, 110, 132, 150, 168];
   const position =
     minutes <= 15
       ? 0
@@ -126,6 +156,11 @@ export function Timeline({
         ((clamped - lower) / Math.max(1, upper - lower))
     );
   };
+  const visualTaskEnd = (minute: number) => {
+    if (!timeAxis) return minute;
+    const clamped = Math.max(timeAxis.start, Math.min(timeAxis.end, minute));
+    return Math.min(timeAxis.end, Math.ceil(clamped / 15) * 15);
+  };
   const targetEnd =
     targetMinute === null || !draggingTask
       ? null
@@ -188,10 +223,14 @@ export function Timeline({
         const nextGap = items[index + 1]?.gap ?? 0;
         const marker = timelineMarker(task);
         const previousEnd = previousTask
-          ? minutes(previousTask.start_time) + previousTask.duration_minutes
+          ? visualTaskEnd(
+              minutes(previousTask.start_time) + previousTask.duration_minutes,
+            )
           : null;
         const taskPosition = timePosition(taskStart);
-        const taskEndPosition = timePosition(taskStart + task.duration_minutes);
+        const taskEndPosition = timePosition(
+          visualTaskEnd(taskStart + task.duration_minutes),
+        );
         const gapPosition =
           previousEnd === null ? 0 : timePosition(previousEnd);
         const gapVisualHeight = Math.max(0, taskPosition - gapPosition);

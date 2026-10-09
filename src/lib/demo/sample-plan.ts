@@ -137,6 +137,17 @@ export function demoScheduledTasks(
       start_time: "20:00",
     },
     {
+      id: "demo-task-love-call",
+      title: "Video call with love",
+      notes: "A little time together before the evening winds down.",
+      duration_minutes: 30,
+      color: "rose",
+      icon: "heart",
+      is_completed: false,
+      scheduled_date: today,
+      start_time: "19:30",
+    },
+    {
       id: "demo-task-share",
       title: "Share project update",
       notes: "",

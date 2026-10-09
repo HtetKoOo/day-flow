@@ -27,7 +27,7 @@ The deployed callback origin is `https://dayflow.htetkooo.dev`; local developmen
 2. `PlannerShell` coordinates the screen.
 3. Focused hooks isolate independent behavior:
    - `use-planner-navigation`: instant URL/range navigation and background route loading
-   - `use-planner-task-display`: optimistic task display, browser-tab sync, and Supabase Realtime updates
+   - `use-planner-task-display`: optimistic task display, browser-tab sync, and Supabase Realtime updates for shared tasks and routines
    - `use-planner-task-actions`: server confirmation, error feedback, completion, and Undo
    - `use-planner-drag`: dnd-kit sensors, pointer position, and drop-time resolution
    - `use-planner-shell-state`: responsive sidebar and remembered Inbox visibility
@@ -45,6 +45,11 @@ Task changes follow an optimistic pattern:
 4. Revert the optimistic change and show an error if the server rejects it.
 
 This makes common actions feel immediate while the server remains authoritative.
+
+Every task and routine database event also refreshes the planner snapshot in
+other open sessions. The refresh is briefly coalesced so a group of related
+events does not create repeated reads. Theme choice, open sheets, and unsaved
+editor drafts remain local to each device.
 
 ## Database changes
 
@@ -69,7 +74,7 @@ Use `supabase migration repair` only when the remote schema is known to already 
 - Resend SMTP has a verified sender, and a password-reset email arrives from `no-reply@mail.htetkooo.dev`.
 - Google OAuth completes from the deployed domain and localhost with a configured test user.
 - Test with two accounts: each account must only see its own tasks and routines.
-- Test a second browser tab: schedule/completion changes should appear without a manual refresh.
+- Test a second browser or device: task and routine create/edit/delete changes, task completion, schedule changes, and routine pause/resume should appear without a manual refresh.
 - Smoke-test mobile, Safari, and the deployed production URL.
 
 ## Safe extension points

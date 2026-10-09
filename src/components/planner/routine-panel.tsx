@@ -23,7 +23,7 @@ export function RoutinePanel({
             <li key={routine.id}>
               <button
                 type="button"
-                className="routine-card"
+                className={`routine-card ${routine.is_active ? "" : "is-paused"}`}
                 onClick={() => onEdit(routine)}
                 aria-label={`Edit ${routine.title} routine`}
               >
@@ -32,6 +32,7 @@ export function RoutinePanel({
                   <strong>{routine.title}</strong>
                   <span>{routineDaysLabel(routine.days_of_week)}</span>
                   <small>
+                    {routine.is_active ? "Active" : "Paused"} ·{" "}
                     {routine.start_time.slice(0, 5)} ·{" "}
                     {routine.duration_minutes} min · Weekly
                   </small>

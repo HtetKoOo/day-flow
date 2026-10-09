@@ -12,7 +12,7 @@ DayFlow helps one person make a realistic plan for tomorrow, then follow that pl
 - Drag tasks from Inbox to the timetable and move scheduled tasks to another date/time
 - Day, 2 days, and Week views; Today, arrows, and shareable URL state
 - Weekly routines with selected days, start/end dates, durations, and future timetable appearances
-- Instant optimistic feedback, Undo, cross-tab sync, Supabase Realtime task updates
+- Instant optimistic feedback, Undo, and realtime task/routine updates across tabs and devices
 - Responsive mobile/desktop interface and installable PWA shell
 - Per-user database isolation through RLS
 
@@ -28,6 +28,12 @@ DayFlow helps one person make a realistic plan for tomorrow, then follow that pl
 ## V1 release criteria
 
 The release is ready when a user can sign up, confirm an email, reset a password, sign in with Google, add an Inbox task, schedule and move it, complete it, create/edit a routine, navigate all planner views, and see changes update in another open tab. Each flow must work on the deployed URL and in Safari/mobile testing.
+
+## V1.1 release scope
+
+- Sync task create, edit, completion, deletion, and schedule changes across open tabs and devices.
+- Sync routine create, edit, pause/resume, and deletion so generated timetable blocks stay current everywhere.
+- Keep device-specific appearance preferences and unsaved editor drafts local.
 
 ## Deliberately deferred
 
