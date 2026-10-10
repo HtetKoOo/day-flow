@@ -9,10 +9,13 @@ export const metadata: Metadata = {
   description: "A calm, tomorrow-first personal planner.",
   applicationName: "DayFlow",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "DayFlow" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  icons: {
+    icon: "/icons/dayflow-mark.svg",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 export const viewport: Viewport = {
-  themeColor: "#334d43",
+  themeColor: "#7954b3",
   width: "device-width",
   initialScale: 1,
 };

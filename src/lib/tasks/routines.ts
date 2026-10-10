@@ -11,6 +11,7 @@ export type Routine = {
   starts_on: string;
   ends_on?: string | null;
   is_active: boolean;
+  is_private?: boolean;
   color?: string;
   icon?: TaskIconName;
 };

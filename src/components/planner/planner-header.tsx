@@ -11,6 +11,7 @@ import {
 import type { PlannerView } from "@/components/planner/use-planner-navigation";
 import type { SidebarMode } from "@/components/planner/use-planner-shell-state";
 import { dateKey } from "@/lib/tasks/schedule";
+import { CalendarActions } from "@/components/planner/calendar-actions";
 
 export function PlannerHeader({
   displayedDay,
@@ -23,6 +24,10 @@ export function PlannerHeader({
   selectSidebar,
   navigate,
   isNavigatingTo,
+  calendarFrom,
+  calendarTo,
+  calendarLabel,
+  onCalendarImported,
 }: {
   displayedDay: string;
   displayedView: PlannerView;
@@ -34,6 +39,10 @@ export function PlannerHeader({
   selectSidebar: (mode: SidebarMode) => void;
   navigate: (day: string, view: PlannerView) => void;
   isNavigatingTo: (day: string, view: PlannerView) => boolean;
+  calendarFrom: string;
+  calendarTo: string;
+  calendarLabel: string;
+  onCalendarImported: () => void;
 }) {
   const previous = dateKey(addDays(parseISO(displayedDay), -7));
   const next = dateKey(addDays(parseISO(displayedDay), 7));
@@ -120,6 +129,12 @@ export function PlannerHeader({
         ))}
       </nav>
       <div className="header-actions">
+        <CalendarActions
+          from={calendarFrom}
+          to={calendarTo}
+          label={calendarLabel}
+          onImported={onCalendarImported}
+        />
         <Link className="icon-button" href="/settings" aria-label="Settings">
           <Settings size={20} />
         </Link>

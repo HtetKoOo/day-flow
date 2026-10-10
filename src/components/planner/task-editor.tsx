@@ -31,6 +31,7 @@ export function TaskEditor({
   );
   const [color, setColor] = useState(taskColor(task?.color));
   const [icon, setIcon] = useState<TaskIconName>(task?.icon ?? "focus");
+  const [isPrivate, setIsPrivate] = useState(task?.is_private ?? false);
   const [duration, setDuration] = useState(task?.duration_minutes ?? 30);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -58,6 +59,7 @@ export function TaskEditor({
           duration_minutes: duration,
           color,
           icon,
+          is_private: isPrivate,
           scheduled_date: chosenDate,
           start_time: scheduled ? form.get("time") : null,
         });
@@ -211,6 +213,20 @@ export function TaskEditor({
                     );
                   })}
                 </div>
+                <label className="privacy-toggle">
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={(event) => {
+                      setIsPrivate(event.target.checked);
+                      setDirty(true);
+                    }}
+                  />
+                  <span>
+                    <strong>Private</strong>
+                    <small>Hide title and notes in calendar exports</small>
+                  </span>
+                </label>
                 <div
                   className="editor-schedule-toggle"
                   role="group"

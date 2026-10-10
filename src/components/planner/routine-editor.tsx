@@ -32,6 +32,7 @@ export function RoutineEditor({
   const [duration, setDuration] = useState(routine?.duration_minutes ?? 60);
   const [color, setColor] = useState(taskColor(routine?.color));
   const [icon, setIcon] = useState<TaskIconName>(routine?.icon ?? "focus");
+  const [isPrivate, setIsPrivate] = useState(routine?.is_private ?? false);
   const [hasEndDate, setHasEndDate] = useState(Boolean(routine?.ends_on));
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -46,6 +47,7 @@ export function RoutineEditor({
         notes: form.get("notes") ?? "",
         color,
         icon,
+        is_private: isPrivate,
         start_time: form.get("time"),
         starts_on: form.get("starts_on"),
         ends_on: hasEndDate ? form.get("ends_on") : null,
@@ -158,6 +160,17 @@ export function RoutineEditor({
                   );
                 })}
               </div>
+              <label className="privacy-toggle">
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={(event) => setIsPrivate(event.target.checked)}
+                />
+                <span>
+                  <strong>Private</strong>
+                  <small>Hide title and notes in calendar exports</small>
+                </span>
+              </label>
               <div className="routine-days" role="group" aria-label="Repeat on">
                 <span>Repeat every</span>
                 <div>

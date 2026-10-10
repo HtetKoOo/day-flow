@@ -10,6 +10,7 @@ export type InboxTask = {
   notes: string;
   duration_minutes: number;
   is_completed: boolean;
+  is_private?: boolean;
   is_routine?: boolean;
   routine_id?: string;
 };

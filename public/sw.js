@@ -2,9 +2,7 @@
 const CACHE = "dayflow-public-v1";
 const ASSETS = [
   "/offline.html",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/maskable-512.png",
+  "/icons/dayflow-mark.svg",
 ];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));

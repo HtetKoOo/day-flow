@@ -12,6 +12,7 @@ type TaskRow = {
   notes: string;
   duration_minutes: number;
   is_completed: boolean;
+  is_private?: boolean;
   color?: string;
   icon?: TaskIconName | null;
   scheduled_date?: string | null;
@@ -34,6 +35,7 @@ function toTask(row: TaskRow) {
     notes: row.notes,
     duration_minutes: row.duration_minutes,
     is_completed: row.is_completed,
+    is_private: row.is_private ?? false,
     color: row.color ?? "sage",
     icon: row.icon ?? undefined,
     scheduled_date: row.scheduled_date ?? null,
@@ -56,7 +58,7 @@ export default async function Planner({
   const routinesRequest = supabase
     .from("recurring_tasks")
     .select(
-      "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active,color,icon",
+      "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active,is_private,color,icon",
     )
     .order("start_time");
   const { data, error } = await supabase.rpc("planner_snapshot", {
@@ -173,6 +175,7 @@ export default async function Planner({
         notes: routine.notes,
         duration_minutes: routine.duration_minutes,
         is_completed: false,
+        is_private: routine.is_private ?? false,
         is_routine: true,
         routine_id: routine.id,
         color: routine.color ?? "sage",

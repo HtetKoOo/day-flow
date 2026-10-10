@@ -240,6 +240,16 @@
   color: var(--muted-foreground);
   margin-left: 22px;
 }
+.dayflow-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--primary);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+.dayflow-mark { display: block; flex: none; }
+.auth-brand { font-size: 17px; }
 .header-actions {
   display: flex;
   gap: 20px;
@@ -1251,6 +1261,132 @@
   background: var(--background);
   outline: 0;
 }
+.privacy-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--foreground);
+  cursor: pointer;
+}
+.privacy-toggle:hover {
+  background: var(--secondary);
+}
+.privacy-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+.privacy-toggle span {
+  display: grid;
+  gap: 1px;
+}
+.privacy-toggle strong {
+  font-size: 13px;
+}
+.privacy-toggle small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.calendar-actions {
+  display: flex;
+  gap: 4px;
+}
+.calendar-dialog {
+  position: fixed;
+  z-index: 62;
+  top: 50%;
+  left: 50%;
+  width: min(440px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 32px));
+  overflow: auto;
+  transform: translate(-50%, -50%);
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-raised);
+}
+.calendar-dialog .sheet-heading {
+  margin-bottom: 18px;
+}
+.calendar-dialog .sheet-heading [data-slot="dialog-description"],
+.calendar-dialog .sheet-heading p {
+  margin-top: 4px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.calendar-options {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+}
+.calendar-options legend {
+  margin-bottom: 9px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.calendar-options label,
+.calendar-import-list label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--foreground);
+  font-size: 14px;
+}
+.calendar-options input,
+.calendar-import-list input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+.calendar-download,
+.calendar-file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  text-decoration: none;
+}
+.calendar-file-button {
+  min-height: 42px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-control);
+  background: var(--secondary);
+  color: var(--foreground);
+  cursor: pointer;
+}
+.calendar-file-button:hover {
+  border-color: var(--primary);
+}
+.calendar-import-list {
+  display: grid;
+  gap: 5px;
+  max-height: 300px;
+  margin: 16px 0;
+  overflow: auto;
+}
+.calendar-import-list label {
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+.calendar-import-list span {
+  display: grid;
+  gap: 2px;
+}
+.calendar-import-list small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
 .editor-timezone {
   font-size: 14px;
   color: var(--muted-foreground);
@@ -1833,3 +1969,29 @@ body {
   font-size: 14px;
   font-weight: 650;
 }
+
+.calendar-share-note { margin: 0 0 16px; color: var(--muted-foreground); font-size: 14px; line-height: 1.5; }
+.calendar-share-link { width: 100%; margin-bottom: 12px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--secondary); color: var(--foreground); font: inherit; font-size: 13px; }
+.shared-timetable { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: clamp(40px, 8vw, 78px) 0 88px; }
+.shared-header { padding: 0 6px 34px; border-bottom: 1px solid var(--border); }
+.shared-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--primary); font-size: 14px; font-weight: 750; letter-spacing: 0.02em; }
+.shared-timetable h1 { margin: 14px 0 6px; font-size: clamp(34px, 7vw, 52px); line-height: 0.98; letter-spacing: -0.055em; }
+.shared-range { margin: 0; color: var(--foreground); font-size: 17px; font-weight: 600; }
+.shared-privacy { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; padding: 7px 10px; border-radius: 999px; background: var(--secondary); color: var(--muted-foreground); font-size: 12px; }
+.shared-days { display: grid; gap: 34px; margin-top: 34px; }
+.shared-day { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 18px; }
+.shared-day-heading { display: grid; align-content: start; justify-items: center; padding-top: 7px; color: var(--muted-foreground); }
+.shared-day-heading span { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.shared-day-heading strong { display: grid; place-items: center; width: 46px; height: 46px; margin-top: 5px; border-radius: 15px; background: var(--secondary); color: var(--foreground); font-size: 22px; letter-spacing: -0.04em; }
+.shared-day-heading h2 { margin: 7px 0 0; font-size: 12px; font-weight: 600; }
+.shared-items { display: grid; gap: 10px; }
+.shared-item { display: grid; grid-template-columns: 52px 42px minmax(0, 1fr); align-items: center; gap: 12px; min-height: 76px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--border) 72%, transparent); border-radius: 20px; background: color-mix(in srgb, var(--card) 94%, var(--task-bg)); box-shadow: 0 8px 20px color-mix(in srgb, var(--task-dot) 8%, transparent); }
+.shared-item time { color: var(--muted-foreground); font-size: 13px; font-variant-numeric: tabular-nums; }
+.shared-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; background: var(--task-bg); color: var(--task-fg); }
+.shared-item-body { min-width: 0; }
+.shared-item-body strong, .shared-item-body span { display: block; }
+.shared-item-body strong { overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.shared-item-body span { margin-top: 3px; color: var(--muted-foreground); font-size: 13px; }
+.shared-empty { display: grid; place-items: center; gap: 10px; min-height: 220px; margin-top: 30px; border: 1px dashed var(--border); border-radius: 24px; color: var(--muted-foreground); text-align: center; }
+.shared-empty p { margin: 0; }
+@media (max-width: 520px) { .shared-timetable { width: min(100% - 24px, 760px); } .shared-header { padding-bottom: 26px; } .shared-day { grid-template-columns: 58px minmax(0, 1fr); gap: 10px; } .shared-day-heading strong { width: 40px; height: 40px; border-radius: 13px; font-size: 19px; } .shared-item { grid-template-columns: 44px 38px minmax(0, 1fr); gap: 8px; padding: 9px 10px; border-radius: 17px; } .shared-icon { width: 34px; height: 34px; border-radius: 11px; } }

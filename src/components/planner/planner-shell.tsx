@@ -216,6 +216,16 @@ export function PlannerShell({
           selectSidebar={selectSidebar}
           navigate={navigate}
           isNavigatingTo={isNavigatingTo}
+          calendarFrom={displayedDays[0]}
+          calendarTo={displayedDays[displayedDays.length - 1]}
+          calendarLabel={
+            displayedView === "day"
+              ? "Day"
+              : displayedView === "two-days"
+                ? "2 days"
+                : "Week"
+          }
+          onCalendarImported={() => router.refresh()}
         />
         {notice && (
           <PlannerToast
