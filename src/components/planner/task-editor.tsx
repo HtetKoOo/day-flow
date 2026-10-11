@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition, type FormEvent } from "react";
 import { Dialog } from "radix-ui";
-import { X, Check, CalendarDays, Inbox, Trash2 } from "lucide-react";
+import { X, Check, CalendarDays, Inbox, Trash2, Bell } from "lucide-react";
 import { saveTask, deleteTask } from "@/app/planner/actions";
 import { DatePicker, TimePicker } from "@/components/planner/date-time-picker";
 import { DurationPicker } from "@/components/planner/duration-picker";
@@ -31,6 +31,10 @@ export function TaskEditor({
   );
   const [color, setColor] = useState(taskColor(task?.color));
   const [icon, setIcon] = useState<TaskIconName>(task?.icon ?? "focus");
+  const [isPrivate, setIsPrivate] = useState(task?.is_private ?? false);
+  const [reminder, setReminder] = useState<number | null>(
+    task?.reminder_minutes ?? null,
+  );
   const [duration, setDuration] = useState(task?.duration_minutes ?? 30);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -58,6 +62,8 @@ export function TaskEditor({
           duration_minutes: duration,
           color,
           icon,
+          is_private: isPrivate,
+          reminder_minutes: scheduled ? reminder : null,
           scheduled_date: chosenDate,
           start_time: scheduled ? form.get("time") : null,
         });
@@ -211,6 +217,20 @@ export function TaskEditor({
                     );
                   })}
                 </div>
+                <label className="privacy-toggle">
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={(event) => {
+                      setIsPrivate(event.target.checked);
+                      setDirty(true);
+                    }}
+                  />
+                  <span>
+                    <strong>Private</strong>
+                    <small>Hide title and notes in calendar exports</small>
+                  </span>
+                </label>
                 <div
                   className="editor-schedule-toggle"
                   role="group"
@@ -262,6 +282,34 @@ export function TaskEditor({
                       />
                     </label>
                   </div>
+                )}
+                {scheduled && (
+                  <label className="reminder-picker">
+                    <Bell size={17} aria-hidden="true" />
+                    <span>Reminder</span>
+                    <select
+                      value={reminder ?? ""}
+                      onChange={(event) => {
+                        const value = event.target.value
+                          ? Number(event.target.value)
+                          : null;
+                        setReminder(value);
+                        setDirty(true);
+                        if (
+                          value &&
+                          "Notification" in window &&
+                          Notification.permission === "default"
+                        )
+                          void Notification.requestPermission();
+                      }}
+                    >
+                      <option value="">No reminder</option>
+                      <option value="5">5 minutes before</option>
+                      <option value="10">10 minutes before</option>
+                      <option value="15">15 minutes before</option>
+                      <option value="30">30 minutes before</option>
+                    </select>
+                  </label>
                 )}
                 <DurationPicker
                   duration={duration}

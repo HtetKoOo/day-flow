@@ -2,9 +2,7 @@
 const CACHE = "dayflow-public-v1";
 const ASSETS = [
   "/offline.html",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/maskable-512.png",
+  "/icons/dayflow-mark.svg",
 ];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
@@ -33,4 +31,19 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(event.request).catch(() => caches.match("/offline.html")),
     );
+});
+
+self.addEventListener("push", (event) => {
+  const payload = event.data ? event.data.json() : {};
+  event.waitUntil(self.registration.showNotification(payload.title || "DayFlow reminder", {
+    body: payload.body || "You have an upcoming task.",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: payload.tag || "dayflow-reminder",
+    data: { url: payload.url || "/planner" },
+  }));
+});
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data?.url || "/planner"));
 });

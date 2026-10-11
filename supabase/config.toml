@@ -40,3 +40,5 @@ subject = "Confirm your DayFlow account"
 content_path = "./supabase/templates/confirmation.html"
 [analytics]
 enabled = false
+[functions.send-reminders]
+verify_jwt = false

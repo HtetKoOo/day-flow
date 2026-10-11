@@ -11,6 +11,8 @@ export type Routine = {
   starts_on: string;
   ends_on?: string | null;
   is_active: boolean;
+  is_private?: boolean;
+  reminder_minutes?: number | null;
   color?: string;
   icon?: TaskIconName;
 };

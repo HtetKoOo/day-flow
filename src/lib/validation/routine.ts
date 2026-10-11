@@ -9,6 +9,8 @@ export const routineInput = z
     notes: z.string().max(10000).default(""),
     color: z.enum(taskColors),
     icon: z.enum(taskIconNames).nullable(),
+    is_private: z.boolean().default(false),
+    reminder_minutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(30)]).nullable().default(null),
     start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
     duration_minutes: z.coerce.number().int().min(5).max(1440),
     days_of_week: z

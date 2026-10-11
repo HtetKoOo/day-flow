@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { Dialog } from "radix-ui";
-import { CalendarClock, Check, Pause, Play, Trash2, X } from "lucide-react";
+import { Bell, CalendarClock, Check, Pause, Play, Trash2, X } from "lucide-react";
 import {
   createRoutine,
   deleteRoutine,
@@ -32,6 +32,10 @@ export function RoutineEditor({
   const [duration, setDuration] = useState(routine?.duration_minutes ?? 60);
   const [color, setColor] = useState(taskColor(routine?.color));
   const [icon, setIcon] = useState<TaskIconName>(routine?.icon ?? "focus");
+  const [isPrivate, setIsPrivate] = useState(routine?.is_private ?? false);
+  const [reminder, setReminder] = useState<number | null>(
+    routine?.reminder_minutes ?? null,
+  );
   const [hasEndDate, setHasEndDate] = useState(Boolean(routine?.ends_on));
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -46,6 +50,8 @@ export function RoutineEditor({
         notes: form.get("notes") ?? "",
         color,
         icon,
+        is_private: isPrivate,
+        reminder_minutes: reminder,
         start_time: form.get("time"),
         starts_on: form.get("starts_on"),
         ends_on: hasEndDate ? form.get("ends_on") : null,
@@ -158,6 +164,17 @@ export function RoutineEditor({
                   );
                 })}
               </div>
+              <label className="privacy-toggle">
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={(event) => setIsPrivate(event.target.checked)}
+                />
+                <span>
+                  <strong>Private</strong>
+                  <small>Hide title and notes in calendar exports</small>
+                </span>
+              </label>
               <div className="routine-days" role="group" aria-label="Repeat on">
                 <span>Repeat every</span>
                 <div>
@@ -197,6 +214,31 @@ export function RoutineEditor({
                   />
                 </label>
               </div>
+              <label className="reminder-picker">
+                <Bell size={17} aria-hidden="true" />
+                <span>Reminder</span>
+                <select
+                  value={reminder ?? ""}
+                  onChange={(event) => {
+                    const value = event.target.value
+                      ? Number(event.target.value)
+                      : null;
+                    setReminder(value);
+                    if (
+                      value &&
+                      "Notification" in window &&
+                      Notification.permission === "default"
+                    )
+                      void Notification.requestPermission();
+                  }}
+                >
+                  <option value="">No reminder</option>
+                  <option value="5">5 minutes before</option>
+                  <option value="10">10 minutes before</option>
+                  <option value="15">15 minutes before</option>
+                  <option value="30">30 minutes before</option>
+                </select>
+              </label>
               <div className="routine-end-date">
                 <label>
                   <input
