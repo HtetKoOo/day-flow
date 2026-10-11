@@ -6,6 +6,9 @@ import { ThemePicker } from "@/components/theme-picker";
 import { PasswordSecurity } from "@/components/auth/password-security";
 import { ShareLinkManager } from "@/components/settings/share-link-manager";
 import { DisplayNameForm } from "@/components/settings/display-name-form";
+import { NotificationSettings } from "@/components/settings/notification-settings";
+import { TimezoneForm } from "@/components/settings/timezone-form";
+import { PushNotificationSettings } from "@/components/settings/push-notification-settings";
 export const dynamic = "force-dynamic";
 export default async function Settings() {
   const { user, supabase } = await requireUser();
@@ -14,7 +17,11 @@ export default async function Settings() {
       .from("timetable_shares")
       .select("token,starts_on,ends_on,created_at")
       .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("display_name").eq("id", user.id).single(),
+    supabase
+      .from("profiles")
+      .select("display_name,timezone")
+      .eq("id", user.id)
+      .single(),
   ]);
   return (
     <main className="mx-auto max-w-xl px-6 py-16">
@@ -30,6 +37,9 @@ export default async function Settings() {
         </form>
       </section>
       <DisplayNameForm defaultValue={profile?.display_name ?? ""} />
+      <TimezoneForm defaultValue={profile?.timezone ?? "UTC"} />
+      <NotificationSettings />
+      <PushNotificationSettings />
       <PasswordSecurity />
       <ShareLinkManager shares={shares ?? []} />
       <section className="mt-6 rounded-3xl border bg-card p-6">

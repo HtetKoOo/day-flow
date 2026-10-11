@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 
 export type PasswordSecurityState = { message: string };
@@ -84,4 +85,28 @@ export async function updateDisplayName(
           ? "Display name saved."
           : "Display name cleared.",
       };
+}
+
+export async function updateTimezone(
+  _: PasswordSecurityState,
+  form: FormData,
+): Promise<PasswordSecurityState> {
+  void _;
+  const parsed = z
+    .object({ timezone: z.string().trim().min(1).max(100) })
+    .safeParse(Object.fromEntries(form));
+  if (!parsed.success)
+    return { message: "Choose a valid timezone." };
+
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ timezone: parsed.data.timezone })
+    .eq("id", user.id);
+  if (error)
+    return { message: "Choose a valid timezone, such as Asia/Bangkok." };
+
+  revalidatePath("/planner");
+  revalidatePath("/settings");
+  return { message: "Timezone saved. Planner times now use this timezone." };
 }

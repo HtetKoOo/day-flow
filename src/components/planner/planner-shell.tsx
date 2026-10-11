@@ -28,6 +28,7 @@ import { PlannerSidebar } from "@/components/planner/planner-sidebar";
 import { PlannerMobileNavigation } from "@/components/planner/planner-mobile-navigation";
 import { PlannerTimelineContent } from "@/components/planner/planner-timeline-content";
 import { PlannerDateCell } from "@/components/planner/planner-date-cell";
+import { ReminderNotifications } from "@/components/planner/reminder-notifications";
 import { dateKey, plannerRange } from "@/lib/tasks/schedule";
 import { taskColor } from "@/lib/tasks/colors";
 import type { InboxTask, ScheduledTask } from "@/lib/tasks/types";
@@ -205,6 +206,7 @@ export function PlannerShell({
       onDragEnd={onDragEnd}
     >
       <main className="planner-app" data-inbox-open={inboxOpen}>
+        <ReminderNotifications scheduled={displayScheduled} timezone={timezone} />
         <PlannerHeader
           displayedDay={displayedDay}
           displayedView={displayedView}

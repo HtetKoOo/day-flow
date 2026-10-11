@@ -10,6 +10,7 @@ export const editorInput = z
     color: z.enum(taskColors),
     icon: z.enum(taskIconNames).nullable(),
     is_private: z.boolean().default(false),
+    reminder_minutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(30)]).nullable().default(null),
     scheduled_date: z.iso.date().nullable(),
     start_time: z
       .string()

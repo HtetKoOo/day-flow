@@ -11,6 +11,7 @@ export type InboxTask = {
   duration_minutes: number;
   is_completed: boolean;
   is_private?: boolean;
+  reminder_minutes?: number | null;
   is_routine?: boolean;
   routine_id?: string;
 };

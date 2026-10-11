@@ -1972,6 +1972,9 @@ body {
 
 .calendar-share-note { margin: 0 0 16px; color: var(--muted-foreground); font-size: 14px; line-height: 1.5; }
 .calendar-share-link { width: 100%; margin-bottom: 12px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--secondary); color: var(--foreground); font: inherit; font-size: 13px; }
+.reminder-picker { display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--secondary); color: var(--muted-foreground); }
+.reminder-picker > span { color: var(--foreground); font-size: 14px; font-weight: 600; }
+.reminder-picker select { min-width: 0; margin-left: auto; border: 0; outline: 0; background: transparent; color: var(--foreground); font: inherit; font-size: 14px; text-align: right; }
 .shared-timetable { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: clamp(40px, 8vw, 78px) 0 88px; }
 .shared-header { padding: 0 6px 34px; border-bottom: 1px solid var(--border); }
 .shared-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--primary); font-size: 14px; font-weight: 750; letter-spacing: 0.02em; }
