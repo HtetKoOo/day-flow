@@ -33,7 +33,7 @@ export function PushNotificationSettings() {
     const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
     const json = subscription.toJSON();
     const { error } = await createClient().from("push_subscriptions").upsert({ endpoint: subscription.endpoint, p256dh: json.keys?.p256dh, auth: json.keys?.auth }, { onConflict: "endpoint" });
-    if (error) { setMessage("Could not save this device for push reminders."); return; }
+    if (error) { setMessage(`Could not save this device for push reminders: ${error.message}`); return; }
     setEnabled(true); setMessage("Push reminders are enabled on this device.");
   }
 
