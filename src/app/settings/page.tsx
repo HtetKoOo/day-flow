@@ -6,7 +6,6 @@ import { ThemePicker } from "@/components/theme-picker";
 import { PasswordSecurity } from "@/components/auth/password-security";
 import { ShareLinkManager } from "@/components/settings/share-link-manager";
 import { DisplayNameForm } from "@/components/settings/display-name-form";
-import { NotificationSettings } from "@/components/settings/notification-settings";
 import { TimezoneForm } from "@/components/settings/timezone-form";
 import { PushNotificationSettings } from "@/components/settings/push-notification-settings";
 export const dynamic = "force-dynamic";
@@ -38,7 +37,6 @@ export default async function Settings() {
       </section>
       <DisplayNameForm defaultValue={profile?.display_name ?? ""} />
       <TimezoneForm defaultValue={profile?.timezone ?? "UTC"} />
-      <NotificationSettings />
       <PushNotificationSettings />
       <PasswordSecurity />
       <ShareLinkManager shares={shares ?? []} />
