@@ -2,7 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { buildIcsCalendar, type CalendarExportEvent } from "@/lib/calendar/ics";
-import { routineOccurrencesBetween, type Routine } from "@/lib/tasks/routines";
+import {
+  expandRoutine,
+  type Routine,
+  type RoutineException,
+} from "@/lib/tasks/routines";
 
 const queryInput = z.object({
   from: z.iso.date(),
@@ -29,6 +33,7 @@ export async function GET(request: NextRequest) {
     { data: profile, error: profileError },
     { data: tasks, error: taskError },
     { data: routines, error: routineError },
+    { data: exceptions, error: exceptionError },
   ] = await Promise.all([
     supabase.from("profiles").select("timezone").eq("id", user.id).single(),
     supabase
@@ -46,8 +51,17 @@ export async function GET(request: NextRequest) {
       )
       .eq("user_id", user.id)
       .eq("is_active", true),
+    supabase
+      .from("routine_exceptions")
+      .select(
+        "recurring_task_id,occurrence_date,scheduled_date,start_time,duration_minutes,is_skipped",
+      )
+      .eq("user_id", user.id)
+      .or(
+        `and(occurrence_date.gte.${parsed.data.from},occurrence_date.lte.${parsed.data.to}),and(scheduled_date.gte.${parsed.data.from},scheduled_date.lte.${parsed.data.to})`,
+      ),
   ]);
-  if (profileError || !profile || taskError || routineError)
+  if (profileError || !profile || taskError || routineError || exceptionError)
     return NextResponse.json(
       { message: "Could not prepare your calendar." },
       { status: 500 },
@@ -71,17 +85,20 @@ export async function GET(request: NextRequest) {
   const routineEvents: CalendarExportEvent[] = (
     (routines ?? []) as Routine[]
   ).flatMap((routine) =>
-    routineOccurrencesBetween(routine, parsed.data.from, parsed.data.to).map(
-      (date) => ({
-        id: `routine-${routine.id}-${date}`,
-        title: routine.title,
-        notes: routine.notes,
-        date,
-        startTime: routine.start_time.slice(0, 5),
-        durationMinutes: routine.duration_minutes,
-        isPrivate: routine.is_private ?? false,
-      }),
-    ),
+    expandRoutine(
+      routine,
+      parsed.data.from,
+      parsed.data.to,
+      (exceptions ?? []) as RoutineException[],
+    ).map((occurrence) => ({
+      id: `routine-${routine.id}-${occurrence.occurrence_date}`,
+      title: routine.title,
+      notes: routine.notes,
+      date: occurrence.scheduled_date,
+      startTime: occurrence.start_time.slice(0, 5),
+      durationMinutes: occurrence.duration_minutes,
+      isPrivate: routine.is_private ?? false,
+    })),
   );
   let calendar: string;
   try {

@@ -60,7 +60,7 @@ export function ReminderNotifications({
           )
             continue;
           const source = task.is_routine
-            ? `routine:${task.routine_id}`
+            ? `routine:${task.routine_id}:${task.occurrence_date ?? task.scheduled_date}`
             : `task:${task.id}`;
           const tag = reminderKey(
             source,

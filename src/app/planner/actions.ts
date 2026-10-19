@@ -365,3 +365,74 @@ export async function revokeTimetableShare(token: string): Promise<TaskResult> {
     return { ok: false, message: "Could not stop sharing. Try again." };
   return { ok: true, message: "Share link stopped." };
 }
+
+export async function saveRoutineOccurrence(
+  id: string,
+  input: unknown,
+): Promise<TaskResult> {
+  const { supabase, user } = await requireUser();
+  const { routineOccurrenceInput } =
+    await import("@/lib/validation/routine-occurrence");
+  const { isRoutineDate } =
+    await import("../../../supabase/functions/_shared/routine-occurrences");
+  if (!taskId.safeParse(id).success)
+    return { ok: false, message: "Invalid routine." };
+  const parsed = routineOccurrenceInput.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, message: parsed.error.issues[0].message };
+  const value = parsed.data;
+  const { data: routine, error: routineError } = await supabase
+    .from("recurring_tasks")
+    .select("id,days_of_week,starts_on,ends_on")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+  if (routineError || !routine)
+    return { ok: false, message: "Could not find this routine." };
+  // Reset is allowed for old exceptions even after the weekly rule was changed.
+  if (value.mode !== "reset" && !isRoutineDate(routine, value.occurrence_date))
+    return {
+      ok: false,
+      message: "This date does not belong to the routine's schedule.",
+    };
+  const query =
+    value.mode === "reset"
+      ? supabase
+          .from("routine_exceptions")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("recurring_task_id", id)
+          .eq("occurrence_date", value.occurrence_date)
+      : supabase.from("routine_exceptions").upsert(
+          {
+            user_id: user.id,
+            recurring_task_id: id,
+            occurrence_date: value.occurrence_date,
+            scheduled_date:
+              value.mode === "change" ? value.scheduled_date : null,
+            start_time: value.mode === "change" ? value.start_time : null,
+            duration_minutes:
+              value.mode === "change" ? value.duration_minutes : null,
+            is_skipped: value.mode === "skip",
+          },
+          { onConflict: "user_id,recurring_task_id,occurrence_date" },
+        );
+  const { error } = await query;
+  if (error)
+    return {
+      ok: false,
+      message:
+        "Could not save this day. Check that the latest database migration is applied.",
+    };
+  revalidatePath("/planner");
+  revalidatePath("/share", "layout");
+  return {
+    ok: true,
+    message:
+      value.mode === "reset"
+        ? "Original schedule restored."
+        : value.mode === "skip"
+          ? "This occurrence skipped."
+          : "Only this occurrence updated.",
+  };
+}

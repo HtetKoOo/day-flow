@@ -7,6 +7,7 @@ import { scheduleCollision } from "./drag-schedule";
 import { useRouter } from "next/navigation";
 import { addDays, parseISO } from "date-fns";
 import { TaskEditor } from "@/components/planner/task-editor";
+import { RoutineOccurrenceEditor } from "./routine-occurrence-editor";
 import { RoutineEditor } from "@/components/planner/routine-editor";
 import { DateStrip } from "@/components/planner/date-strip";
 import { timelineMarker } from "@/components/planner/timeline";
@@ -72,6 +73,11 @@ export function PlannerShell({
     time?: string;
   } | null>(null);
   const [routineEditorOpen, setRoutineEditorOpen] = useState(false);
+  const [occurrenceEditor, setOccurrenceEditor] = useState<{
+    task: InboxTask;
+    routine: Routine;
+    date: string;
+  } | null>(null);
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   // Keep the result of a move in memory immediately. The server action still
   // confirms it in the background, but the timeline no longer waits for a
@@ -168,8 +174,11 @@ export function PlannerShell({
     if (task?.is_routine) {
       const routine = routines.find((item) => item.id === task.routine_id);
       if (routine) {
-        setEditingRoutine(routine);
-        setRoutineEditorOpen(true);
+        setOccurrenceEditor({
+          task,
+          routine,
+          date: task.scheduled_date ?? date,
+        });
       } else {
         selectSidebar("routines");
         showNotice({
@@ -356,6 +365,20 @@ export function PlannerShell({
                 navigate(date, displayedView);
             }}
             returnFocus={returnFocus}
+          />
+        )}
+        {occurrenceEditor && (
+          <RoutineOccurrenceEditor
+            routine={occurrenceEditor.routine}
+            task={occurrenceEditor.task}
+            date={occurrenceEditor.date}
+            onClose={() => setOccurrenceEditor(null)}
+            onSaved={() => router.refresh()}
+            onEditSeries={() => {
+              setEditingRoutine(occurrenceEditor.routine);
+              setOccurrenceEditor(null);
+              setRoutineEditorOpen(true);
+            }}
           />
         )}
         {routineEditorOpen && (

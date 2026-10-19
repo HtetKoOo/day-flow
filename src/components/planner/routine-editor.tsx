@@ -2,8 +2,17 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { Dialog } from "radix-ui";
-import { Bell, CalendarClock, Check, Pause, Play, Trash2, X } from "lucide-react";
 import {
+  Bell,
+  CalendarClock,
+  Check,
+  Pause,
+  Play,
+  Trash2,
+  X,
+} from "lucide-react";
+import {
+  saveRoutineOccurrence,
   createRoutine,
   deleteRoutine,
   setRoutineActive,
@@ -319,6 +328,54 @@ export function RoutineEditor({
               </button>
             </div>
           </form>
+          {routine && Boolean(routine.exceptions?.length) && (
+            <section className="mt-6 border-t pt-5">
+              <h3 className="font-medium">Changed days in this range</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Restore a skipped or rescheduled occurrence to its weekly
+                schedule.
+              </p>
+              <ul className="mt-3 space-y-3">
+                {routine.exceptions!.map((item) => (
+                  <li
+                    key={item.occurrence_date}
+                    className="flex flex-wrap items-center justify-between gap-2 text-sm"
+                  >
+                    <span>
+                      {item.occurrence_date} ·{" "}
+                      {item.is_skipped
+                        ? "Skipped"
+                        : `${item.scheduled_date} ${item.start_time?.slice(0, 5)}`}
+                    </span>
+                    <button
+                      type="button"
+                      className="text-button"
+                      disabled={pending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          const result = await saveRoutineOccurrence(
+                            routine.id,
+                            {
+                              mode: "reset",
+                              occurrence_date: item.occurrence_date,
+                            },
+                          );
+                          if (!result.ok) {
+                            setError(result.message);
+                            return;
+                          }
+                          onSaved();
+                          onClose();
+                        })
+                      }
+                    >
+                      Restore
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           <Dialog.Root
             open={confirmDelete}
             onOpenChange={(open) =>

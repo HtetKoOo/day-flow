@@ -5,7 +5,7 @@ import { plannerRange } from "@/lib/tasks/schedule";
 import { PlannerShell } from "@/components/planner/planner-shell";
 import type { Routine } from "@/lib/tasks/routines";
 import type { TaskIconName } from "@/lib/tasks/icons";
-import { routineOccurrencesBetween } from "@/lib/tasks/routines";
+import { expandRoutine, type RoutineException } from "@/lib/tasks/routines";
 type TaskRow = {
   id: string;
   title: string;
@@ -162,20 +162,39 @@ export default async function Planner({
     snapshot.loaded_through && snapshot.loaded_through > strip.to
       ? [...strip.days, snapshot.loaded_through]
       : strip.days;
-  const { data: routines } = await routinesRequest;
-  const allRoutines = (routines ?? []) as Routine[];
+  const [
+    { data: routines, error: routineError },
+    { data: exceptions, error: exceptionError },
+  ] = await Promise.all([
+    routinesRequest,
+    supabase
+      .from("routine_exceptions")
+      .select(
+        "recurring_task_id,occurrence_date,scheduled_date,start_time,duration_minutes,is_skipped",
+      )
+      .or(
+        `and(occurrence_date.gte.${strip.from},occurrence_date.lte.${loadedDays[loadedDays.length - 1]}),and(scheduled_date.gte.${strip.from},scheduled_date.lte.${loadedDays[loadedDays.length - 1]})`,
+      ),
+  ]);
+  const allRoutines = ((routines ?? []) as Routine[]).map((routine) => ({
+    ...routine,
+    exceptions: (exceptions ?? []).filter(
+      (item) => item.recurring_task_id === routine.id,
+    ) as RoutineException[],
+  }));
   const routineBlocks = allRoutines
     .filter((routine) => routine.is_active)
     .flatMap((routine) =>
-      routineOccurrencesBetween(
+      expandRoutine(
         routine,
         strip.from,
         loadedDays[loadedDays.length - 1],
-      ).map((date) => ({
-        id: `routine-${routine.id}-${date}`,
+        routine.exceptions,
+      ).map((occurrence) => ({
+        id: `routine-${routine.id}-${occurrence.occurrence_date}`,
         title: routine.title,
         notes: routine.notes,
-        duration_minutes: routine.duration_minutes,
+        duration_minutes: occurrence.duration_minutes,
         is_completed: false,
         is_private: routine.is_private ?? false,
         reminder_minutes: routine.reminder_minutes ?? null,
@@ -183,8 +202,10 @@ export default async function Planner({
         routine_id: routine.id,
         color: routine.color ?? "sage",
         icon: routine.icon,
-        scheduled_date: date,
-        start_time: routine.start_time,
+        occurrence_date: occurrence.occurrence_date,
+        is_exception: occurrence.is_exception,
+        scheduled_date: occurrence.scheduled_date,
+        start_time: occurrence.start_time,
       })),
     );
   return (
@@ -201,7 +222,9 @@ export default async function Planner({
         })),
         ...routineBlocks,
       ]}
-      scheduleError={snapshot.scheduled_error}
+      scheduleError={
+        snapshot.scheduled_error || Boolean(routineError || exceptionError)
+      }
       scheduledCount={snapshot.scheduled_count}
       today={today}
       range={range}
