@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Dialog } from "radix-ui";
-import { Check, Download, Link2, Upload, X } from "lucide-react";
+import Link from "next/link";
+import { Dialog, DropdownMenu } from "radix-ui";
+import { Check, Download, Link2, Upload, X, MoreHorizontal, Settings } from "lucide-react";
 import {
   createTimetableShare,
   importCalendarTasks,
@@ -140,6 +141,18 @@ export function CalendarActions({
           <Link2 size={18} />
         </button>
       </div>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild><button type="button" className="icon-button planner-more-trigger" aria-label="More planner options"><MoreHorizontal size={20} /></button></DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content className="planner-options-menu" align="end" sideOffset={8} collisionPadding={8}>
+            <DropdownMenu.Item onSelect={() => setOpen("export")}><Download size={17} /> Export calendar</DropdownMenu.Item>
+            <DropdownMenu.Item onSelect={() => setOpen("import")}><Upload size={17} /> Import calendar</DropdownMenu.Item>
+            <DropdownMenu.Item onSelect={() => { setError(""); setShareUrl(""); setCopied(false); setOpen("share"); }}><Link2 size={17} /> Share timetable</DropdownMenu.Item>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item asChild><Link href="/settings"><Settings size={17} /> Settings</Link></DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
       <Dialog.Root
         open={open === "export"}
         onOpenChange={(value) => !value && setOpen(null)}
