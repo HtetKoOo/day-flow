@@ -13,50 +13,118 @@ function keyBytes(key: string) {
 }
 
 export function PushNotificationSettings() {
-  const [message, setMessage] = useState("Enable reminders on this device to receive them even after DayFlow is closed.");
+  const [message, setMessage] = useState(
+    "Enable reminders on this device to receive them even after DayFlow is closed.",
+  );
   const [enabled, setEnabled] = useState(false);
+  const [pending, setPending] = useState(false);
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-  async function saveSubscription(subscription: PushSubscription) {
-    const json = subscription.toJSON();
-    const { error } = await createClient().from("push_subscriptions").upsert({
-      endpoint: subscription.endpoint,
-      p256dh: json.keys?.p256dh,
-      auth: json.keys?.auth,
-    }, { onConflict: "endpoint" });
-
-    if (error) {
-      setEnabled(false);
-      setMessage(`Could not save this device for push reminders: ${error.message}`);
-      return false;
-    }
-
-    setEnabled(true);
-    setMessage("Push reminders are enabled on this device.");
-    return true;
-  }
-
   useEffect(() => {
-    navigator.serviceWorker?.ready.then(async (registration) => {
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) await saveSubscription(subscription);
-    }).catch(() => undefined);
+    let disposed = false;
+    async function checkSubscription() {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      const subscription = await registration?.pushManager?.getSubscription();
+      if (!subscription) return;
+      // RLS only returns subscriptions belonging to the signed-in account.
+      // Never upsert an endpoint that may still belong to a previous account.
+      const { data, error } = await createClient()
+        .from("push_subscriptions")
+        .select("id")
+        .eq("endpoint", subscription.endpoint)
+        .maybeSingle();
+      if (disposed) return;
+      setEnabled(!error && Boolean(data));
+      setMessage(
+        error
+          ? "Could not check reminders. Please try enabling them again."
+          : data
+            ? "Push reminders are enabled on this device."
+            : "Enable reminders to connect this device to your current account.",
+      );
+    }
+    void checkSubscription().catch(() => undefined);
+    return () => {
+      disposed = true;
+    };
   }, []);
 
   async function enable() {
-    if (!publicKey || !("PushManager" in window) || !("Notification" in window)) {
-      setMessage("Push notifications are not configured for this deployment yet.");
+    if (pending) return;
+    if (
+      !publicKey ||
+      !("PushManager" in window) ||
+      !("Notification" in window)
+    ) {
+      setMessage(
+        "Push notifications are not configured for this deployment yet.",
+      );
       return;
     }
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      setMessage("Notification permission is needed for reminders.");
-      return;
+    setPending(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setMessage("Notification permission is needed for reminders.");
+        return;
+      }
+      const client = createClient();
+      const { data: auth, error: authError } = await client.auth.getUser();
+      if (authError || !auth.user)
+        throw new Error("Please sign in again before enabling reminders.");
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        const { data: owned, error } = await client
+          .from("push_subscriptions")
+          .select("id")
+          .eq("user_id", auth.user.id)
+          .eq("endpoint", subscription.endpoint)
+          .maybeSingle();
+        if (error)
+          throw new Error("Could not check this device. Please try again.");
+        if (owned) {
+          setEnabled(true);
+          setMessage("Push reminders are enabled on this device.");
+          return;
+        }
+        // A previous account may own this endpoint. Retire it at the browser
+        // push service, then register a fresh endpoint; do not change ownership.
+        if (!(await subscription.unsubscribe()))
+          throw new Error("Could not reconnect this device. Please try again.");
+        subscription = null;
+      }
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: keyBytes(publicKey),
+      });
+      const json = subscription.toJSON();
+      if (!json.keys?.p256dh || !json.keys?.auth)
+        throw new Error("This browser could not create a push subscription.");
+      const { error } = await client.from("push_subscriptions").insert({
+        user_id: auth.user.id,
+        endpoint: subscription.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+      });
+      if (error) {
+        await subscription.unsubscribe().catch(() => undefined);
+        throw new Error(
+          "Could not connect this device to your account. Please try again.",
+        );
+      }
+      setEnabled(true);
+      setMessage("Push reminders are enabled on this device.");
+    } catch (error) {
+      setEnabled(false);
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not enable push reminders. Please try again.",
+      );
+    } finally {
+      setPending(false);
     }
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription()
-      ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
-    await saveSubscription(subscription);
   }
 
   async function sendTestNotification() {
@@ -83,16 +151,27 @@ export function PushNotificationSettings() {
           <p className="mt-2 text-sm text-muted-foreground">{message}</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {enabled ? (
-              <p className="inline-flex h-10 items-center gap-2 rounded-md bg-primary/15 px-4 text-sm font-medium text-primary" role="status">
+              <p
+                className="inline-flex h-10 items-center gap-2 rounded-md bg-primary/15 px-4 text-sm font-medium text-primary"
+                role="status"
+              >
                 <Check size={16} /> Enabled on this device
               </p>
             ) : (
-              <Button type="button" onClick={() => void enable()}>
-                Enable push reminders
+              <Button
+                type="button"
+                disabled={pending}
+                onClick={() => void enable()}
+              >
+                {pending ? "Connecting…" : "Enable push reminders"}
               </Button>
             )}
             {enabled && (
-              <Button type="button" variant="outline" onClick={() => void sendTestNotification()}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void sendTestNotification()}
+              >
                 Send test notification
               </Button>
             )}
