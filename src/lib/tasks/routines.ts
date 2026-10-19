@@ -62,3 +62,18 @@ export function routineOccurrencesBetween(
   }
   return dates;
 }
+
+/** Editor lists follow the visible range, not the planner's preloaded buffer. */
+export function routineExceptionsInRange(
+  exceptions: RoutineException[],
+  from: string,
+  to: string,
+) {
+  const within = (date: string) => date >= from && date <= to;
+  return exceptions.filter(
+    (item) =>
+      within(item.occurrence_date) ||
+      (!item.is_skipped &&
+        Boolean(item.scheduled_date && within(item.scheduled_date))),
+  );
+}

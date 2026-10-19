@@ -7,6 +7,7 @@ import { DatePicker, TimePicker } from "@/components/planner/date-time-picker";
 import { DurationPicker } from "@/components/planner/duration-picker";
 import { taskColor, taskPickerColorOptions } from "@/lib/tasks/colors";
 import { taskIcon, taskIconNames, type TaskIconName } from "@/lib/tasks/icons";
+import { editorInput } from "@/lib/validation/editor";
 import type { InboxTask } from "@/lib/tasks/types";
 
 export function TaskEditor({
@@ -26,6 +27,14 @@ export function TaskEditor({
   onSaved: (date: string | null) => void;
   returnFocus: React.RefObject<HTMLElement | null>;
 }) {
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [notes, setNotes] = useState(task?.notes ?? "");
+  const [selectedDate, setSelectedDate] = useState(
+    time ? date : (task?.scheduled_date ?? date),
+  );
+  const [selectedTime, setSelectedTime] = useState(
+    time ?? task?.start_time?.slice(0, 5) ?? "09:00",
+  );
   const [scheduled, setScheduled] = useState(
     Boolean(task?.scheduled_date || time),
   );
@@ -39,7 +48,27 @@ export function TaskEditor({
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [dirty, setDirty] = useState(false);
+  const values = {
+    title: title.trim(),
+    notes,
+    duration_minutes: duration,
+    color,
+    icon,
+    is_private: isPrivate,
+    reminder_minutes: scheduled ? reminder : null,
+    scheduled_date: scheduled ? selectedDate : null,
+    start_time: scheduled ? selectedTime : null,
+  };
+  const [initialValues] = useState(() => JSON.stringify(values));
+  const dirty = JSON.stringify(values) !== initialValues;
+  const validation = editorInput.safeParse(values);
+  const placementChanged = Boolean(
+    task &&
+    time &&
+    (values.scheduled_date !== task.scheduled_date ||
+      values.start_time !== task.start_time?.slice(0, 5)),
+  );
+  const canSave = validation.success && (!task || dirty || placementChanged);
   const [discard, setDiscard] = useState(false);
   function close() {
     if (pending) return;
@@ -51,22 +80,12 @@ export function TaskEditor({
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    if (pending || !canSave) return;
     setError("");
     startTransition(async () => {
       try {
-        const chosenDate = scheduled ? String(form.get("date")) : null;
-        const result = await saveTask(task?.id ?? null, {
-          title: form.get("title"),
-          notes: form.get("notes") ?? "",
-          duration_minutes: duration,
-          color,
-          icon,
-          is_private: isPrivate,
-          reminder_minutes: scheduled ? reminder : null,
-          scheduled_date: chosenDate,
-          start_time: scheduled ? form.get("time") : null,
-        });
+        const chosenDate = values.scheduled_date;
+        const result = await saveTask(task?.id ?? null, values);
         if (!result.ok) {
           setError(result.message);
           return;
@@ -156,7 +175,7 @@ export function TaskEditor({
               Edit your task, schedule, duration, notes, and color. Times use{" "}
               {timezone}.
             </Dialog.Description>
-            <form onSubmit={submit} onChange={() => setDirty(true)}>
+            <form onSubmit={submit}>
               <fieldset disabled={pending} className="editor-fields">
                 <label className="sr-only" htmlFor="task-title">
                   Task title
@@ -166,7 +185,8 @@ export function TaskEditor({
                   className="task-title-input"
                   name="title"
                   placeholder="Task name"
-                  defaultValue={task?.title ?? ""}
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
                   required
                   maxLength={200}
                 />
@@ -186,7 +206,6 @@ export function TaskEditor({
                       title={value}
                       onClick={() => {
                         setColor(value);
-                        setDirty(true);
                       }}
                     >
                       {color === value && <Check size={17} strokeWidth={3} />}
@@ -209,7 +228,6 @@ export function TaskEditor({
                         title={value}
                         onClick={() => {
                           setIcon(value);
-                          setDirty(true);
                         }}
                       >
                         <Icon size={19} />
@@ -223,7 +241,6 @@ export function TaskEditor({
                     checked={isPrivate}
                     onChange={(event) => {
                       setIsPrivate(event.target.checked);
-                      setDirty(true);
                     }}
                   />
                   <span>
@@ -241,7 +258,6 @@ export function TaskEditor({
                     aria-pressed={!scheduled}
                     onClick={() => {
                       setScheduled(false);
-                      setDirty(true);
                     }}
                   >
                     <Inbox size={17} />
@@ -252,7 +268,6 @@ export function TaskEditor({
                     aria-pressed={scheduled}
                     onClick={() => {
                       setScheduled(true);
-                      setDirty(true);
                     }}
                   >
                     <CalendarDays size={17} />
@@ -265,9 +280,8 @@ export function TaskEditor({
                       Date
                       <DatePicker
                         name="date"
-                        defaultValue={
-                          time ? date : (task?.scheduled_date ?? date)
-                        }
+                        defaultValue={selectedDate}
+                        onValueChange={setSelectedDate}
                         label="Choose task date"
                       />
                     </label>
@@ -275,9 +289,8 @@ export function TaskEditor({
                       Start time
                       <TimePicker
                         name="time"
-                        defaultValue={
-                          time ?? task?.start_time?.slice(0, 5) ?? "09:00"
-                        }
+                        defaultValue={selectedTime}
+                        onValueChange={setSelectedTime}
                         label="Choose task start time"
                       />
                     </label>
@@ -294,7 +307,6 @@ export function TaskEditor({
                           ? Number(event.target.value)
                           : null;
                         setReminder(value);
-                        setDirty(true);
                         if (
                           value &&
                           "Notification" in window &&
@@ -315,14 +327,14 @@ export function TaskEditor({
                   duration={duration}
                   onChange={(value) => {
                     setDuration(value);
-                    setDirty(true);
                   }}
                 />
                 <label className="notes-input" htmlFor="task-notes">
                   <textarea
                     id="task-notes"
                     name="notes"
-                    defaultValue={task?.notes ?? ""}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
                     rows={2}
                     maxLength={10000}
                     placeholder="Add a note…"
@@ -332,6 +344,11 @@ export function TaskEditor({
                   <p className="editor-timezone">All times in {timezone}</p>
                 )}
               </fieldset>
+              {title.trim() && !validation.success && (
+                <p className="form-error" role="status">
+                  {validation.error.issues[0].message}
+                </p>
+              )}
               {error && (
                 <p role="alert" className="form-error">
                   {error}
@@ -351,7 +368,10 @@ export function TaskEditor({
                 ) : (
                   <span />
                 )}
-                <button className="primary-button" disabled={pending}>
+                <button
+                  className="primary-button disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={pending || !canSave}
+                >
                   {pending
                     ? "Saving…"
                     : time

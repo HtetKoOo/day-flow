@@ -12,7 +12,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  saveRoutineOccurrence,
   createRoutine,
   deleteRoutine,
   setRoutineActive,
@@ -21,20 +20,35 @@ import {
 import { DatePicker, TimePicker } from "@/components/planner/date-time-picker";
 import { DurationPicker } from "@/components/planner/duration-picker";
 import { weekdayLabels, type Routine } from "@/lib/tasks/routines";
+import { routineInput } from "@/lib/validation/routine";
+import { RoutineChanges } from "./routine-changes";
 import { taskColor, taskPickerColorOptions } from "@/lib/tasks/colors";
 import { taskIcon, taskIconNames, type TaskIconName } from "@/lib/tasks/icons";
 
 export function RoutineEditor({
   date,
   routine,
+  rangeFrom = date,
+  rangeTo = date,
   onClose,
   onSaved,
 }: {
   date: string;
   routine?: Routine | null;
+  rangeFrom?: string;
+  rangeTo?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [title, setTitle] = useState(routine?.title ?? "");
+  const [notes, setNotes] = useState(routine?.notes ?? "");
+  const [selectedTime, setSelectedTime] = useState(
+    routine?.start_time.slice(0, 5) ?? "09:00",
+  );
+  const [startsOn, setStartsOn] = useState(routine?.starts_on ?? date);
+  const [endsOn, setEndsOn] = useState(
+    routine?.ends_on ?? routine?.starts_on ?? date,
+  );
   const [days, setDays] = useState<number[]>(
     routine?.days_of_week ?? [1, 2, 3, 4, 5],
   );
@@ -49,50 +63,72 @@ export function RoutineEditor({
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pending, startTransition] = useTransition();
+  const values = {
+    title: title.trim(),
+    notes,
+    color,
+    icon,
+    is_private: isPrivate,
+    reminder_minutes: reminder,
+    start_time: selectedTime,
+    starts_on: startsOn,
+    ends_on: hasEndDate ? endsOn : null,
+    days_of_week: [...days].sort((a, b) => a - b),
+    duration_minutes: duration,
+  };
+  const [initialValues] = useState(() => JSON.stringify(values));
+  const hasChanges = JSON.stringify(values) !== initialValues;
+  const validation = routineInput.safeParse(values);
+  const canSave = validation.success && (!routine || hasChanges);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    if (pending || !canSave) return;
     setError("");
     startTransition(async () => {
-      const values = {
-        title: form.get("title"),
-        notes: form.get("notes") ?? "",
-        color,
-        icon,
-        is_private: isPrivate,
-        reminder_minutes: reminder,
-        start_time: form.get("time"),
-        starts_on: form.get("starts_on"),
-        ends_on: hasEndDate ? form.get("ends_on") : null,
-        days_of_week: days,
-        duration_minutes: duration,
-      };
-      const result = routine
-        ? await updateRoutine(routine.id, values)
-        : await createRoutine(values);
-      if (!result.ok) return setError(result.message);
-      onSaved();
-      onClose();
+      try {
+        const result = routine
+          ? await updateRoutine(routine.id, values)
+          : await createRoutine(values);
+        if (!result.ok) return setError(result.message);
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm your save. Your draft is still here. Check your connection and timetable before retrying.",
+        );
+      }
     });
   }
   function toggleActive() {
-    if (!routine) return;
+    if (!routine || pending) return;
     setError("");
     startTransition(async () => {
-      const result = await setRoutineActive(routine.id, !routine.is_active);
-      if (!result.ok) return setError(result.message);
-      onSaved();
-      onClose();
+      try {
+        const result = await setRoutineActive(routine.id, !routine.is_active);
+        if (!result.ok) return setError(result.message);
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm the status change. Check your connection and timetable before retrying.",
+        );
+      }
     });
   }
   function remove() {
-    if (!routine) return;
+    if (!routine || pending) return;
     setError("");
     startTransition(async () => {
-      const result = await deleteRoutine(routine.id);
-      if (!result.ok) return setError(result.message);
-      onSaved();
-      onClose();
+      try {
+        const result = await deleteRoutine(routine.id);
+        if (!result.ok) return setError(result.message);
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm deletion. Check your connection and timetable before retrying.",
+        );
+      }
     });
   }
   return (
@@ -127,7 +163,8 @@ export function RoutineEditor({
                 className="task-title-input"
                 name="title"
                 placeholder="Routine name"
-                defaultValue={routine?.title ?? ""}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
                 required
                 maxLength={200}
                 autoFocus
@@ -210,7 +247,8 @@ export function RoutineEditor({
                   Start time
                   <TimePicker
                     name="time"
-                    defaultValue={routine?.start_time.slice(0, 5) ?? "09:00"}
+                    defaultValue={selectedTime}
+                    onValueChange={setSelectedTime}
                     label="Choose routine start time"
                   />
                 </label>
@@ -218,7 +256,8 @@ export function RoutineEditor({
                   Start from
                   <DatePicker
                     name="starts_on"
-                    defaultValue={routine?.starts_on ?? date}
+                    defaultValue={startsOn}
+                    onValueChange={setStartsOn}
                     label="Choose routine start date"
                   />
                 </label>
@@ -260,10 +299,9 @@ export function RoutineEditor({
                 {hasEndDate && (
                   <DatePicker
                     name="ends_on"
-                    min={routine?.starts_on ?? date}
-                    defaultValue={
-                      routine?.ends_on ?? routine?.starts_on ?? date
-                    }
+                    min={startsOn}
+                    defaultValue={endsOn}
+                    onValueChange={setEndsOn}
                     label="Choose routine end date"
                   />
                 )}
@@ -278,10 +316,16 @@ export function RoutineEditor({
                 name="notes"
                 rows={2}
                 placeholder="Add a note…"
-                defaultValue={routine?.notes ?? ""}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
                 maxLength={10000}
               />
             </fieldset>
+            {title.trim() && !validation.success && (
+              <p className="form-error" role="status">
+                {validation.error.issues[0].message}
+              </p>
+            )}
             {error && (
               <p role="alert" className="form-error">
                 {error}
@@ -314,7 +358,10 @@ export function RoutineEditor({
                     aria-label="Delete routine"
                     title="Delete routine"
                     disabled={pending}
-                    onClick={() => setConfirmDelete(true)}
+                    onClick={() => {
+                      setError("");
+                      setConfirmDelete(true);
+                    }}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -322,59 +369,22 @@ export function RoutineEditor({
               ) : (
                 <span />
               )}
-              <button className="primary-button" disabled={pending}>
+              <button
+                className="primary-button disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={pending || !canSave}
+              >
                 {pending ? "Saving…" : routine ? "Save changes" : "Add routine"}
                 <Check size={17} />
               </button>
             </div>
           </form>
-          {routine && Boolean(routine.exceptions?.length) && (
-            <section className="mt-6 border-t pt-5">
-              <h3 className="font-medium">Changed days in this range</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Restore a skipped or rescheduled occurrence to its weekly
-                schedule.
-              </p>
-              <ul className="mt-3 space-y-3">
-                {routine.exceptions!.map((item) => (
-                  <li
-                    key={item.occurrence_date}
-                    className="flex flex-wrap items-center justify-between gap-2 text-sm"
-                  >
-                    <span>
-                      {item.occurrence_date} ·{" "}
-                      {item.is_skipped
-                        ? "Skipped"
-                        : `${item.scheduled_date} ${item.start_time?.slice(0, 5)}`}
-                    </span>
-                    <button
-                      type="button"
-                      className="text-button"
-                      disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          const result = await saveRoutineOccurrence(
-                            routine.id,
-                            {
-                              mode: "reset",
-                              occurrence_date: item.occurrence_date,
-                            },
-                          );
-                          if (!result.ok) {
-                            setError(result.message);
-                            return;
-                          }
-                          onSaved();
-                          onClose();
-                        })
-                      }
-                    >
-                      Restore
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
+          {routine && (
+            <RoutineChanges
+              routine={routine}
+              from={rangeFrom}
+              to={rangeTo}
+              onSaved={onSaved}
+            />
           )}
           <Dialog.Root
             open={confirmDelete}
@@ -390,6 +400,11 @@ export function RoutineEditor({
                   Its future timetable blocks will be removed. This can’t be
                   undone.
                 </Dialog.Description>
+                {error && (
+                  <p className="form-error" role="alert">
+                    {error}
+                  </p>
+                )}
                 <div className="confirmation-actions">
                   <button
                     type="button"
