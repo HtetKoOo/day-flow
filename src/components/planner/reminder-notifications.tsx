@@ -2,32 +2,15 @@
 
 import { useEffect } from "react";
 import type { ScheduledTask } from "@/lib/tasks/types";
-import { minutes } from "@/lib/tasks/schedule";
-
-function nowInTimezone(timezone: string) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(
-    parts
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value]),
-  );
-  return {
-    date: `${values.year}-${values.month}-${values.day}`,
-    minute: Number(values.hour) * 60 + Number(values.minute),
-  };
-}
+import {
+  isReminderDue,
+  localClock,
+  reminderKey,
+} from "../../../supabase/functions/_shared/reminders";
 
 function reminderWasSent(key: string) {
   try {
-    return sessionStorage.getItem(key) === "sent";
+    return localStorage.getItem(key) === "sent";
   } catch {
     return false;
   }
@@ -35,7 +18,7 @@ function reminderWasSent(key: string) {
 
 function markReminderSent(key: string) {
   try {
-    sessionStorage.setItem(key, "sent");
+    localStorage.setItem(key, "sent");
   } catch {
     // A notification can still be shown when browser storage is unavailable.
   }
@@ -52,31 +35,67 @@ export function ReminderNotifications({
     if (!("Notification" in window) || Notification.permission !== "granted")
       return;
 
-    const checkReminders = () => {
-      const now = nowInTimezone(timezone);
-      for (const task of scheduled) {
-        const reminder = task.reminder_minutes;
+    let checking = false;
+    let disposed = false;
+    const checkReminders = async () => {
+      if (checking || disposed) return;
+      checking = true;
+      try {
+        // The push service owns notifications on subscribed devices, even while
+        // this tab is open. Never run an independent local timer on those devices.
+        const registration = await navigator.serviceWorker?.getRegistration();
         if (
-          task.is_completed ||
-          !reminder ||
-          task.scheduled_date !== now.date ||
-          !task.start_time
+          registration?.pushManager &&
+          (await registration.pushManager.getSubscription())
         )
-          continue;
-        const start = minutes(task.start_time);
-        if (now.minute < start - reminder || now.minute >= start) continue;
-
-        const key = `dayflow-reminder:${task.id}:${task.scheduled_date}:${task.start_time}:${reminder}`;
-        if (reminderWasSent(key)) continue;
-        markReminderSent(key);
-        const time = task.start_time.slice(0, 5);
-        new Notification("DayFlow reminder", {
-          body: task.is_private
-            ? `A private task starts at ${time}.`
-            : `${task.title} starts at ${time}.`,
-          icon: "/icons/icon-192.png",
-          tag: key,
-        });
+          return;
+        if (disposed) return;
+        const now = localClock(timezone);
+        for (const task of scheduled) {
+          const reminder = task.reminder_minutes;
+          if (task.is_completed || !reminder || !task.start_time) continue;
+          if (
+            !isReminderDue(task.scheduled_date, task.start_time, reminder, now)
+          )
+            continue;
+          const source = task.is_routine
+            ? `routine:${task.routine_id}`
+            : `task:${task.id}`;
+          const tag = reminderKey(
+            source,
+            task.scheduled_date,
+            task.start_time,
+            reminder,
+          );
+          const key = `dayflow-reminder:${tag}`;
+          const notify = () => {
+            if (disposed || reminderWasSent(key)) return;
+            const time = task.start_time!.slice(0, 5);
+            new Notification("DayFlow reminder", {
+              body: task.is_private
+                ? `A private task starts at ${time}.`
+                : `${task.title} starts at ${time}.`,
+              icon: "/icons/icon-192.png",
+              tag,
+            });
+            markReminderSent(key);
+          };
+          if (navigator.locks) {
+            await navigator.locks.request(
+              key,
+              { ifAvailable: true },
+              (lock) => {
+                if (lock) notify();
+              },
+            );
+          } else {
+            notify();
+          }
+        }
+      } catch {
+        // A failed subscription check must not cause duplicate local alerts.
+      } finally {
+        checking = false;
       }
     };
 
@@ -84,6 +103,7 @@ export function ReminderNotifications({
     const timer = window.setInterval(checkReminders, 15_000);
     window.addEventListener("focus", checkReminders);
     return () => {
+      disposed = true;
       window.clearInterval(timer);
       window.removeEventListener("focus", checkReminders);
     };
