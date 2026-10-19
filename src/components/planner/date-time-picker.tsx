@@ -38,11 +38,13 @@ export function DatePicker({
   defaultValue,
   min,
   label,
+  onValueChange,
 }: {
   name: string;
   defaultValue: string;
   min?: string;
   label: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [value, setValue] = useState(defaultValue);
   const [month, setMonth] = useState(() =>
@@ -110,6 +112,7 @@ export function DatePicker({
                   aria-pressed={isSameDay(day, pickerDate(value))}
                   onClick={() => {
                     setValue(key);
+                    onValueChange?.(key);
                     setMonth(startOfMonth(day));
                     setOpen(false);
                   }}
@@ -129,10 +132,12 @@ export function TimePicker({
   name,
   defaultValue,
   label,
+  onValueChange,
 }: {
   name: string;
   defaultValue: string;
   label: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [initialHour, initialMinute] = defaultValue.split(":").map(Number);
   const initialPeriod = initialHour >= 12 ? "PM" : "AM";
@@ -174,7 +179,14 @@ export function TimePicker({
                     key={value}
                     type="button"
                     aria-pressed={value === hour}
-                    onClick={() => setHour(value)}
+                    onClick={() => {
+                      setHour(value);
+                      const nextHour =
+                        period === "AM" ? value % 12 : (value % 12) + 12;
+                      onValueChange?.(
+                        `${String(nextHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                      );
+                    }}
                   >
                     {String(value).padStart(2, "0")}
                   </button>
@@ -189,7 +201,12 @@ export function TimePicker({
                     key={value}
                     type="button"
                     aria-pressed={value === minute}
-                    onClick={() => setMinute(value)}
+                    onClick={() => {
+                      setMinute(value);
+                      onValueChange?.(
+                        `${String(savedHour).padStart(2, "0")}:${String(value).padStart(2, "0")}`,
+                      );
+                    }}
                   >
                     {String(value).padStart(2, "0")}
                   </button>
@@ -207,7 +224,14 @@ export function TimePicker({
                     key={value}
                     type="button"
                     aria-pressed={value === period}
-                    onClick={() => setPeriod(value)}
+                    onClick={() => {
+                      setPeriod(value);
+                      const nextHour =
+                        value === "AM" ? hour % 12 : (hour % 12) + 12;
+                      onValueChange?.(
+                        `${String(nextHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                      );
+                    }}
                   >
                     {value}
                   </button>

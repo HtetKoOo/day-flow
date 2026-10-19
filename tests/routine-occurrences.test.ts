@@ -6,6 +6,7 @@ import {
   expandRoutine,
   type RoutineException,
 } from "../supabase/functions/_shared/routine-occurrences";
+import { routineExceptionsInRange } from "../src/lib/tasks/routines";
 import { routineOccurrenceInput } from "../src/lib/validation/routine-occurrence";
 import { isReminderDue } from "../supabase/functions/_shared/reminders";
 
@@ -197,4 +198,53 @@ test("Shared SQL respects skip/move/reset/privacy and database prevents cross-ac
   } finally {
     await db.close();
   }
+});
+
+test("Restore list excludes skipped days outside the visible week even when preloaded", () => {
+  const skipped = {
+    ...override,
+    is_skipped: true,
+    scheduled_date: null,
+    start_time: null,
+    duration_minutes: null,
+  };
+  assert.equal(
+    routineExceptionsInRange([skipped], "2026-10-12", "2026-10-18").length,
+    0,
+  );
+  assert.equal(
+    routineExceptionsInRange([skipped], "2026-10-26", "2026-11-01").length,
+    0,
+  );
+  assert.equal(
+    routineExceptionsInRange([skipped], "2026-10-19", "2026-10-25").length,
+    1,
+  );
+  assert.equal(
+    routineExceptionsInRange([skipped], "2026-10-20", "2026-10-20").length,
+    0,
+  );
+});
+test("Restore list includes moved-in and moved-out changes only in their relevant ranges", () => {
+  const moved = { ...override, scheduled_date: "2026-10-26" };
+  assert.equal(
+    routineExceptionsInRange([moved], "2026-10-19", "2026-10-25").length,
+    1,
+  );
+  assert.equal(
+    routineExceptionsInRange([moved], "2026-10-26", "2026-11-01").length,
+    1,
+  );
+  assert.equal(
+    routineExceptionsInRange([moved], "2026-11-02", "2026-11-08").length,
+    0,
+  );
+  assert.equal(
+    routineExceptionsInRange(
+      [{ ...moved, is_skipped: true }],
+      "2026-10-26",
+      "2026-11-01",
+    ).length,
+    0,
+  );
 });

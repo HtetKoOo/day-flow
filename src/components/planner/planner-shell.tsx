@@ -384,7 +384,12 @@ export function PlannerShell({
         {routineEditorOpen && (
           <RoutineEditor
             date={displayedDay}
-            routine={editingRoutine}
+            routine={
+              routines.find((item) => item.id === editingRoutine?.id) ??
+              editingRoutine
+            }
+            rangeFrom={displayedDays[0]}
+            rangeTo={displayedDays[displayedDays.length - 1]}
             onClose={() => setRoutineEditorOpen(false)}
             onSaved={() => router.refresh()}
           />

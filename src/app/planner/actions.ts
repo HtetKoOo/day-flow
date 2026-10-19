@@ -436,3 +436,33 @@ export async function saveRoutineOccurrence(
           : "Only this occurrence updated.",
   };
 }
+
+export async function loadRoutineChanges(
+  id: string,
+): Promise<
+  | { ok: true; changes: import("@/lib/tasks/routines").RoutineException[] }
+  | { ok: false; message: string }
+> {
+  const { supabase, user } = await requireUser();
+  if (!taskId.safeParse(id).success)
+    return { ok: false, message: "Invalid routine." };
+  const changes: import("@/lib/tasks/routines").RoutineException[] = [];
+  for (let from = 0; ; from += 500) {
+    const { data, error } = await supabase
+      .from("routine_exceptions")
+      .select(
+        "recurring_task_id,occurrence_date,scheduled_date,start_time,duration_minutes,is_skipped",
+      )
+      .eq("user_id", user.id)
+      .eq("recurring_task_id", id)
+      .order("occurrence_date")
+      .range(from, from + 499);
+    if (error)
+      return {
+        ok: false,
+        message: "Could not load changed days. Please try again.",
+      };
+    changes.push(...(data ?? []));
+    if ((data?.length ?? 0) < 500) return { ok: true, changes };
+  }
+}
