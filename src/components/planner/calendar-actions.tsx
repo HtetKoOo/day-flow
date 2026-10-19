@@ -3,13 +3,21 @@
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Dialog, DropdownMenu } from "radix-ui";
-import { Check, Download, Link2, Upload, X, MoreHorizontal, Settings } from "lucide-react";
+import {
+  Check,
+  Download,
+  Link2,
+  Upload,
+  X,
+  MoreHorizontal,
+  Settings,
+} from "lucide-react";
 import {
   createTimetableShare,
   importCalendarTasks,
 } from "@/app/planner/actions";
 import {
-  parseIcsCalendar,
+  readIcsCalendar,
   type ImportedCalendarEvent,
 } from "@/lib/calendar/ics";
 
@@ -20,17 +28,22 @@ export function CalendarActions({
   to,
   label,
   onImported,
+  timezone,
 }: {
   from: string;
   to: string;
   label: string;
   onImported: () => void;
+  timezone: string;
 }) {
   const [open, setOpen] = useState<"export" | "import" | "share" | null>(null);
   const [privateMode, setPrivateMode] = useState<PrivateMode>("exclude");
   const [includeNotes, setIncludeNotes] = useState(false);
   const [events, setEvents] = useState<ImportedCalendarEvent[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [importPrivate, setImportPrivate] = useState(true);
+  const [importNotice, setImportNotice] = useState("");
+  const [importResult, setImportResult] = useState("");
   const [error, setError] = useState("");
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
@@ -41,18 +54,45 @@ export function CalendarActions({
   async function readFile(file: File | undefined) {
     if (!file) return;
     setError("");
+    setImportResult("");
+    setImportNotice("");
     try {
-      const parsed = parseIcsCalendar(await file.text()).filter(
+      if (file.size > 2 * 1024 * 1024)
+        throw new Error("Choose a calendar file smaller than 2 MB.");
+      const result = readIcsCalendar(await file.text(), timezone);
+      const parsed = result.events.filter(
         (event) => event.date >= from && event.date <= to,
+      );
+      if (parsed.length > 200)
+        throw new Error(
+          "Import up to 200 events at a time. Choose a smaller calendar range.",
+        );
+      const outside = result.events.length - parsed.length;
+      setImportNotice(
+        [
+          result.skipped
+            ? `${result.skipped} unsupported or invalid events skipped (including recurring, all-day, or overnight events).`
+            : "",
+          result.duplicates
+            ? `${result.duplicates} duplicate events in this file skipped.`
+            : "",
+          outside ? `${outside} events outside this range skipped.` : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
       );
       setEvents(parsed);
       setSelected(new Set(parsed.map((event) => event.id)));
       if (!parsed.length)
         setError(`No calendar events fall within this ${label.toLowerCase()}.`);
-    } catch {
+    } catch (error) {
       setEvents([]);
       setSelected(new Set());
-      setError("That calendar file could not be read.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "That calendar file could not be read.",
+      );
     }
   }
 
@@ -71,6 +111,9 @@ export function CalendarActions({
       .map((event) => ({
         title: event.title,
         notes: event.notes,
+        source_uid: event.sourceUid,
+        recurrence_id: event.recurrenceId,
+        is_private: importPrivate,
         scheduled_date: event.date,
         start_time: event.startTime,
         duration_minutes: event.durationMinutes,
@@ -80,7 +123,7 @@ export function CalendarActions({
       const result = await importCalendarTasks(chosen);
       if (!result.ok) return setError(result.message);
       onImported();
-      setOpen(null);
+      setImportResult(result.message);
       setEvents([]);
       setSelected(new Set());
     });
@@ -142,14 +185,44 @@ export function CalendarActions({
         </button>
       </div>
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild><button type="button" className="icon-button planner-more-trigger" aria-label="More planner options"><MoreHorizontal size={20} /></button></DropdownMenu.Trigger>
+        <DropdownMenu.Trigger asChild>
+          <button
+            type="button"
+            className="icon-button planner-more-trigger"
+            aria-label="More planner options"
+          >
+            <MoreHorizontal size={20} />
+          </button>
+        </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="planner-options-menu" align="end" sideOffset={8} collisionPadding={8}>
-            <DropdownMenu.Item onSelect={() => setOpen("export")}><Download size={17} /> Export calendar</DropdownMenu.Item>
-            <DropdownMenu.Item onSelect={() => setOpen("import")}><Upload size={17} /> Import calendar</DropdownMenu.Item>
-            <DropdownMenu.Item onSelect={() => { setError(""); setShareUrl(""); setCopied(false); setOpen("share"); }}><Link2 size={17} /> Share timetable</DropdownMenu.Item>
+          <DropdownMenu.Content
+            className="planner-options-menu"
+            align="end"
+            sideOffset={8}
+            collisionPadding={8}
+          >
+            <DropdownMenu.Item onSelect={() => setOpen("export")}>
+              <Download size={17} /> Export calendar
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onSelect={() => setOpen("import")}>
+              <Upload size={17} /> Import calendar
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => {
+                setError("");
+                setShareUrl("");
+                setCopied(false);
+                setOpen("share");
+              }}
+            >
+              <Link2 size={17} /> Share timetable
+            </DropdownMenu.Item>
             <DropdownMenu.Separator />
-            <DropdownMenu.Item asChild><Link href="/settings"><Settings size={17} /> Settings</Link></DropdownMenu.Item>
+            <DropdownMenu.Item asChild>
+              <Link href="/settings">
+                <Settings size={17} /> Settings
+              </Link>
+            </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
@@ -228,27 +301,52 @@ export function CalendarActions({
                   {label}: {from} to {to}
                 </Dialog.Description>
               </div>
-              <button type="button" className="icon-button" onClick={() => setOpen(null)} aria-label="Close sharing">
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => setOpen(null)}
+                aria-label="Close sharing"
+              >
                 <X size={20} />
               </button>
             </div>
             <p className="calendar-share-note">
-              Anyone with this link can view this timetable. Private tasks and routines are always excluded.
+              Anyone with this link can view this timetable. Private tasks and
+              routines are always excluded.
             </p>
             {shareUrl ? (
               <>
-                <input className="calendar-share-link" value={shareUrl} readOnly aria-label="Timetable share link" />
-                <button type="button" className="primary-button" onClick={() => void copyShareLink()}>
+                <input
+                  className="calendar-share-link"
+                  value={shareUrl}
+                  readOnly
+                  aria-label="Timetable share link"
+                />
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => void copyShareLink()}
+                >
                   {copied ? <Check size={17} /> : <Link2 size={17} />}
                   {copied ? "Copied" : "Copy link"}
                 </button>
               </>
             ) : (
-              <button type="button" className="primary-button" disabled={pending} onClick={createShareLink}>
-                <Link2 size={17} /> {pending ? "Creating…" : "Create view-only link"}
+              <button
+                type="button"
+                className="primary-button"
+                disabled={pending}
+                onClick={createShareLink}
+              >
+                <Link2 size={17} />{" "}
+                {pending ? "Creating…" : "Create view-only link"}
               </button>
             )}
-            {error && <p className="form-error" role="alert">{error}</p>}
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -263,7 +361,7 @@ export function CalendarActions({
               <div>
                 <Dialog.Title>Import calendar</Dialog.Title>
                 <Dialog.Description>
-                  Events outside this {label.toLowerCase()} are skipped.
+                  {from} to {to}. Times are shown in {timezone}.
                 </Dialog.Description>
               </div>
               <button
@@ -281,7 +379,10 @@ export function CalendarActions({
               className="sr-only"
               type="file"
               accept=".ics,text/calendar"
-              onChange={(event) => void readFile(event.target.files?.[0])}
+              onChange={(event) => {
+                void readFile(event.target.files?.[0]);
+                event.target.value = "";
+              }}
             />
             <button
               type="button"
@@ -291,6 +392,37 @@ export function CalendarActions({
             >
               <Upload size={18} /> Choose .ics file
             </button>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Existing imports are skipped. Recurring, all-day, and overnight
+              events are not imported.
+            </p>
+            {importNotice && (
+              <p className="mt-3 text-sm text-muted-foreground" role="status">
+                {importNotice}
+              </p>
+            )}
+            {importResult && (
+              <p className="mt-3 text-sm text-primary" role="status">
+                {importResult}
+              </p>
+            )}
+            {events.length > 0 && (
+              <label className="privacy-toggle mt-4">
+                <input
+                  type="checkbox"
+                  checked={importPrivate}
+                  disabled={pending}
+                  onChange={(e) => setImportPrivate(e.target.checked)}
+                />
+                <span>
+                  <strong>Keep imported tasks private</strong>
+                  <small>
+                    Hidden from shared timetables. Uncheck only if you want to
+                    share these tasks.
+                  </small>
+                </span>
+              </label>
+            )}
             {events.length > 0 && (
               <div
                 className="calendar-import-list"

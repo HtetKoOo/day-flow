@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { inboxInput, taskId, completionInput } from "@/lib/validation/inbox";
 import { z } from "zod";
+import { calendarImportInput, calendarImportKey } from "@/lib/calendar/import";
 import type { TaskResult } from "@/lib/tasks/types";
 
 export async function saveInboxTask(
@@ -273,34 +274,35 @@ export async function saveTask(
   return { ok: true, message: id ? "Changes saved." : "Task added." };
 }
 
-const calendarImportInput = z
-  .array(
-    z.object({
-      title: z.string().trim().min(1).max(200),
-      notes: z.string().max(10000).default(""),
-      scheduled_date: z.iso.date(),
-      start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-      duration_minutes: z.number().int().min(5).max(1440),
-    }),
-  )
-  .min(1, "Choose at least one event to import.")
-  .max(200, "Import up to 200 events at a time.");
-
 export async function importCalendarTasks(input: unknown): Promise<TaskResult> {
   const { supabase, user } = await requireUser();
   const parsed = calendarImportInput.safeParse(input);
   if (!parsed.success)
     return { ok: false, message: parsed.error.issues[0].message };
-  const { error } = await supabase.from("tasks").insert(
-    parsed.data.map((event) => ({
+  const rows = parsed.data.map(
+    ({ source_uid: _uid, recurrence_id: _recurrence, ...event }) => ({
       ...event,
       user_id: user.id,
+      calendar_import_key: calendarImportKey({
+        ...event,
+        source_uid: _uid,
+        recurrence_id: _recurrence,
+      }),
       color: "sky",
       icon: "calendar-check",
-      is_private: false,
-    })),
+    }),
   );
-  if (error?.code === "PGRST204" || error?.code === "42703")
+  const unique = [
+    ...new Map(rows.map((row) => [row.calendar_import_key, row])).values(),
+  ];
+  const { data: inserted, error } = await supabase
+    .from("tasks")
+    .upsert(unique, {
+      onConflict: "user_id,calendar_import_key",
+      ignoreDuplicates: true,
+    })
+    .select("id");
+  if (["PGRST204", "42703", "42P10"].includes(error?.code ?? ""))
     return {
       ok: false,
       message:
@@ -311,7 +313,7 @@ export async function importCalendarTasks(input: unknown): Promise<TaskResult> {
   revalidatePath("/planner");
   return {
     ok: true,
-    message: `${parsed.data.length} calendar ${parsed.data.length === 1 ? "event" : "events"} imported.`,
+    message: `${inserted?.length ?? 0} imported. ${parsed.data.length - (inserted?.length ?? 0)} already imported or duplicate events skipped.`,
   };
 }
 
@@ -320,9 +322,9 @@ const shareRangeInput = z.object({
   to: z.iso.date(),
 });
 
-export async function createTimetableShare(input: unknown): Promise<
-  TaskResult & { token?: string }
-> {
+export async function createTimetableShare(
+  input: unknown,
+): Promise<TaskResult & { token?: string }> {
   const { supabase, user } = await requireUser();
   const parsed = shareRangeInput.safeParse(input);
   if (!parsed.success || parsed.data.from > parsed.data.to)
@@ -359,6 +361,7 @@ export async function revokeTimetableShare(token: string): Promise<TaskResult> {
     .delete()
     .eq("token", token)
     .eq("owner_id", user.id);
-  if (error) return { ok: false, message: "Could not stop sharing. Try again." };
+  if (error)
+    return { ok: false, message: "Could not stop sharing. Try again." };
   return { ok: true, message: "Share link stopped." };
 }

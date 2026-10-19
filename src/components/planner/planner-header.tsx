@@ -35,6 +35,7 @@ export function PlannerHeader({
   onCalendarImported,
   showPlanTomorrow,
   weekStartsOn,
+  timezone,
 }: {
   displayedDay: string;
   displayedView: PlannerView;
@@ -52,6 +53,7 @@ export function PlannerHeader({
   onCalendarImported: () => void;
   showPlanTomorrow: boolean;
   weekStartsOn: number;
+  timezone: string;
 }) {
   const previous = dateKey(addDays(parseISO(displayedDay), -7));
   const next = dateKey(addDays(parseISO(displayedDay), 7));
@@ -59,35 +61,43 @@ export function PlannerHeader({
   return (
     <header className="app-header" data-inbox-open={inboxOpen}>
       <div className="planner-sidebar-slot">
-      <nav className="view-switch sidebar-switch" aria-label="Sidebar panels">
-        <button
-          type="button"
-          className="text-button"
-          aria-pressed={inboxOpen && sidebarMode === "inbox"}
-          aria-controls="planner-inbox"
-          onClick={() => selectSidebar("inbox")}
-        >
-          <Inbox size={19} />
-          <span>Tasks</span>
-          {displayTotal > 0 && (
-            <span className="sidebar-switch-count">{displayTotal}</span>
-          )}
-        </button>
-        <button
-          type="button"
-          className="text-button"
-          aria-pressed={inboxOpen && sidebarMode === "routines"}
-          aria-controls="planner-inbox"
-          onClick={() => selectSidebar("routines")}
-        >
-          <CalendarDays size={19} />
-          <span>Routines</span>
-        </button>
-      </nav>
+        <nav className="view-switch sidebar-switch" aria-label="Sidebar panels">
+          <button
+            type="button"
+            className="text-button"
+            aria-pressed={inboxOpen && sidebarMode === "inbox"}
+            aria-controls="planner-inbox"
+            onClick={() => selectSidebar("inbox")}
+          >
+            <Inbox size={19} />
+            <span>Tasks</span>
+            {displayTotal > 0 && (
+              <span className="sidebar-switch-count">{displayTotal}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className="text-button"
+            aria-pressed={inboxOpen && sidebarMode === "routines"}
+            aria-controls="planner-inbox"
+            onClick={() => selectSidebar("routines")}
+          >
+            <CalendarDays size={19} />
+            <span>Routines</span>
+          </button>
+        </nav>
       </div>
       <div className="calendar-navigation">
         <div className="date-navigation">
-          <h1><PlannerDatePicker value={displayedDay} today={today} weekStartsOn={weekStartsOn} disabled={routeStillLoading} onSelect={day => navigate(day, displayedView)} /></h1>
+          <h1>
+            <PlannerDatePicker
+              value={displayedDay}
+              today={today}
+              weekStartsOn={weekStartsOn}
+              disabled={routeStillLoading}
+              onSelect={(day) => navigate(day, displayedView)}
+            />
+          </h1>
           <button
             type="button"
             className="icon-button"
@@ -108,10 +118,18 @@ export function PlannerHeader({
             onClick={() => navigate(today, displayedView)}
             aria-current={displayedDay === today ? "date" : undefined}
           >
-            <span>Today</span><CalendarCheck className="planner-today-icon" size={18} aria-hidden="true" />
+            <span>Today</span>
+            <CalendarCheck
+              className="planner-today-icon"
+              size={18}
+              aria-hidden="true"
+            />
           </button>
           {showPlanTomorrow && (
-            <Link className="plan-tomorrow-button" href={`/planner?date=${tomorrow}`}>
+            <Link
+              className="plan-tomorrow-button"
+              href={`/planner?date=${tomorrow}`}
+            >
               Plan tomorrow <ArrowRight size={15} />
             </Link>
           )}
@@ -148,22 +166,50 @@ export function PlannerHeader({
       </nav>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
-          <button type="button" className="planner-view-trigger" aria-label="Choose planner view" disabled={routeStillLoading}>
-            {displayedView === "two-days" ? "2 days" : displayedView === "week" ? "Week" : "Day"}<ChevronDown size={14} />
+          <button
+            type="button"
+            className="planner-view-trigger"
+            aria-label="Choose planner view"
+            disabled={routeStillLoading}
+          >
+            {displayedView === "two-days"
+              ? "2 days"
+              : displayedView === "week"
+                ? "Week"
+                : "Day"}
+            <ChevronDown size={14} />
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="planner-options-menu" align="end" sideOffset={8} collisionPadding={8}>
-            <DropdownMenu.RadioGroup value={displayedView} onValueChange={view => navigate(displayedDay, view as PlannerView)}>
-              {(["day", "two-days", "week"] as const).map(view => <DropdownMenu.RadioItem key={view} value={view}>
-                {view === "two-days" ? "2 days" : view === "week" ? "Week" : "Day"}<DropdownMenu.ItemIndicator>✓</DropdownMenu.ItemIndicator>
-              </DropdownMenu.RadioItem>)}
+          <DropdownMenu.Content
+            className="planner-options-menu"
+            align="end"
+            sideOffset={8}
+            collisionPadding={8}
+          >
+            <DropdownMenu.RadioGroup
+              value={displayedView}
+              onValueChange={(view) =>
+                navigate(displayedDay, view as PlannerView)
+              }
+            >
+              {(["day", "two-days", "week"] as const).map((view) => (
+                <DropdownMenu.RadioItem key={view} value={view}>
+                  {view === "two-days"
+                    ? "2 days"
+                    : view === "week"
+                      ? "Week"
+                      : "Day"}
+                  <DropdownMenu.ItemIndicator>✓</DropdownMenu.ItemIndicator>
+                </DropdownMenu.RadioItem>
+              ))}
             </DropdownMenu.RadioGroup>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <div className="header-actions">
         <CalendarActions
+          timezone={timezone}
           from={calendarFrom}
           to={calendarTo}
           label={calendarLabel}

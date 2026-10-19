@@ -208,8 +208,12 @@ export function PlannerShell({
       onDragEnd={onDragEnd}
     >
       <main className="planner-app" data-inbox-open={inboxOpen}>
-        <ReminderNotifications scheduled={displayScheduled} timezone={timezone} />
+        <ReminderNotifications
+          scheduled={displayScheduled}
+          timezone={timezone}
+        />
         <PlannerHeader
+          timezone={timezone}
           displayedDay={displayedDay}
           displayedView={displayedView}
           today={today}

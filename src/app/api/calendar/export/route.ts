@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const { supabase, user } = await requireUser();
   const [
-    { data: profile },
+    { data: profile, error: profileError },
     { data: tasks, error: taskError },
     { data: routines, error: routineError },
   ] = await Promise.all([
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .eq("is_active", true),
   ]);
-  if (taskError || routineError)
+  if (profileError || !profile || taskError || routineError)
     return NextResponse.json(
       { message: "Could not prepare your calendar." },
       { status: 500 },
@@ -83,11 +83,22 @@ export async function GET(request: NextRequest) {
       }),
     ),
   );
-  const calendar = buildIcsCalendar([...taskEvents, ...routineEvents], {
-    timezone: profile?.timezone ?? "UTC",
-    privateMode: parsed.data.private,
-    includeNotes: parsed.data.notes === "1",
-  });
+  let calendar: string;
+  try {
+    calendar = buildIcsCalendar([...taskEvents, ...routineEvents], {
+      timezone: profile.timezone,
+      privateMode: parsed.data.private,
+      includeNotes: parsed.data.notes === "1",
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        message:
+          "Could not export an event time. Check your timezone and event times.",
+      },
+      { status: 422 },
+    );
+  }
   const filename = `dayflow-${parsed.data.from}-to-${parsed.data.to}.ics`;
   return new NextResponse(calendar, {
     headers: {
