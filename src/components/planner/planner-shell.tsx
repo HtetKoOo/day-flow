@@ -1,10 +1,9 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PlannerToast } from "./planner-toast";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { LoaderCircle } from "lucide-react";
 import { scheduleCollision } from "./drag-schedule";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDays, parseISO } from "date-fns";
 import { TaskEditor } from "@/components/planner/task-editor";
@@ -64,6 +63,9 @@ export function PlannerShell({
   routines,
 }: PlannerProps) {
   const router = useRouter();
+  useEffect(() => {
+    router.prefetch("/settings");
+  }, [router]);
   const [editor, setEditor] = useState<{
     task: InboxTask | null;
     date: string;
@@ -228,6 +230,8 @@ export function PlannerShell({
                 : "Week"
           }
           onCalendarImported={() => router.refresh()}
+          showPlanTomorrow={evening && displayedDay === today}
+          weekStartsOn={weekStartsOn}
         />
         {notice && (
           <PlannerToast
@@ -275,14 +279,6 @@ export function PlannerShell({
             }}
           />
           <section className="planner-main" data-view={displayedView}>
-            {evening && displayedDay === today && (
-              <Link
-                className="tomorrow-shortcut"
-                href={href(dateKey(addDays(parseISO(today), 1)), displayedView)}
-              >
-                Plan tomorrow →
-              </Link>
-            )}
             <div
               className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`}
               data-view={displayedView}
