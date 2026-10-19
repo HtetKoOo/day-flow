@@ -1,5 +1,6 @@
 "use client";
 
+import { deviceRemindersDisabled } from "@/lib/notifications/device";
 import { useEffect } from "react";
 import type { ScheduledTask } from "@/lib/tasks/types";
 import {
@@ -38,7 +39,7 @@ export function ReminderNotifications({
     let checking = false;
     let disposed = false;
     const checkReminders = async () => {
-      if (checking || disposed) return;
+      if (checking || disposed || deviceRemindersDisabled()) return;
       checking = true;
       try {
         // The push service owns notifications on subscribed devices, even while
@@ -69,7 +70,8 @@ export function ReminderNotifications({
           );
           const key = `dayflow-reminder:${tag}`;
           const notify = () => {
-            if (disposed || reminderWasSent(key)) return;
+            if (disposed || deviceRemindersDisabled() || reminderWasSent(key))
+              return;
             const time = task.start_time!.slice(0, 5);
             new Notification("DayFlow reminder", {
               body: task.is_private
