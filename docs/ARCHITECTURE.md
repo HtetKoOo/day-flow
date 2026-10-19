@@ -9,6 +9,7 @@ A **task** is a user-owned item. It can be in Inbox or scheduled for one date an
 - Inbox task: `scheduled_date` and `start_time` are both `NULL`.
 - Scheduled task: both values are present; its duration must finish by midnight.
 - Routine: weekday selection, start date, optional end date, time, duration, and notes. The planner generates its visible occurrences on demand.
+- Routine exception: one row per original occurrence date, owned by the same user as its parent routine. A skip hides it; a move overrides its effective date, time, and duration. Restore deletes the exception.
 - Completed tasks stay in their current position so the schedule remains readable.
 
 Every data row is owned by the signed-in user. Supabase RLS is the security boundary; client-side filtering is only a UI convenience.
@@ -46,7 +47,7 @@ Task changes follow an optimistic pattern:
 
 This makes common actions feel immediate while the server remains authoritative.
 
-Every task and routine database event also refreshes the planner snapshot in
+Every task, routine, and routine-exception database event also refreshes the planner snapshot in
 other open sessions. The refresh is briefly coalesced so a group of related
 events does not create repeated reads. Theme choice, open sheets, and unsaved
 editor drafts remain local to each device.
@@ -77,11 +78,36 @@ Use `supabase migration repair` only when the remote schema is known to already 
 - Test a second browser or device: task and routine create/edit/delete changes, task completion, schedule changes, and routine pause/resume should appear without a manual refresh.
 - Smoke-test mobile, Safari, and the deployed production URL.
 
+## V2 boundaries
+
+### Routine occurrence identity
+
+`supabase/functions/_shared/routine-occurrences.ts` owns the shared expansion logic used by the planner, calendar export, and reminder sender. `occurrence_date` identifies the original weekly appearance; `scheduled_date` is where it is shown after a move. Queries include both original dates and moved-in dates. Shared timetable SQL follows the same rules, covered by database tests.
+
+The editor's Current range list includes exceptions whose original or non-skipped destination date is visible. All changes fetches the owner's complete paginated exception list on demand. Restoring a day keeps the editor open. Exceptions invalidated by a later weekly rule change are ignored during expansion.
+
+### Calendar import and export
+
+Export resolves profile-local times into UTC instants. Import converts UTC/TZID input into the destination profile timezone. Floating events use the source calendar timezone when available, otherwise the destination timezone. The app cannot store events crossing midnight, all-day events, or imported recurrence rules; those entries are skipped and reported.
+
+`calendar_import_key` and a unique `(user_id, calendar_import_key)` index prevent repeated imports from overwriting existing tasks. Imported tasks default to private. Files are transfers, not ongoing calendar synchronization.
+
+### Public sharing
+
+The public `/share/[token]` route uses narrow SQL RPCs to read a live range by token, without login. Private items are excluded in SQL and notes are not returned. Share metadata contains the owner's display name and timezone. Tokens grant view access to anyone who has the link; Settings revokes access by deleting the owner's share row. Already downloaded exports cannot be revoked.
+
+### Notifications
+
+Browser timer reminders run while DayFlow is open. A device with a registered push subscription skips timer delivery to avoid duplicates. The public service worker handles push and notification clicks; it caches public offline assets only, not authenticated planner data. PWA installation does not provide offline planner editing.
+
+The `send-reminders` Edge Function is authenticated with `x-cron-secret`; JWT verification is disabled for this function only. It uses privileged server credentials to load due reminders and subscriptions. The reminder window begins at the configured lead time and closes at task start. Device-specific claims use a lease, a five-attempt limit, and sent-state deduplication; failures can retry while still due. This does not guarantee exact-time delivery to an operating system.
+
+Explicit device enrollment avoids transferring another account's endpoint. Disable and sign-out clean up the current device's subscription; sign-out is local to that session. See [push operations](PUSH-REMINDERS.md).
+
 ## Safe extension points
 
-Future work should build on the current model:
-
-- Icon selection belongs on `tasks` and `recurring_tasks`, with a constrained preset list.
-- Analytics should derive from completed task records; do not delete historical data automatically in V1.
-- Notifications, calendar integrations, AI planning, and offline editing need separate product and conflict-resolution designs.
-- If a routine needs one-date exceptions, model an explicit exception rather than mutating its weekly rule for every occurrence.
+- Keep presets constrained in validation and database constraints.
+- Analytics should derive from completed task records rather than deleting history.
+- Offline editing, external calendar sync, and AI planning still need explicit conflict-resolution designs.
+- Use the shared routine expander when adding another consumer of one-day changes.
+- Follow the [V2 release checklist](V2-RELEASE.md) in addition to the checks above.

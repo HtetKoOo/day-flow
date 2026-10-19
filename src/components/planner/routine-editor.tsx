@@ -85,32 +85,50 @@ export function RoutineEditor({
     if (pending || !canSave) return;
     setError("");
     startTransition(async () => {
-      const result = routine
-        ? await updateRoutine(routine.id, values)
-        : await createRoutine(values);
-      if (!result.ok) return setError(result.message);
-      onSaved();
-      onClose();
+      try {
+        const result = routine
+          ? await updateRoutine(routine.id, values)
+          : await createRoutine(values);
+        if (!result.ok) return setError(result.message);
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm your save. Your draft is still here. Check your connection and timetable before retrying.",
+        );
+      }
     });
   }
   function toggleActive() {
-    if (!routine) return;
+    if (!routine || pending) return;
     setError("");
     startTransition(async () => {
-      const result = await setRoutineActive(routine.id, !routine.is_active);
-      if (!result.ok) return setError(result.message);
-      onSaved();
-      onClose();
+      try {
+        const result = await setRoutineActive(routine.id, !routine.is_active);
+        if (!result.ok) return setError(result.message);
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm the status change. Check your connection and timetable before retrying.",
+        );
+      }
     });
   }
   function remove() {
-    if (!routine) return;
+    if (!routine || pending) return;
     setError("");
     startTransition(async () => {
-      const result = await deleteRoutine(routine.id);
-      if (!result.ok) return setError(result.message);
-      onSaved();
-      onClose();
+      try {
+        const result = await deleteRoutine(routine.id);
+        if (!result.ok) return setError(result.message);
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm deletion. Check your connection and timetable before retrying.",
+        );
+      }
     });
   }
   return (
@@ -340,7 +358,10 @@ export function RoutineEditor({
                     aria-label="Delete routine"
                     title="Delete routine"
                     disabled={pending}
-                    onClick={() => setConfirmDelete(true)}
+                    onClick={() => {
+                      setError("");
+                      setConfirmDelete(true);
+                    }}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -379,6 +400,11 @@ export function RoutineEditor({
                   Its future timetable blocks will be removed. This can’t be
                   undone.
                 </Dialog.Description>
+                {error && (
+                  <p className="form-error" role="alert">
+                    {error}
+                  </p>
+                )}
                 <div className="confirmation-actions">
                   <button
                     type="button"

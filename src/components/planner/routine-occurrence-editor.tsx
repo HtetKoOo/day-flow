@@ -38,15 +38,22 @@ export function RoutineOccurrenceEditor({
     selectedTime !== initialTime ||
     duration !== task.duration_minutes;
   function save(input: unknown) {
+    if (pending) return;
     setError("");
     startTransition(async () => {
-      const result = await saveRoutineOccurrence(routine.id, input);
-      if (!result.ok) {
-        setError(result.message);
-        return;
+      try {
+        const result = await saveRoutineOccurrence(routine.id, input);
+        if (!result.ok) {
+          setError(result.message);
+          return;
+        }
+        onSaved();
+        onClose();
+      } catch {
+        setError(
+          "Could not confirm this change. Your draft is still here. Check your connection and timetable before retrying.",
+        );
       }
-      onSaved();
-      onClose();
     });
   }
   function submit(event: FormEvent<HTMLFormElement>) {

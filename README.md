@@ -30,6 +30,12 @@ Open [/demo](https://dayflow.htetkooo.dev/demo) to explore a complete sample pla
 - Immediate UI updates with background server confirmation, Undo, and realtime task/routine sync across tabs and devices
 - Day, 2 days, and Week views with URL-based navigation
 - Weekly routines with chosen weekdays, start date, optional end date, start time, duration, and notes
+- Edit, skip, reschedule, and restore one routine occurrence without changing the weekly rule
+- Calendar `.ics` export/import with timezone conversion, private imports by default, and duplicate detection
+- View-only timetable links with private tasks and routines excluded; manage links in Settings
+- Display name, timezone, notification, appearance, and sharing settings
+- Browser reminders and device-specific Web Push reminders through a scheduled Supabase Edge Function
+- Save buttons detect actual changes and validate drafts before submission
 - Responsive desktop and mobile UI, dark/light/system appearance, and PWA install support
 
 ## Stack
@@ -57,6 +63,8 @@ Open [http://localhost:3000](http://localhost:3000). Restart the development ser
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+# Optional: enables the Web Push subscription UI
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 ```
 
 These browser-safe values identify the Supabase project. Do not add a service-role key, database password, or Supabase access token to `.env.local` or to Vercel’s public variables. RLS protects each user’s rows.
@@ -70,6 +78,10 @@ pnpm exec supabase login
 pnpm exec supabase link --project-ref YOUR_PROJECT_REF
 pnpm exec supabase db push
 ```
+
+### Push reminders
+
+Push requires separate configuration: generating a matching VAPID key pair, setting Edge Function secrets, deploying `send-reminders`, and scheduling it every minute. Deploying the website alone does not schedule notifications. Follow [Push setup and troubleshooting](docs/PUSH-REMINDERS.md).
 
 ### Authentication configuration
 
@@ -123,7 +135,7 @@ pnpm build
 1. Push the repository to GitHub. A private repository works.
 2. Import the repository into Vercel with the Next.js preset.
 3. Set Node.js 24, `pnpm install --frozen-lockfile` as the install command, and `pnpm build` as the build command.
-4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Production and Preview as appropriate.
+4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Production and Preview as appropriate. Add `NEXT_PUBLIC_VAPID_PUBLIC_KEY` to environments using push, then rebuild/redeploy after changing it.
 5. Apply pending Supabase migrations with `pnpm exec supabase db push`.
 6. Connect `dayflow.htetkooo.dev` in Vercel and configure its DNS records with the domain provider.
 7. Update Supabase Auth Site URL and Redirect URLs, configure Resend SMTP, and enable Google OAuth.
@@ -144,4 +156,10 @@ tests/                       Unit tests
 public/                      PWA manifest, icons, and offline fallback
 ```
 
-See [V1 product scope](docs/V1-BLUEPRINT.md) and [architecture & operations](docs/ARCHITECTURE.md) for product rules, data flow, and maintenance guidance.
+## Documentation
+
+- [V2 usage and current limitations](docs/V2-GUIDE.md)
+- [Push reminder setup and troubleshooting](docs/PUSH-REMINDERS.md)
+- [Architecture and operations](docs/ARCHITECTURE.md)
+- [V2 release checklist](docs/V2-RELEASE.md)
+- [Original V1 product scope](docs/V1-BLUEPRINT.md) — historical planning reference; the implementation now includes V2 features.

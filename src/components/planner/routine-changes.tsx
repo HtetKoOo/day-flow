@@ -65,7 +65,9 @@ export function RoutineChanges({
         setRemoved((previous) => new Set([...previous, date]));
         onSaved();
       } catch {
-        setError("Could not restore this occurrence. Please try again.");
+        setError(
+          "Could not confirm restoration. Check your connection and timetable before retrying.",
+        );
       } finally {
         setBusyDate(null);
       }
