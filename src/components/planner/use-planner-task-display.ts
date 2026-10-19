@@ -199,6 +199,11 @@ export function usePlannerTaskDisplay({
         { event: "*", schema: "public", table: "recurring_tasks" },
         () => refreshPlanner(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "routine_exceptions" },
+        () => refreshPlanner(),
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);

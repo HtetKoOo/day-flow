@@ -1,7 +1,11 @@
+import type { RoutineException } from "../../../supabase/functions/_shared/routine-occurrences";
+export { expandRoutine } from "../../../supabase/functions/_shared/routine-occurrences";
+export type { RoutineException } from "../../../supabase/functions/_shared/routine-occurrences";
 import { format, parseISO, addDays } from "date-fns";
 import type { TaskIconName } from "@/lib/tasks/icons";
 
 export type Routine = {
+  exceptions?: RoutineException[];
   id: string;
   title: string;
   notes: string;

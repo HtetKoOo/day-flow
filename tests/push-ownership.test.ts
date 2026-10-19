@@ -60,6 +60,33 @@ test("Switching accounts cannot reuse another owner's push endpoint; a fresh end
       1,
     );
     await as(a);
+    await db.query(
+      "insert into public.push_subscriptions(endpoint,p256dh,auth) values ('other-device','key','auth')",
+    );
+    await db.query(
+      "delete from public.push_subscriptions where endpoint=$1 and user_id=$2",
+      ["old-device", a],
+    );
+    assert.equal(
+      (
+        await db.query(
+          "select * from public.push_subscriptions where endpoint='other-device'",
+        )
+      ).rows.length,
+      1,
+      "Other devices on the account remain registered",
+    );
+    await as(b);
+    assert.equal(
+      (
+        await db.query(
+          "select * from public.push_subscriptions where endpoint='fresh-device'",
+        )
+      ).rows.length,
+      1,
+      "Other accounts remain registered",
+    );
+    await as(a);
     assert.equal(
       (
         await db.query(
@@ -71,7 +98,7 @@ test("Switching accounts cannot reuse another owner's push endpoint; a fresh end
     assert.equal(
       (
         await db.query(
-          "select * from public.push_subscriptions where endpoint='old-device'",
+          "select * from public.push_subscriptions where endpoint='other-device'",
         )
       ).rows.length,
       1,

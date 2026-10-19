@@ -325,7 +325,9 @@ export function Timeline({
               disabled={
                 pending || compact || disableDrag || Boolean(task.is_routine)
               }
-              allowControlsWhenDragDisabled={disableDrag}
+              allowControlsWhenDragDisabled={
+                disableDrag || Boolean(task.is_routine)
+              }
               className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${task.is_routine ? "is-routine" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
               data-color={taskColor(task.color)}
               data-timeline-segment
@@ -369,7 +371,9 @@ export function Timeline({
                   {task.start_time.slice(0, 5)}–
                   {endTime(task.start_time, task.duration_minutes)}
                   {task.is_routine && (
-                    <span className="agenda-routine-label">· Routine</span>
+                    <span className="agenda-routine-label">
+                      {task.is_exception ? "· Changed day" : "· Routine"}
+                    </span>
                   )}
                 </span>
                 <strong>{task.title}</strong>

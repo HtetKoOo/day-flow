@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { BellRing, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  disableDeviceReminders,
+  setDeviceRemindersDisabled,
+} from "@/lib/notifications/device";
 import { Button } from "@/components/ui/button";
 
 function keyBytes(key: string) {
@@ -84,6 +88,7 @@ export function PushNotificationSettings() {
         if (error)
           throw new Error("Could not check this device. Please try again.");
         if (owned) {
+          setDeviceRemindersDisabled(false);
           setEnabled(true);
           setMessage("Push reminders are enabled on this device.");
           return;
@@ -113,6 +118,7 @@ export function PushNotificationSettings() {
           "Could not connect this device to your account. Please try again.",
         );
       }
+      setDeviceRemindersDisabled(false);
       setEnabled(true);
       setMessage("Push reminders are enabled on this device.");
     } catch (error) {
@@ -127,18 +133,23 @@ export function PushNotificationSettings() {
     }
   }
 
-  async function sendTestNotification() {
+  async function disable() {
+    if (pending) return;
+    setPending(true);
     try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification("DayFlow reminder", {
-        body: "Push reminders are working on this device.",
-        icon: "/icons/icon-192.png",
-        badge: "/icons/icon-192.png",
-        tag: "dayflow-reminder-test",
-      });
-      setMessage("Test notification sent.");
-    } catch {
-      setMessage("The browser could not show a test notification.");
+      await disableDeviceReminders();
+      setEnabled(false);
+      setMessage(
+        "Reminders are off on this device. Your other devices are unchanged.",
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not disable reminders. Please try again.",
+      );
+    } finally {
+      setPending(false);
     }
   }
 
@@ -169,10 +180,11 @@ export function PushNotificationSettings() {
             {enabled && (
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => void sendTestNotification()}
+                variant="ghost"
+                disabled={pending}
+                onClick={() => void disable()}
               >
-                Send test notification
+                {pending ? "Disconnecting…" : "Disable on this device"}
               </Button>
             )}
           </div>

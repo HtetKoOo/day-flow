@@ -7,6 +7,8 @@ import {
   reminderKey,
 } from "../_shared/reminders.ts";
 
+import { expandRoutine } from "../_shared/routine-occurrences.ts";
+
 type Reminder = {
   source: string;
   userId: string;
@@ -52,7 +54,7 @@ Deno.serve(async (request) => {
 
   try {
     const admin = createClient(requiredSecret("SUPABASE_URL"), secretKey());
-    const [profiles, tasks, routines] = await Promise.all([
+    const [profiles, tasks, routines, exceptions] = await Promise.all([
       allRows((from, to) =>
         admin
           .from("profiles")
@@ -75,10 +77,19 @@ Deno.serve(async (request) => {
         admin
           .from("recurring_tasks")
           .select(
-            "id,user_id,title,is_private,start_time,reminder_minutes,days_of_week,starts_on,ends_on",
+            "id,user_id,title,is_private,start_time,duration_minutes,reminder_minutes,days_of_week,starts_on,ends_on",
           )
           .not("reminder_minutes", "is", null)
           .eq("is_active", true)
+          .order("id")
+          .range(from, to),
+      ),
+      allRows((from, to) =>
+        admin
+          .from("routine_exceptions")
+          .select(
+            "id,user_id,recurring_task_id,occurrence_date,scheduled_date,start_time,duration_minutes,is_skipped",
+          )
           .order("id")
           .range(from, to),
       ),
@@ -117,25 +128,28 @@ Deno.serve(async (request) => {
     for (const routine of routines) {
       const now = zones.get(routine.user_id);
       if (!now || !routine.start_time) continue;
-      // Tomorrow's early routines can become due before today's midnight.
-      for (const date of [now.date, nextDate(now.date)]) {
+      const occurrences = expandRoutine(
+        routine,
+        now.date,
+        nextDate(now.date),
+        exceptions.filter((item) => item.user_id === routine.user_id),
+      );
+      for (const occurrence of occurrences) {
         if (
-          (routine.starts_on && date < routine.starts_on) ||
-          (routine.ends_on && date > routine.ends_on)
-        )
-          continue;
-        const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
-        if (
-          routine.days_of_week?.includes(weekday) &&
-          isReminderDue(date, routine.start_time, routine.reminder_minutes, now)
+          isReminderDue(
+            occurrence.scheduled_date,
+            occurrence.start_time,
+            routine.reminder_minutes,
+            now,
+          )
         )
           reminders.push({
-            source: `routine:${routine.id}`,
+            source: `routine:${routine.id}:${occurrence.occurrence_date}`,
             userId: routine.user_id,
             title: routine.title,
             private: routine.is_private,
-            date,
-            time: routine.start_time,
+            date: occurrence.scheduled_date,
+            time: occurrence.start_time,
             minutes: routine.reminder_minutes,
           });
       }

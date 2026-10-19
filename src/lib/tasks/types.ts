@@ -14,6 +14,8 @@ export type InboxTask = {
   reminder_minutes?: number | null;
   is_routine?: boolean;
   routine_id?: string;
+  occurrence_date?: string;
+  is_exception?: boolean;
 };
 export type TaskResult = { ok: boolean; message: string };
 export type ScheduledTask = InboxTask & {
