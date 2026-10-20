@@ -153,13 +153,16 @@ src/lib/validation/          Zod schemas for server actions
 supabase/migrations/         Versioned schema, policies, realtime, and planner data
 scripts/test-rls.mjs         Database/RLS isolation checks
 tests/                       Unit tests
-public/                      PWA manifest, icons, and offline fallback
+public/                      PWA icons and offline fallback
+src/app/manifest.ts          PWA manifest
+src/app/sw.js/route.ts       Versioned service worker endpoint
 ```
 
 ## Documentation
 
 - [V2 usage and current limitations](docs/V2-GUIDE.md)
 - [Push reminder setup and troubleshooting](docs/PUSH-REMINDERS.md)
+- [PWA implementation, build, and testing](docs/PWA.md)
 - [Architecture and operations](docs/ARCHITECTURE.md)
 - [V2 release checklist](docs/V2-RELEASE.md)
 - [Original V1 product scope](docs/V1-BLUEPRINT.md) — historical planning reference; the implementation now includes V2 features.

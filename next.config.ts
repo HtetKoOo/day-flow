@@ -1,6 +1,13 @@
+import { randomUUID } from "node:crypto";
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: {
+    DAYFLOW_BUILD_ID:
+      process.env.VERCEL_DEPLOYMENT_ID ??
+      process.env.VERCEL_GIT_COMMIT_SHA ??
+      randomUUID(),
+  },
   turbopack: { root: process.cwd() },
   async headers() {
     return [
