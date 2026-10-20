@@ -346,9 +346,6 @@ export function PlannerShell({
           sidebarMode={sidebarMode}
           total={displayTotal}
           onShowPlanner={() => setMobile("planner")}
-          onCreate={() =>
-            open(null, displayedDay, mobile === "planner" ? "09:00" : undefined)
-          }
           onSelectSidebar={selectSidebar}
         />
         {editor && (

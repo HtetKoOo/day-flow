@@ -1,4 +1,4 @@
-import { CalendarDays, Inbox, Plus } from "lucide-react";
+import { CalendarDays, Inbox } from "lucide-react";
 import type { SidebarMode } from "@/components/planner/use-planner-shell-state";
 
 export function PlannerMobileNavigation({
@@ -6,14 +6,12 @@ export function PlannerMobileNavigation({
   sidebarMode,
   total,
   onShowPlanner,
-  onCreate,
   onSelectSidebar,
 }: {
   mobile: string;
   sidebarMode: SidebarMode;
   total: number;
   onShowPlanner: () => void;
-  onCreate: () => void;
   onSelectSidebar: (mode: SidebarMode) => void;
 }) {
   return (
@@ -23,18 +21,19 @@ export function PlannerMobileNavigation({
         Planner
       </button>
       <button
-        className="mobile-create"
-        aria-label="Add task"
-        onClick={onCreate}
-      >
-        <Plus size={24} />
-      </button>
-      <button
         aria-pressed={mobile === "inbox" && sidebarMode === "inbox"}
         onClick={() => onSelectSidebar("inbox")}
+        aria-label={total > 0 ? `Tasks, ${total} in Inbox` : "Tasks"}
       >
-        <Inbox size={20} />
-        Tasks {total > 0 && <span>{total}</span>}
+        <span className="mobile-task-icon">
+          <Inbox size={20} />
+          {total > 0 && (
+            <span className="mobile-task-count" aria-hidden="true">
+              {total > 99 ? "99+" : total}
+            </span>
+          )}
+        </span>
+        Tasks
       </button>
       <button
         aria-pressed={mobile === "inbox" && sidebarMode === "routines"}
