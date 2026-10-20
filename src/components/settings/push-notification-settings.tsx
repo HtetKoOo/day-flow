@@ -156,39 +156,36 @@ export function PushNotificationSettings() {
   return (
     <section className="mt-6 rounded-3xl border bg-card p-6">
       <div className="flex items-start gap-3">
-        <BellRing className="mt-0.5 text-primary" size={19} />
-        <div className="min-w-0">
+        <BellRing className="mt-0.5 shrink-0 text-primary" size={19} />
+        <div className="min-w-0 flex-1">
           <h2 className="font-medium">Push reminders</h2>
           <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {enabled ? (
-              <p
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-primary/15 px-4 text-sm font-medium text-primary"
-                role="status"
-              >
-                <Check size={16} /> Enabled on this device
-              </p>
-            ) : (
-              <Button
-                type="button"
-                disabled={pending}
-                onClick={() => void enable()}
-              >
-                {pending ? "Connecting…" : "Enable push reminders"}
-              </Button>
-            )}
-            {enabled && (
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={pending}
-                onClick={() => void disable()}
-              >
-                {pending ? "Disconnecting…" : "Disable on this device"}
-              </Button>
-            )}
-          </div>
         </div>
+      </div>
+      <div className="mt-5 flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+        {enabled && (
+          <p
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary"
+            role="status"
+          >
+            <Check size={16} className="shrink-0" /> Enabled on this device
+          </p>
+        )}
+        <Button
+          type="button"
+          variant={enabled ? "outline" : "default"}
+          className="min-h-11 w-full sm:w-auto"
+          disabled={pending}
+          onClick={() => void (enabled ? disable() : enable())}
+        >
+          {pending
+            ? enabled
+              ? "Disconnecting…"
+              : "Connecting…"
+            : enabled
+              ? "Disable on this device"
+              : "Enable push reminders"}
+        </Button>
       </div>
     </section>
   );

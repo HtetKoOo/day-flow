@@ -32,7 +32,7 @@ export function TimezoneForm({ defaultValue }: { defaultValue: string }) {
       </div>
       <form
         action={action}
-        className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+        className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
       >
         <label className="min-w-0 space-y-2">
           <span className="text-sm">Your timezone</span>
@@ -46,7 +46,7 @@ export function TimezoneForm({ defaultValue }: { defaultValue: string }) {
             required
           />
         </label>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid gap-3 sm:flex sm:flex-wrap">
           <Button disabled={pending}>
             {pending ? "Saving…" : "Save timezone"}
           </Button>

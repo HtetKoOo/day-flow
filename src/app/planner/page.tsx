@@ -63,10 +63,14 @@ export default async function Planner({
       "id,title,notes,start_time,duration_minutes,days_of_week,starts_on,ends_on,is_active,is_private,reminder_minutes,color,icon",
     )
     .order("start_time");
-  const { data, error } = await supabase.rpc("planner_snapshot", {
-    p_selected_date: requestedDate.success ? requestedDate.data : null,
-    p_view: view,
-  });
+  const [{ data, error }, { data: routines, error: routineError }] =
+    await Promise.all([
+      supabase.rpc("planner_snapshot", {
+        p_selected_date: requestedDate.success ? requestedDate.data : null,
+        p_view: view,
+      }),
+      routinesRequest,
+    ]);
   let snapshot = data
     ? {
         ...(data as Omit<PlannerSnapshot, "inbox_error" | "scheduled_error">),
@@ -162,20 +166,14 @@ export default async function Planner({
     snapshot.loaded_through && snapshot.loaded_through > strip.to
       ? [...strip.days, snapshot.loaded_through]
       : strip.days;
-  const [
-    { data: routines, error: routineError },
-    { data: exceptions, error: exceptionError },
-  ] = await Promise.all([
-    routinesRequest,
-    supabase
-      .from("routine_exceptions")
-      .select(
-        "recurring_task_id,occurrence_date,scheduled_date,start_time,duration_minutes,is_skipped",
-      )
-      .or(
-        `and(occurrence_date.gte.${strip.from},occurrence_date.lte.${loadedDays[loadedDays.length - 1]}),and(scheduled_date.gte.${strip.from},scheduled_date.lte.${loadedDays[loadedDays.length - 1]})`,
-      ),
-  ]);
+  const { data: exceptions, error: exceptionError } = await supabase
+    .from("routine_exceptions")
+    .select(
+      "recurring_task_id,occurrence_date,scheduled_date,start_time,duration_minutes,is_skipped",
+    )
+    .or(
+      `and(occurrence_date.gte.${strip.from},occurrence_date.lte.${loadedDays[loadedDays.length - 1]}),and(scheduled_date.gte.${strip.from},scheduled_date.lte.${loadedDays[loadedDays.length - 1]})`,
+    );
   const allRoutines = ((routines ?? []) as Routine[]).map((routine) => ({
     ...routine,
     exceptions: (exceptions ?? []).filter(

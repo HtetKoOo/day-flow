@@ -1908,3 +1908,53 @@ button,
 @media (max-width: 760px) {
   .planner-app .app-header .planner-sidebar-slot { display: none; }
 }
+
+/* Give mobile controls breathing room below system chrome without UA checks. */
+@media (max-width: 760px) {
+  .planner-app .app-header {
+    height: calc(60px + env(safe-area-inset-top, 0px));
+    min-height: calc(60px + env(safe-area-inset-top, 0px));
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: 8px;
+  }
+}
+
+/* Give every editor section its own spacing instead of relying on margins
+   that collapse differently between fieldsets, labels, and picker grids. */
+.task-sheet .editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.task-sheet .editor-fields > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.task-sheet .icon-picker {
+  gap: 10px;
+}
+.task-sheet .duration-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.task-sheet .duration-presets button {
+  min-height: 44px;
+  padding: 10px 8px;
+}
+.task-sheet .duration-stepper {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.task-sheet .duration-stepper button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.task-sheet .routine-end-date {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.task-sheet .routine-end-date label {
+  min-height: 44px;
+}

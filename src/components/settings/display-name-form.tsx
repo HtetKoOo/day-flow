@@ -13,10 +13,14 @@ export function DisplayNameForm({ defaultValue }: { defaultValue: string }) {
     <section className="mt-6 rounded-3xl border bg-card p-6">
       <h2 className="font-medium">Display name</h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        This name appears on view-only timetable links. Your email is never shared.
+        This name appears on view-only timetable links. Your email is never
+        shared.
       </p>
-      <form action={action} className="mt-5 flex flex-wrap items-end gap-3">
-        <label className="min-w-52 flex-1 space-y-2">
+      <form
+        action={action}
+        className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+      >
+        <label className="min-w-0 space-y-2">
           <span className="text-sm">Name</span>
           <Input
             name="displayName"

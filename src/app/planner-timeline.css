@@ -992,3 +992,235 @@
     animation: none;
   }
 }
+
+/* Phone range views keep two dates comparable and weekly cards readable. */
+.range-mobile-hint {
+  display: none;
+}
+@media (max-width: 760px) {
+  .range-mobile-hint {
+    display: block;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 8px 12px 0;
+    color: var(--muted-foreground);
+    font-size: 12px;
+  }
+  .planner-stage .timeline-scroll.range-scroll {
+    padding: 8px 8px 24px;
+    overscroll-behavior-x: contain;
+  }
+  .two-day-timelines {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 12px;
+  }
+  .two-day-timelines .timeline-day {
+    min-width: 0;
+    width: auto;
+  }
+  .week-timelines {
+    grid-template-columns: repeat(7, 180px);
+    width: max-content;
+    gap: 12px;
+  }
+  .week-timelines .timeline-day {
+    width: 180px;
+    scroll-snap-align: start;
+  }
+  .range-scroll .range-date-header {
+    padding-bottom: 8px;
+  }
+  .range-scroll .range-date-header .date-cell {
+    padding: 8px 2px;
+    border-radius: 18px;
+  }
+  .range-scroll .range-day .agenda {
+    --timeline-spine-x: 17px;
+    --timeline-node-half: 17px;
+  }
+  .two-day-timelines .agenda-card,
+  .week-timelines .agenda-compact .agenda-card {
+    grid-template-columns: 34px minmax(0, 1fr);
+    column-gap: 6px;
+    padding: 0;
+    justify-items: stretch;
+  }
+  .range-scroll .timeline-time {
+    display: none;
+  }
+  .range-scroll .timeline-marker,
+  .range-scroll .agenda-card.is-moment .timeline-marker,
+  .week-timelines .agenda-compact .timeline-marker {
+    grid-column: 1;
+    width: 34px;
+  }
+  .range-scroll .agenda-card.is-moment .timeline-marker {
+    height: 44px;
+  }
+  .range-scroll .timeline-marker svg {
+    width: 18px;
+    height: 18px;
+  }
+  .two-day-timelines .agenda-body,
+  .week-timelines .agenda-compact .agenda-body {
+    display: flex;
+    grid-column: 2;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-width: 0;
+    min-height: 44px;
+    padding: 2px 0;
+    text-align: left;
+  }
+  .range-scroll .agenda-body strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: normal;
+  }
+  .range-scroll .agenda-time {
+    font-size: 10px;
+    line-height: 1.5;
+    white-space: normal;
+  }
+  .range-scroll .agenda-routine-label {
+    display: none;
+  }
+  .range-scroll .agenda-gap,
+  .week-timelines .agenda-compact .agenda-gap {
+    grid-template-columns: 34px minmax(0, 1fr);
+    column-gap: 6px;
+    margin-left: 0;
+    padding: 0;
+  }
+  .range-scroll .agenda-gap > span:last-child,
+  .range-scroll .agenda-gap-add {
+    display: none;
+  }
+  .range-scroll .agenda-gap > .timeline-connector,
+  .week-timelines .agenda-compact .agenda-gap > .timeline-connector {
+    grid-column: 1;
+    justify-self: center;
+  }
+  .two-day-timelines .agenda-add {
+    margin-left: 0;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .two-day-timelines .completion-button,
+  .range-scroll .task-drag-handle {
+    display: none;
+  }
+}
+
+/* Anchor the connector to the painted node, not the invisible time-slot row. */
+.agenda-time-aligned .timeline-marker {
+  align-self: start;
+}
+.agenda-time-aligned .agenda-gap {
+  --connector-node-height: max(
+    var(--agenda-previous-height),
+    var(--timeline-node-size)
+  );
+  top: calc(var(--agenda-previous-top) + var(--connector-node-height));
+  height: max(
+    0px,
+    calc(
+      var(--agenda-next-top) - var(--agenda-previous-top) -
+        var(--connector-node-height)
+    )
+  );
+  min-height: 0;
+}
+.agenda-time-aligned .agenda-gap[data-from-moment="true"] {
+  --connector-node-height: var(--timeline-node-size);
+}
+.agenda-time-aligned .agenda-gap > .timeline-connector {
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+@media (max-width: 760px) {
+  .range-scroll .range-day .agenda {
+    --timeline-node-size: 34px;
+  }
+  .range-scroll .agenda-card.is-moment .timeline-marker {
+    width: var(--timeline-node-size);
+    height: var(--timeline-node-size);
+    border-radius: 50%;
+  }
+}
+
+/* The phone week is a seven-day overview, with full-column tap targets. */
+@media (max-width: 760px) {
+  .week-timelines {
+    width: 100%;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .week-timelines .timeline-day {
+    width: auto;
+    min-width: 0;
+  }
+  .week-timelines .range-date-header .date-cell {
+    padding: 8px 0;
+    border-radius: 14px;
+  }
+  .week-timelines .range-date-header .date-cell > span:first-child {
+    font-size: 10px;
+  }
+  .week-timelines .range-date-header .date-cell strong {
+    font-size: 16px;
+  }
+  .week-timelines .date-dots {
+    display: none;
+  }
+  .range-scroll .week-timelines .agenda {
+    --timeline-node-size: 28px;
+    --timeline-spine-x: 50%;
+    --timeline-node-half: 14px;
+  }
+  .week-timelines .agenda-compact .agenda-card,
+  .week-timelines .agenda-compact .agenda-gap {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .week-timelines .agenda-compact .timeline-marker,
+  .week-timelines .agenda-compact .agenda-card.is-moment .timeline-marker {
+    width: var(--timeline-node-size);
+    justify-self: center;
+  }
+  .week-timelines .agenda-compact .agenda-card.is-moment .timeline-marker {
+    height: var(--timeline-node-size);
+  }
+  .week-timelines .timeline-marker svg {
+    width: 15px;
+    height: 15px;
+  }
+  .week-timelines .agenda-compact .agenda-body {
+    grid-column: 1;
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 12px;
+  }
+  .week-timelines .agenda-compact .agenda-body > * {
+    display: none;
+  }
+  .week-timelines .agenda-body:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+}
