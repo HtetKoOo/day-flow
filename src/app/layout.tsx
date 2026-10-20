@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { RegisterServiceWorker } from "@/components/pwa/register";
+import { PwaProvider } from "@/components/pwa/register";
 import "./globals.css";
 import "./planner.css";
 import "./planner-timeline.css";
@@ -26,8 +26,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider>
-          {children}
-          <RegisterServiceWorker />
+          <PwaProvider>{children}</PwaProvider>
         </ThemeProvider>
       </body>
     </html>

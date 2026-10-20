@@ -98,7 +98,7 @@ The public `/share/[token]` route uses narrow SQL RPCs to read a live range by t
 
 ### Notifications
 
-Browser timer reminders run while DayFlow is open. A device with a registered push subscription skips timer delivery to avoid duplicates. The public service worker handles push and notification clicks; it caches public offline assets only, not authenticated planner data. PWA installation does not provide offline planner editing.
+Browser timer reminders run while DayFlow is open. A device with a registered push subscription skips timer delivery to avoid duplicates. The versioned `/sw.js` route serves the public service worker, which handles push and notification clicks; it caches public offline assets only, not authenticated planner data. PWA installation does not provide offline planner editing. Settings → App provides installation guidance; the root PWA provider offers explicit updates without automatic draft-discarding reloads. See [PWA implementation and testing](PWA.md).
 
 The `send-reminders` Edge Function is authenticated with `x-cron-secret`; JWT verification is disabled for this function only. It uses privileged server credentials to load due reminders and subscriptions. The reminder window begins at the configured lead time and closes at task start. Device-specific claims use a lease, a five-attempt limit, and sent-state deduplication; failures can retry while still due. This does not guarantee exact-time delivery to an operating system.
 
