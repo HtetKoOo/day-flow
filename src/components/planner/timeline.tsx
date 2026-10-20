@@ -231,8 +231,20 @@ export function Timeline({
         const taskEndPosition = timePosition(
           visualTaskEnd(taskStart + task.duration_minutes),
         );
+        const previousPosition = previousTask
+          ? timePosition(minutes(previousTask.start_time))
+          : 0;
+        const previousVisualHeight =
+          previousEnd === null
+            ? 0
+            : timePosition(previousEnd) - previousPosition;
         const gapPosition =
           previousEnd === null ? 0 : timePosition(previousEnd);
+        const connectorStyle = {
+          "--agenda-previous-top": `${previousPosition}px`,
+          "--agenda-previous-height": `${previousVisualHeight}px`,
+          "--agenda-next-top": `${taskPosition}px`,
+        };
         const gapVisualHeight = Math.max(0, taskPosition - gapPosition);
         const taskVisualHeight = Math.max(1, taskEndPosition - taskPosition);
         const MarkerIcon = marker.icon;
@@ -248,17 +260,22 @@ export function Timeline({
                 : undefined
             }
           >
-            {gap > 0 &&
+            {(gap > 0 || (isTimeAligned && !overlapsPrevious)) &&
               index > 0 &&
               (draggingTask ? (
                 <div
                   className="agenda-gap agenda-gap-visible"
+                  data-from-moment={
+                    (previousTask && timelineMarker(previousTask).moment) ||
+                    undefined
+                  }
                   data-timeline-segment
                   data-timeline-segment-kind="gap"
                   data-start={clockTime(gapStart)}
                   data-end={task.start_time.slice(0, 5)}
                   style={
                     {
+                      ...connectorStyle,
                       "--agenda-gap-height": isTimeAligned
                         ? `${gapVisualHeight}px`
                         : gapHeight(gap, compact),
@@ -285,12 +302,17 @@ export function Timeline({
               ) : (
                 <div
                   className="agenda-gap"
+                  data-from-moment={
+                    (previousTask && timelineMarker(previousTask).moment) ||
+                    undefined
+                  }
                   data-timeline-segment
                   data-timeline-segment-kind="gap"
                   data-start={clockTime(gapStart)}
                   data-end={task.start_time.slice(0, 5)}
                   style={
                     {
+                      ...connectorStyle,
                       "--agenda-gap-height": isTimeAligned
                         ? `${gapVisualHeight}px`
                         : gapHeight(gap, compact),
@@ -323,10 +345,14 @@ export function Timeline({
             <DraggableTaskCard
               task={task}
               disabled={
-                pending || compact || disableDrag || Boolean(task.is_routine)
+                pending ||
+                compact ||
+                compact ||
+                disableDrag ||
+                Boolean(task.is_routine)
               }
               allowControlsWhenDragDisabled={
-                disableDrag || Boolean(task.is_routine)
+                compact || disableDrag || Boolean(task.is_routine)
               }
               className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${task.is_routine ? "is-routine" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
               data-color={taskColor(task.color)}

@@ -1,0 +1,48 @@
+/* Keep touch sizing and narrow-screen rules local to Settings. */
+.settings-detail [data-slot="input"] {
+  min-height: 44px;
+}
+.settings-detail > div > section {
+  min-width: 0;
+}
+.settings-detail p {
+  overflow-wrap: anywhere;
+}
+.settings-detail svg {
+  flex-shrink: 0;
+}
+@media (max-width: 639px) {
+  .settings-page {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .settings-detail > div > section {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+  .settings-detail > div > section + section {
+    margin-top: 16px;
+  }
+  .settings-detail [data-slot="button"],
+  .settings-detail .primary-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    height: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .settings-detail .theme-picker {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .settings-detail .theme-picker button {
+    min-width: 0;
+    min-height: 44px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 4px;
+    font-size: 14px;
+  }
+}

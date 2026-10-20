@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ChevronRight,
   Download,
   BellRing,
   CircleUserRound,
@@ -12,6 +13,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import "./settings.css";
+import { PlannerBackIcon } from "./planner-back-icon";
 
 const navigation = [
   {
@@ -66,59 +69,134 @@ export function SettingsShell({
     ? (defaultSection as SectionId)
     : "profile";
   const [active, setActive] = useState<SectionId>(initialSection);
+  const [mobileDetail, setMobileDetail] = useState(
+    navigation.some((item) => item.id === defaultSection),
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const listRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>(
+    {},
+  );
 
   useEffect(() => {
     function handlePopState() {
       const section = new URLSearchParams(window.location.search).get(
         "section",
       );
-      setActive(
-        navigation.some((item) => item.id === section)
-          ? (section as SectionId)
-          : "profile",
-      );
+      const valid = navigation.some((item) => item.id === section);
+      setActive(valid ? (section as SectionId) : "profile");
+      setMobileDetail(valid);
+      if (!window.matchMedia("(min-width: 640px)").matches) {
+        requestAnimationFrame(() => {
+          if (valid) headingRef.current?.focus();
+          else listRefs.current[active]?.focus();
+        });
+      }
     }
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [active]);
   const activeItem = navigation.find((item) => item.id === active)!;
 
   function select(section: SectionId) {
     setActive(section);
-    window.history.replaceState(
-      null,
-      "",
-      section === "profile" ? "/settings" : `/settings?section=${section}`,
-    );
+    setMobileDetail(true);
+    const url = `/settings?section=${section}`;
+    if (window.matchMedia("(min-width: 640px)").matches) {
+      window.history.replaceState(null, "", url);
+    } else {
+      window.history.pushState(
+        { ...window.history.state, dayflowSettingsDetail: true },
+        "",
+        url,
+      );
+      requestAnimationFrame(() => {
+        headingRef.current?.focus();
+        window.scrollTo(0, 0);
+      });
+    }
+  }
+  function backToList() {
+    if (window.history.state?.dayflowSettingsDetail) {
+      window.history.back();
+    } else {
+      setMobileDetail(false);
+      window.history.replaceState(null, "", "/settings");
+      requestAnimationFrame(() => listRefs.current[active]?.focus());
+    }
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <header className="flex items-center justify-between gap-4 border-b pb-5">
-        <div className="flex min-w-0 items-center gap-3">
+    <main className="settings-page mx-auto min-h-dvh max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <header className="flex items-center justify-between gap-4 border-b pb-4 sm:pb-5">
+        <div className="grid w-full min-w-0 grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-3 sm:flex sm:w-auto">
+          {mobileDetail && (
+            <button
+              type="button"
+              onClick={backToList}
+              className="inline-flex size-11 items-center justify-center rounded-xl border bg-card text-muted-foreground hover:bg-accent hover:text-foreground sm:hidden"
+              aria-label="Back to Settings"
+            >
+              <ArrowLeft size={19} />
+            </button>
+          )}
           <Link
             href="/planner"
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            prefetch={true}
+            className={`${mobileDetail ? "hidden sm:inline-flex" : "inline-flex"} size-11 shrink-0 items-center justify-center rounded-xl border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground`}
             aria-label="Back to planner"
             title="Back to planner"
           >
-            <ArrowLeft size={19} />
+            <PlannerBackIcon />
           </Link>
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">DayFlow</p>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Settings
+          <div className="min-w-0 text-center sm:text-left">
+            <h1
+              ref={headingRef}
+              tabIndex={-1}
+              className="text-2xl font-semibold tracking-tight outline-none sm:text-3xl"
+            >
+              <span className="sm:hidden">
+                {mobileDetail ? activeItem.label : "Settings"}
+              </span>
+              <span className="hidden sm:inline">Settings</span>
             </h1>
           </div>
+          <span aria-hidden="true" className="size-11 sm:hidden" />
         </div>
       </header>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
+      <div className="mt-4 grid gap-5 sm:mt-6 sm:gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
         <nav
-          className="lg:sticky lg:top-8 lg:self-start"
+          className={`${mobileDetail ? "hidden sm:block" : "block"} lg:sticky lg:top-8 lg:self-start`}
           aria-label="Settings sections"
         >
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 lg:mx-0 lg:block lg:space-y-1 lg:overflow-visible lg:px-0 lg:pb-0">
+          <div className="divide-y overflow-hidden rounded-2xl border bg-card sm:hidden">
+            {navigation.map(({ id, label, description, Icon }) => (
+              <button
+                key={id}
+                ref={(element) => {
+                  listRefs.current[id] = element;
+                }}
+                type="button"
+                onClick={() => select(id)}
+                className="flex min-h-20 w-full items-center gap-3 px-4 py-4 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">{label}</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">
+                    {description}
+                  </span>
+                </span>
+                <ChevronRight
+                  size={18}
+                  className="shrink-0 text-muted-foreground"
+                />
+              </button>
+            ))}
+          </div>
+          <div className="-mx-1 hidden gap-2 sm:flex overflow-x-auto px-1 pb-2 lg:mx-0 lg:block lg:space-y-1 lg:overflow-visible lg:px-0 lg:pb-0">
             {navigation.map(({ id, label, description, Icon }) => {
               const selected = id === active;
               return (
@@ -144,8 +222,10 @@ export function SettingsShell({
           </div>
         </nav>
 
-        <section className="min-w-0">
-          <div className="mb-5 lg:mb-6">
+        <section
+          className={`settings-detail min-w-0 ${mobileDetail ? "block" : "hidden sm:block"}`}
+        >
+          <div className="mb-4 hidden sm:mb-5 sm:block lg:mb-6">
             <h2 className="text-xl font-semibold">{activeItem.label}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {activeItem.description}

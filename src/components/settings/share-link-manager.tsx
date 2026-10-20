@@ -31,15 +31,16 @@ export function ShareLinkManager({ shares }: { shares: Share[] }) {
     startTransition(async () => {
       const result = await revokeTimetableShare(token);
       setMessage(result.message);
-      if (result.ok) setItems((current) => current.filter((item) => item.token !== token));
+      if (result.ok)
+        setItems((current) => current.filter((item) => item.token !== token));
     });
   }
 
   return (
     <section className="mt-6 rounded-3xl border bg-card p-6">
       <div className="flex items-start gap-3">
-        <Link2 className="mt-0.5 text-primary" size={19} />
-        <div>
+        <Link2 className="mt-0.5 shrink-0 text-primary" size={19} />
+        <div className="min-w-0">
           <h2 className="font-medium">Shared timetables</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             These links are view-only. Private tasks and routines stay hidden.
@@ -53,16 +54,36 @@ export function ShareLinkManager({ shares }: { shares: Share[] }) {
       ) : (
         <ul className="mt-5 divide-y divide-border">
           {items.map((share) => (
-            <li key={share.token} className="flex items-center justify-between gap-3 py-3">
+            <li
+              key={share.token}
+              className="flex flex-wrap items-center justify-between gap-3 py-4"
+            >
               <div className="min-w-0">
-                <strong className="block text-sm">{share.starts_on} to {share.ends_on}</strong>
-                <span className="text-xs text-muted-foreground">View-only link</span>
+                <strong className="block break-words text-sm">
+                  {share.starts_on} to {share.ends_on}
+                </strong>
+                <span className="text-xs text-muted-foreground">
+                  View-only link
+                </span>
               </div>
               <div className="flex shrink-0 gap-1">
-                <button type="button" className="icon-button" onClick={() => void copy(share.token)} aria-label="Copy share link" title="Copy share link">
+                <button
+                  type="button"
+                  className="icon-button min-h-11 min-w-11"
+                  onClick={() => void copy(share.token)}
+                  aria-label="Copy share link"
+                  title="Copy share link"
+                >
                   <Copy size={17} />
                 </button>
-                <button type="button" className="icon-button text-destructive" disabled={pending} onClick={() => remove(share.token)} aria-label="Stop sharing" title="Stop sharing">
+                <button
+                  type="button"
+                  className="icon-button min-h-11 min-w-11 text-destructive"
+                  disabled={pending}
+                  onClick={() => remove(share.token)}
+                  aria-label="Stop sharing"
+                  title="Stop sharing"
+                >
                   <Trash2 size={17} />
                 </button>
               </div>
@@ -70,7 +91,11 @@ export function ShareLinkManager({ shares }: { shares: Share[] }) {
           ))}
         </ul>
       )}
-      {message && <p role="status" className="mt-4 text-sm text-muted-foreground">{message}</p>}
+      {message && (
+        <p role="status" className="mt-4 text-sm text-muted-foreground">
+          {message}
+        </p>
+      )}
     </section>
   );
 }

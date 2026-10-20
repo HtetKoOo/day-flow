@@ -8,7 +8,17 @@ import type { ScheduledTask } from "@/lib/tasks/types";
  */
 export function buildRangeTimeAxis(tasks: ScheduledTask[], compact: boolean) {
   const start = 6 * 60;
-  const end = 22 * 60;
+  const end = Math.min(
+    1440,
+    Math.max(
+      22 * 60,
+      ...tasks.map(
+        (task) =>
+          Math.ceil((minutes(task.start_time) + task.duration_minutes) / 15) *
+          15,
+      ),
+    ),
+  );
   const slotHeights = new Map<number, number>();
   for (let minute = start; minute < end; minute += 15)
     slotHeights.set(minute, 12);

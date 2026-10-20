@@ -48,36 +48,50 @@ export function PlannerTimelineContent({
     );
   }
   return (
-    <div className={`timeline-scroll ${isRangeView ? "range-scroll" : ""}`}>
+    <>
+      {isWeek && (
+        <p className="range-mobile-hint">Tap an icon to see task details</p>
+      )}
       <div
-        className={`selected-timelines ${isWeek ? "week-timelines" : isTwoDays ? "two-day-timelines" : ""}`}
+        className={`timeline-scroll ${isRangeView ? "range-scroll" : ""}`}
+        tabIndex={isRangeView ? 0 : undefined}
+        role={isRangeView ? "region" : undefined}
+        aria-label={
+          isRangeView
+            ? "Timetable, scroll to explore days and times"
+            : undefined
+        }
       >
-        {days.map((day) => (
-          <section
-            key={day}
-            className={`timeline-day ${isRangeView ? "range-day" : "day-timeline"}`}
-            aria-label={format(parseISO(day), "EEEE, MMMM d")}
-            style={{ viewTransitionName: `dayflow-column-${day}` }}
-          >
-            {isRangeView && (
-              <div className="range-date-header">{renderDate(day)}</div>
-            )}
-            <Timeline
-              day={day}
-              tasks={scheduledByDay.get(day) ?? []}
-              onEdit={onEdit}
-              onAdd={(time) => onAdd(day, time)}
-              onComplete={onComplete}
-              pending={pending}
-              compact={isWeek}
-              draggingTask={dragTask}
-              dragTime={dragTarget?.day === day ? dragTarget.time : null}
-              dragPosition={dragTarget?.day === day ? dragTarget.top : null}
-              timeAxis={timeAxis}
-            />
-          </section>
-        ))}
+        <div
+          className={`selected-timelines ${isWeek ? "week-timelines" : isTwoDays ? "two-day-timelines" : ""}`}
+        >
+          {days.map((day) => (
+            <section
+              key={day}
+              className={`timeline-day ${isRangeView ? "range-day" : "day-timeline"}`}
+              aria-label={format(parseISO(day), "EEEE, MMMM d")}
+              style={{ viewTransitionName: `dayflow-column-${day}` }}
+            >
+              {isRangeView && (
+                <div className="range-date-header">{renderDate(day)}</div>
+              )}
+              <Timeline
+                day={day}
+                tasks={scheduledByDay.get(day) ?? []}
+                onEdit={onEdit}
+                onAdd={(time) => onAdd(day, time)}
+                onComplete={onComplete}
+                pending={pending}
+                compact={isWeek}
+                draggingTask={dragTask}
+                dragTime={dragTarget?.day === day ? dragTarget.time : null}
+                dragPosition={dragTarget?.day === day ? dragTarget.top : null}
+                timeAxis={timeAxis}
+              />
+            </section>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
