@@ -954,7 +954,7 @@ button,
   background: transparent;
   color: inherit;
   cursor: grab;
-  touch-action: none;
+  touch-action: auto;
 }
 .task-drag-handle:active {
   cursor: grabbing;
@@ -1976,5 +1976,53 @@ button,
     background: var(--background);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+}
+
+/* Anchor Inbox counts to the icon, never the expanding navigation column. */
+.mobile-navigation > button > .mobile-task-icon {
+  position: relative;
+  top: auto;
+  right: auto;
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+.mobile-task-count {
+  position: absolute;
+  top: -7px;
+  left: 15px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 2px solid var(--card);
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Touch users edit dates/times in the sheet; grips are mouse/keyboard tools. */
+@media (hover: none) and (pointer: coarse) {
+  .planner-app .task-drag-handle { display: none; }
+  .planner-app .agenda-card[data-draggable="true"],
+  .planner-app .agenda-card[data-draggable="true"] .agenda-body { cursor: pointer; }
+}
+
+@media (max-width: 760px) {
+  .planner-app .mobile-navigation {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .planner-app .mobile-navigation > button {
+    min-width: 0;
+    width: 100%;
   }
 }

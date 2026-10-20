@@ -522,7 +522,7 @@
 }
 .agenda-card[data-draggable="true"] {
   cursor: grab;
-  touch-action: none;
+  touch-action: auto;
 }
 .agenda-card[data-draggable="true"] .agenda-body {
   cursor: grab;
@@ -1223,4 +1223,16 @@
     outline: 2px solid var(--primary);
     outline-offset: -2px;
   }
+}
+
+/* In Day view a moment's row must end at its circle, not at the larger
+   duration preset height. Lines occupy only the free interval, with no bleed. */
+.day-timeline .agenda-card.is-moment {
+  min-height: var(--timeline-node-size);
+}
+.day-timeline .agenda:not(.agenda-time-aligned) .agenda-gap > .timeline-connector {
+  height: 100%;
+  min-height: var(--agenda-gap-height, 26px);
+  margin-top: 0;
+  border-radius: 0;
 }

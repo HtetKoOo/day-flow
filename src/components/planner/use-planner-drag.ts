@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   KeyboardSensor,
   MouseSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -160,9 +159,6 @@ export function usePlannerDrag({
   const pointerInitiatedDrag = useRef(false);
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 240, tolerance: 8 },
-    }),
     useSensor(KeyboardSensor),
   );
 
