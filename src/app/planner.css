@@ -1958,3 +1958,23 @@ button,
 .task-sheet .routine-end-date label {
   min-height: 44px;
 }
+
+/* Installed apps keep the toolbar outside the scrolling content surface.
+   Safari tabs retain the ordinary in-flow header. */
+@media (display-mode: standalone) and (max-width: 760px) {
+  .planner-app {
+    box-sizing: border-box;
+    padding-top: calc(60px + env(safe-area-inset-top, 0px));
+  }
+  .planner-app .app-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 30;
+    isolation: isolate;
+    background: var(--background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
