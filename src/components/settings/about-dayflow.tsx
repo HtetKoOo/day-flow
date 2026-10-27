@@ -81,12 +81,20 @@ export function AboutDayFlow() {
           ))}
         </ul>
       </details>
-      <Link
-        href="/demo"
-        className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary hover:underline"
-      >
-        Explore the demo <ArrowUpRight size={16} aria-hidden="true" />
-      </Link>
+      <div className="flex flex-wrap items-center gap-x-6">
+        <Link
+          href="/demo"
+          className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary hover:underline"
+        >
+          Explore the demo <ArrowUpRight size={16} aria-hidden="true" />
+        </Link>
+        <Link
+          href="/privacy"
+          className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
+        >
+          Privacy policy
+        </Link>
+      </div>
     </section>
   );
 }

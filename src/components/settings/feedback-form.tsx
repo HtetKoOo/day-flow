@@ -7,7 +7,7 @@ import { submitFeedback } from "@/app/settings/feedback-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-function FeedbackFields() {
+function FeedbackFields({ onAnother }: { onAnother: () => void }) {
   const [state, action, pending] = useActionState(submitFeedback, {
     ok: false,
     message: "",
@@ -15,9 +15,19 @@ function FeedbackFields() {
   const [kind, setKind] = useState("feedback");
   if (state.ok)
     return (
-      <div role="status" className="mt-5 flex items-start gap-3 text-sm">
-        <CheckCircle2 className="shrink-0 text-primary" size={20} />
-        <p>{state.message}</p>
+      <div className="mt-5 space-y-4">
+        <div role="status" className="flex items-start gap-3 text-sm">
+          <CheckCircle2 className="shrink-0 text-primary" size={20} />
+          <p>{state.message}</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11"
+          onClick={onAnother}
+        >
+          Send another message
+        </Button>
       </div>
     );
   return (
@@ -129,6 +139,7 @@ function FeedbackFields() {
 
 export function FeedbackForm() {
   const [open, setOpen] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   return (
     <section className="mt-6 rounded-3xl border bg-card p-6">
       <button
@@ -147,7 +158,15 @@ export function FeedbackForm() {
         />
       </button>
       <div id="dayflow-feedback" hidden={!open}>
-        <FeedbackFields />
+        <FeedbackFields
+          key={attempt}
+          onAnother={() => {
+            setAttempt((value) => value + 1);
+            requestAnimationFrame(() =>
+              document.getElementById("feedback-kind")?.focus(),
+            );
+          }}
+        />
       </div>
     </section>
   );

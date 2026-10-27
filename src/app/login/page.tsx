@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasSupabaseConfig } from "@/lib/env";
 import { LoginForm } from "@/components/auth/login-form";
@@ -7,9 +8,9 @@ export const dynamic = "force-dynamic";
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ confirmation?: string }>;
+  searchParams: Promise<{ confirmation?: string; account?: string }>;
 }) {
-  const { confirmation } = await searchParams;
+  const { confirmation, account } = await searchParams;
   if (!hasSupabaseConfig()) redirect("/setup");
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -28,7 +29,20 @@ export default async function Login({
           request a new signup email.
         </p>
       )}
+      {account === "deleted" && (
+        <p role="status" className="mt-5 text-sm">
+          Your account has been deleted.
+        </p>
+      )}
       <LoginForm />
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        <Link
+          href="/privacy"
+          className="inline-flex min-h-11 items-center text-primary hover:underline"
+        >
+          Privacy policy
+        </Link>
+      </p>
     </main>
   );
 }

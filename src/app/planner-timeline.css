@@ -1236,3 +1236,11 @@
   margin-top: 0;
   border-radius: 0;
 }
+
+/* Task rows have a hover surface; routines do not. Keep its invisible bounds
+   inside a phone's Day row so adding a task cannot widen the scroll area. */
+@media (max-width: 760px) {
+  .day-timeline .agenda-card[data-draggable="true"]::before {
+    inset-inline: 0;
+  }
+}

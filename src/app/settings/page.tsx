@@ -1,3 +1,5 @@
+import { deletionEmailConfigured } from "@/lib/account/deletion";
+import { DeleteAccount } from "@/components/settings/delete-account";
 import { FeedbackForm } from "@/components/settings/feedback-form";
 import { AboutDayFlow } from "@/components/settings/about-dayflow";
 import { InstallSettings } from "@/components/pwa/install-settings";
@@ -21,17 +23,19 @@ export default async function Settings({
 }) {
   const { section } = await searchParams;
   const { user, supabase } = await requireUser();
-  const [{ data: shares }, { data: profile }] = await Promise.all([
-    supabase
-      .from("timetable_shares")
-      .select("token,starts_on,ends_on,created_at")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("profiles")
-      .select("display_name,timezone")
-      .eq("id", user.id)
-      .single(),
-  ]);
+  const [{ data: shares }, { data: profile }, deletionStatus] =
+    await Promise.all([
+      supabase
+        .from("timetable_shares")
+        .select("token,starts_on,ends_on,created_at")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("display_name,timezone")
+        .eq("id", user.id)
+        .single(),
+      supabase.rpc("can_delete_own_account"),
+    ]);
 
   return (
     <SettingsShell
@@ -85,7 +89,15 @@ export default async function Settings({
             <InstallSettings />
           </>
         ),
-        security: <PasswordSecurity />,
+        security: (
+          <>
+            <PasswordSecurity />
+            <DeleteAccount
+              eligible={deletionStatus.data === true}
+              available={!deletionStatus.error && deletionEmailConfigured()}
+            />
+          </>
+        ),
       }}
     />
   );

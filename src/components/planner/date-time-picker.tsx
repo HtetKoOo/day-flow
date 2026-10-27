@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type WheelEvent } from "react";
+import { useState } from "react";
 import { Popover } from "radix-ui";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 import {
@@ -21,13 +21,6 @@ import {
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const hours = Array.from({ length: 12 }, (_, index) => index + 1);
 const minuteValues = Array.from({ length: 60 }, (_, index) => index);
-
-function scrollColumn(event: WheelEvent<HTMLDivElement>) {
-  if (!event.deltaY) return;
-  event.currentTarget.scrollTop += event.deltaY;
-  event.preventDefault();
-  event.stopPropagation();
-}
 
 function pickerDate(value: string) {
   return parseISO(value);
@@ -150,7 +143,9 @@ export function TimePicker({
   const savedValue = `${String(savedHour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    // The editor Dialog locks scrolling outside its DOM subtree. The picker is
+    // portalled to body, so it needs its own modal scroll boundary for iOS touch.
+    <Popover.Root modal open={open} onOpenChange={setOpen}>
       <input type="hidden" name={name} value={savedValue} />
       <Popover.Trigger asChild>
         <button
@@ -165,6 +160,8 @@ export function TimePicker({
       <Popover.Portal>
         <Popover.Content
           className="time-picker-popover"
+          aria-label="Choose a time"
+          collisionPadding={12}
           side="bottom"
           align="start"
           sideOffset={8}
@@ -173,7 +170,7 @@ export function TimePicker({
           <div className="time-picker-columns">
             <div className="time-picker-column" aria-label="Hour">
               <span>Hour</span>
-              <div onWheel={scrollColumn}>
+              <div role="group" aria-label="Hours" tabIndex={0}>
                 {hours.map((value) => (
                   <button
                     key={value}
@@ -195,7 +192,7 @@ export function TimePicker({
             </div>
             <div className="time-picker-column" aria-label="Minute">
               <span>Minute</span>
-              <div onWheel={scrollColumn}>
+              <div role="group" aria-label="Minutes" tabIndex={0}>
                 {minuteValues.map((value) => (
                   <button
                     key={value}
@@ -218,7 +215,7 @@ export function TimePicker({
               aria-label="AM or PM"
             >
               <span>Period</span>
-              <div onWheel={scrollColumn}>
+              <div>
                 {(["AM", "PM"] as const).map((value) => (
                   <button
                     key={value}
