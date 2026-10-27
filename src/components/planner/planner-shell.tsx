@@ -32,9 +32,11 @@ import { ReminderNotifications } from "@/components/planner/reminder-notificatio
 import { dateKey, plannerRange } from "@/lib/tasks/schedule";
 import { taskColor } from "@/lib/tasks/colors";
 import type { InboxTask, ScheduledTask } from "@/lib/tasks/types";
+import { EveningPlanningReminder } from "./evening-planning-reminder";
 import type { Routine } from "@/lib/tasks/routines";
 
 export type PlannerProps = {
+  userId: string;
   stripDays: string[];
   loadedDays: string[];
   timezone: string;
@@ -50,6 +52,7 @@ export type PlannerProps = {
   routines: Routine[];
 };
 export function PlannerShell({
+  userId,
   loadedDays,
   timezone,
   tasks,
@@ -119,6 +122,7 @@ export function PlannerShell({
     isMobile,
     inboxOpen,
     evening,
+    planningToday,
     selectSidebar,
   } = usePlannerShellState(timezone);
   const {
@@ -206,6 +210,17 @@ export function PlannerShell({
       onNavigate={(nextDay) => navigate(nextDay, displayedView)}
     />
   );
+  const planningDate = planningToday ?? today;
+  const tomorrow = new Date(Date.parse(`${planningDate}T00:00:00Z`) + 86400000)
+    .toISOString()
+    .slice(0, 10);
+  const reviewTomorrow = displayScheduled.some(
+    (task) => task.scheduled_date === tomorrow && !task.is_routine,
+  );
+  function planTomorrow() {
+    setMobile("planner");
+    navigate(tomorrow, "day");
+  }
   return (
     <DndContext
       id="dayflow-planner-drag"
@@ -225,7 +240,6 @@ export function PlannerShell({
           timezone={timezone}
           displayedDay={displayedDay}
           displayedView={displayedView}
-          today={today}
           inboxOpen={inboxOpen}
           sidebarMode={sidebarMode}
           displayTotal={displayTotal}
@@ -243,7 +257,10 @@ export function PlannerShell({
                 : "Week"
           }
           onCalendarImported={() => router.refresh()}
-          showPlanTomorrow={evening && displayedDay === today}
+          eveningPlanning={evening}
+          planningToday={planningDate}
+          reviewTomorrow={reviewTomorrow}
+          onPlanTomorrow={planTomorrow}
           weekStartsOn={weekStartsOn}
         />
         {notice && (
@@ -292,6 +309,18 @@ export function PlannerShell({
             }}
           />
           <section className="planner-main" data-view={displayedView}>
+            {evening &&
+              displayedView === "day" &&
+              displayedDay === planningDate &&
+              (!isMobile || mobile === "planner") && (
+                <EveningPlanningReminder
+                  key={`${userId}:${planningDate}`}
+                  userId={userId}
+                  today={planningDate}
+                  review={reviewTomorrow}
+                  onPlan={planTomorrow}
+                />
+              )}
             <div
               className={`planner-stage ${showRoutePending ? "is-route-pending" : ""}`}
               data-view={displayedView}

@@ -21,7 +21,6 @@ import { CalendarActions } from "@/components/planner/calendar-actions";
 export function PlannerHeader({
   displayedDay,
   displayedView,
-  today,
   inboxOpen,
   sidebarMode,
   displayTotal,
@@ -33,13 +32,15 @@ export function PlannerHeader({
   calendarTo,
   calendarLabel,
   onCalendarImported,
-  showPlanTomorrow,
+  eveningPlanning,
+  planningToday,
+  reviewTomorrow,
+  onPlanTomorrow,
   weekStartsOn,
   timezone,
 }: {
   displayedDay: string;
   displayedView: PlannerView;
-  today: string;
   inboxOpen: boolean;
   sidebarMode: SidebarMode;
   displayTotal: number;
@@ -51,13 +52,15 @@ export function PlannerHeader({
   calendarTo: string;
   calendarLabel: string;
   onCalendarImported: () => void;
-  showPlanTomorrow: boolean;
+  eveningPlanning: boolean;
+  planningToday: string;
+  reviewTomorrow: boolean;
+  onPlanTomorrow: () => void;
   weekStartsOn: number;
   timezone: string;
 }) {
   const previous = dateKey(addDays(parseISO(displayedDay), -7));
   const next = dateKey(addDays(parseISO(displayedDay), 7));
-  const tomorrow = dateKey(addDays(parseISO(today), 1));
   return (
     <header className="app-header" data-inbox-open={inboxOpen}>
       <div className="planner-sidebar-slot">
@@ -92,7 +95,7 @@ export function PlannerHeader({
           <h1>
             <PlannerDatePicker
               value={displayedDay}
-              today={today}
+              today={planningToday}
               weekStartsOn={weekStartsOn}
               disabled={routeStillLoading}
               onSelect={(day) => navigate(day, displayedView)}
@@ -115,8 +118,8 @@ export function PlannerHeader({
             type="button"
             className="text-button planner-today"
             aria-label="Go to today"
-            onClick={() => navigate(today, displayedView)}
-            aria-current={displayedDay === today ? "date" : undefined}
+            onClick={() => navigate(planningToday, displayedView)}
+            aria-current={displayedDay === planningToday ? "date" : undefined}
           >
             <span>Today</span>
             <CalendarCheck
@@ -125,14 +128,6 @@ export function PlannerHeader({
               aria-hidden="true"
             />
           </button>
-          {showPlanTomorrow && (
-            <Link
-              className="plan-tomorrow-button"
-              href={`/planner?date=${tomorrow}`}
-            >
-              Plan tomorrow <ArrowRight size={15} />
-            </Link>
-          )}
           <button
             type="button"
             className="icon-button"
@@ -145,6 +140,24 @@ export function PlannerHeader({
             ) : (
               <ChevronRight size={18} />
             )}
+          </button>
+          <button
+            type="button"
+            className="plan-tomorrow-button"
+            data-evening={eveningPlanning || undefined}
+            onClick={onPlanTomorrow}
+            aria-label={
+              reviewTomorrow ? "Review tomorrow’s plan" : "Plan tomorrow"
+            }
+            title={reviewTomorrow ? "Review tomorrow’s plan" : "Plan tomorrow"}
+          >
+            <span className="plan-tomorrow-label">
+              {reviewTomorrow ? "Review tomorrow" : "Plan tomorrow"}
+            </span>
+            <span className="plan-tomorrow-compact" aria-hidden="true">
+              Tomorrow
+            </span>
+            <ArrowRight size={15} aria-hidden="true" />
           </button>
         </div>
       </div>

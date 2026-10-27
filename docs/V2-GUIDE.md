@@ -2,6 +2,14 @@
 
 This guide describes implemented behavior, not a guarantee that every deployment has its required migrations and secrets installed.
 
+## Plan tomorrow
+
+The toolbar always offers Plan tomorrow (Tomorrow on mobile). It opens tomorrow's Day view based on your profile timezone, regardless of the date currently displayed. Repeated clicks do not copy tasks or advance to another date. If loaded data includes scheduled tasks for tomorrow, the desktop action says Review tomorrow; routines alone do not count as a prepared task plan.
+
+From 18:00 local time, the button gains a quiet lavender emphasis. Today's Day view also offers a small reminder, without automatic dialogs, animation, or notifications. Dismiss it for the rest of that local date on this device; it is scoped to your account and does not mark a plan complete. The button stays available. On mobile, the calendar icon in the header returns to today; Go to today is also available inside the date picker.
+
+The guided task-selection/planning sheet and saved plan-ready status are not implemented yet.
+
 ## Tasks and routines
 
 Tasks belong to Inbox or one scheduled date/time. Routines are weekly rules. Click a routine on the timetable to edit only that appearance: change its date, time, or duration, or choose Skip this day. Edit entire routine opens the weekly rule instead.
@@ -41,6 +49,10 @@ Create a link for the desired planner range and send that link to the viewer. Th
 
 Private tasks and routines are always excluded from shared links, and notes are not shared. The owner's display name can appear publicly; set it in Settings. Anyone holding the link can view its public items. Manage and stop links from Settings. Revoking a link prevents future access but cannot retract screenshots or copies someone already made.
 
+## About and version
+
+Settings → App shows About DayFlow, the release version, and an expandable What’s new summary. The displayed version is read from `package.json`, so it reflects the website build you are using. The App section also contains installation and update guidance. The version number is not a live update check; use the update prompt or reopen the app to load a newer deployment.
+
 ## Reminders and device settings
 
 Set the profile timezone first, then assign a reminder lead time to scheduled tasks or routines. Completed tasks, paused routines, and skipped occurrences are not reminder candidates. Moved occurrences use their effective date/time.
@@ -48,3 +60,21 @@ Set the profile timezone first, then assign a reminder lead time to scheduled ta
 Browser reminders need DayFlow running. Push requires the separate server setup and an enrolled browser/device; enable it on each device that should receive reminders. Disable removes that device's enrollment. Do not assume a successful permission prompt alone proves automatic push delivery: test a future task after closing the tab.
 
 Delivery also depends on device/browser support, notification permission, connectivity, and operating-system settings. PWA install support is present, but offline editing and guaranteed delivery while the browser is fully quit are not promised. See [push setup](PUSH-REMINDERS.md).
+
+## Feedback and issue reports
+
+Settings → App → Send feedback or report an issue opens the in-app form. Signed-in users can submit feedback, a bug report, or a feature request. A reply email is optional; it is never taken from the account automatically. App version is attached on the server. Task titles, notes, passwords, and browser diagnostics are not attached.
+
+Apply `20261027000100_feedback.sql` with `pnpm exec supabase db push`. Submissions are stored in `public.feedback`; only database administrators can read them in the Supabase Dashboard. Users cannot read, edit, delete, or directly insert feedback. The authenticated RPC derives the owner and enforces one submission per minute and five per hour, including concurrent requests.
+
+Email setup (server environment only, both `.env.local` and Vercel):
+
+- `RESEND_API_KEY`: a Resend sending API key.
+- `FEEDBACK_FROM_EMAIL`: your verified sender, for example `DayFlow <feedback@your-domain.com>`.
+- `FEEDBACK_TO_EMAIL`: the inbox receiving feedback. Change this setting and redeploy to change the recipient; no migration is needed.
+
+Restart the dev server after changing local environment settings, and redeploy after changing Vercel settings. Do not prefix these variables with `NEXT_PUBLIC_` or commit their values. See [Resend's Send Email API](https://resend.com/docs/api-reference/emails/send-email).
+
+The database save happens before the email request. Reply-To uses the optional email entered in the form. An email failure does not lose feedback or tell the user to resubmit: the app confirms receipt after saving and logs the feedback reference plus failure status (without message content or secrets). Check server logs and the feedback table if an email is missing. Automatic email retries, attachments, and an admin inbox are not included yet. The support disclosure in the form explains storage and email forwarding; this is not a replacement for a full privacy policy.
+
+Release check: apply the migration, configure all three environment values, submit one report, verify the row in Supabase and receipt in the developer inbox, check Reply-To with an explicitly entered address, and confirm another account cannot access the record. No real email is sent by automated tests.

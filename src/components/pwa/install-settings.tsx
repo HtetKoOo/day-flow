@@ -24,7 +24,7 @@ export function InstallSettings() {
   }
   return (
     <>
-      <section className="rounded-3xl border bg-card p-6">
+      <section className="mt-6 rounded-3xl border bg-card p-6">
         <div className="flex items-center gap-3">
           <Download size={21} className="text-primary" />
           <h3 className="font-medium">Install DayFlow</h3>

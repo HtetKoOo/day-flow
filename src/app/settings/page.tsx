@@ -1,3 +1,5 @@
+import { FeedbackForm } from "@/components/settings/feedback-form";
+import { AboutDayFlow } from "@/components/settings/about-dayflow";
 import { InstallSettings } from "@/components/pwa/install-settings";
 import { requireUser } from "@/lib/auth";
 import { signOut } from "@/app/auth/actions";
@@ -76,7 +78,13 @@ export default async function Settings({
             </p>
           </section>
         ),
-        app: <InstallSettings />,
+        app: (
+          <>
+            <AboutDayFlow />
+            <FeedbackForm />
+            <InstallSettings />
+          </>
+        ),
         security: <PasswordSecurity />,
       }}
     />
