@@ -1,6 +1,6 @@
 # V2 release checklist
 
-This is a verification checklist, not a record that these checks have been completed. Mark items only with evidence from the target release/environment. The Plan tomorrow feature remains deferred; do not include it in V2 acceptance claims.
+This is a verification checklist, not a record that these checks have been completed. Mark items only with evidence from the target release/environment. Plan tomorrow currently provides an always-visible shortcut and a dismissible evening reminder. The guided planning sheet and a persisted “plan ready” status remain deferred.
 
 ## Automated gates
 
@@ -21,6 +21,10 @@ Database simulation tests do not prove the hosted project's migrations or realti
 - [ ] Review [push setup](PUSH-REMINDERS.md) and confirm actual end-to-end delivery.
 
 ## Functional checks
+
+- [ ] Plan tomorrow remains visible on phone/tablet/desktop at any hour; repeated clicks target profile-local tomorrow rather than advancing the viewed date.
+- [ ] Evening emphasis starts at 18:00 in the profile timezone. Only today's Day view shows a non-modal reminder; dismissing hides it for that account/date on this device, without removing the toolbar button.
+- [ ] A timezone-local midnight resets the reminder date and tomorrow target. Scheduled tasks (not routines alone) change the action to review wording.
 
 - [ ] Task and routine Save disabled initially; edit each field, then restore it to confirm Save disables again.
 - [ ] New item rejects blank/whitespace titles, invalid durations, midnight overflow, missing repeat days, and invalid end dates.

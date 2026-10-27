@@ -2026,3 +2026,100 @@ button,
     width: 100%;
   }
 }
+
+/* Tomorrow planning is always available; evening emphasis stays quiet. */
+.planner-app .app-header .plan-tomorrow-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-left: 8px;
+  border-color: var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.planner-app .app-header .plan-tomorrow-button[data-evening="true"] {
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
+  background: color-mix(in srgb, var(--primary) 13%, var(--background));
+  color: var(--primary);
+}
+.plan-tomorrow-compact { display: none; }
+.evening-planning-reminder {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--primary) 6%, var(--background));
+}
+.evening-planning-reminder p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.evening-planning-action {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.evening-planning-dismiss {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.evening-planning-dismiss:hover { background: var(--secondary); }
+@media (max-width: 760px) {
+  .planner-app .app-header { gap: 2px; }
+  .planner-app .app-header .planner-today { display: none; }
+  .planner-app .app-header .date-navigation { gap: 0; }
+  .planner-app .app-header .date-navigation h1 { margin-right: 0; }
+  .planner-app .app-header .planner-month-trigger { gap: 2px; font-size: 13px; }
+  .planner-app .app-header .date-navigation > .icon-button { width: 28px; min-width: 28px; }
+  .planner-app .app-header .plan-tomorrow-button { min-height: 40px; margin-left: 2px; padding: 6px; font-size: 12px; }
+  .plan-tomorrow-label { display: none; }
+  .plan-tomorrow-compact { display: inline; }
+  .planner-app .app-header .plan-tomorrow-button > svg { display: none; }
+  .planner-app .app-header .planner-view-trigger { padding-inline: 6px; font-size: 12px; gap: 2px; }
+  .planner-app .app-header .planner-more-trigger { width: 32px; min-width: 32px; }
+  .evening-planning-reminder { gap: 4px; margin-bottom: 8px; padding: 4px 6px 4px 10px; }
+  .evening-planning-reminder p { font-size: 12px; }
+  .evening-planning-action { max-width: 95px; font-size: 12px; }
+}
+
+/* Keep Today one tap away alongside the compact Tomorrow action. */
+@media (max-width: 760px) {
+  .planner-app .app-header .planner-today {
+    display: inline-flex;
+    flex: 0 0 28px;
+    width: 28px;
+    min-width: 28px;
+    min-height: 40px;
+    padding: 4px;
+    justify-content: center;
+  }
+  .planner-app .app-header .planner-today span { display: none; }
+  .planner-app .app-header .planner-today-icon { display: block; }
+}
+@media (max-width: 359px) {
+  .planner-app .app-header { padding-left: 4px; padding-right: 4px; }
+  .planner-app .app-header .planner-month-trigger { font-size: 12px; gap: 0; }
+  .planner-app .app-header .plan-tomorrow-button { padding-inline: 4px; margin-left: 0; font-size: 11px; }
+  .planner-app .app-header .planner-more-trigger { width: 28px; min-width: 28px; }
+}

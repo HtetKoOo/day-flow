@@ -53,7 +53,7 @@ export default async function Planner({
   searchParams: Promise<{ date?: string; view?: string }>;
 }) {
   const params = await searchParams;
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const requestedDate = z.iso.date().safeParse(params.date);
   const view =
     params.view === "week" || params.view === "two-days" ? params.view : "day";
@@ -208,6 +208,7 @@ export default async function Planner({
     );
   return (
     <PlannerShell
+      userId={user.id}
       timezone={profile.timezone}
       tasks={snapshot.inbox.map(toTask)}
       inboxError={snapshot.inbox_error}

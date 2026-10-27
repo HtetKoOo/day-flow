@@ -44,7 +44,7 @@ const navigation = [
   {
     id: "app",
     label: "App",
-    description: "Install and updates",
+    description: "About, install and updates",
     Icon: Download,
   },
   {

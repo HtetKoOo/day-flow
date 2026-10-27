@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { tomorrowPlanningClock } from "@/lib/tasks/tomorrow";
 
 export type SidebarMode = "inbox" | "routines";
 
@@ -51,15 +52,11 @@ export function usePlannerShellState(timezone: string) {
   );
   const inboxOpen = useSyncExternalStore(subscribeInbox, readInbox, () => true);
   const minute = useSyncExternalStore(subscribeClock, readClock, () => 0);
-  const evening =
-    minute > 0 &&
-    Number(
-      new Intl.DateTimeFormat("en-GB", {
-        timeZone: timezone,
-        hour: "2-digit",
-        hourCycle: "h23",
-      }).format(new Date(minute * 60000)),
-    ) >= 18;
+  const clock =
+    minute > 0
+      ? tomorrowPlanningClock(timezone, new Date(minute * 60000))
+      : null;
+  const evening = clock?.evening ?? false;
 
   function setInboxVisibility(open: boolean) {
     try {
@@ -95,6 +92,7 @@ export function usePlannerShellState(timezone: string) {
     isMobile,
     inboxOpen,
     evening,
+    planningToday: clock?.today,
     selectSidebar,
   };
 }
