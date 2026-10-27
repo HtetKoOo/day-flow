@@ -1081,7 +1081,7 @@
   opacity: 0.25;
 }
 .time-picker-popover {
-  width: 312px;
+  width: min(312px, calc(100vw - 24px));
   padding: 12px;
 }
 .time-picker-heading {
@@ -1102,7 +1102,8 @@
 }
 .time-picker-column > div {
   display: grid;
-  max-height: 212px;
+  max-height: min(212px, max(88px, calc(var(--radix-popover-content-available-height, 400px) - 120px)));
+  min-height: 0;
   gap: 3px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1111,9 +1112,11 @@
   border-radius: var(--radius-control);
   background: var(--background);
   touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 .time-picker-column button {
-  min-height: 31px;
+  min-height: 44px;
+  flex-shrink: 0;
   border: 0;
   border-radius: var(--radius-chip);
   background: transparent;

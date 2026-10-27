@@ -50,7 +50,7 @@ const navigation = [
   {
     id: "security",
     label: "Security",
-    description: "Password",
+    description: "Password and account deletion",
     Icon: KeyRound,
   },
 ] as const;
