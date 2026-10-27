@@ -214,11 +214,19 @@ export function DemoPlanner() {
             >
               <RotateCcw size={18} />
             </button>
-            <Link className="text-button demo-login" href="/login">
-              <LogIn size={18} /> Use the app
+            <Link
+              className="text-button demo-login"
+              href="/login"
+              aria-label="Sign in or create an account"
+            >
+              <LogIn size={18} /> Sign in
             </Link>
           </div>
         </header>
+        <div className="demo-intro" aria-label="About this demo">
+          <p>Sample data · Changes aren’t saved.</p>
+          <Link href="/login">Create account</Link>
+        </div>
 
         {notice && (
           <div className="demo-notice" role="status">

@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import { deletionEmailContent } from "./deletion-email";
 import { supabaseEnv } from "@/lib/env";
 
 export function deletionEmailConfigured() {
@@ -33,8 +34,7 @@ export async function sendDeletionCode(
     body: JSON.stringify({
       from: process.env.FEEDBACK_FROM_EMAIL,
       to: [email],
-      subject: "Confirm your DayFlow account deletion",
-      text: `Your DayFlow account deletion code is: ${code}\n\nThis code expires in 10 minutes and only authorizes deletion from the browser session that requested it. Enter it in DayFlow and confirm only if you want to permanently delete your account.\n\nIf you did not request this, do not share the code. Your account has not been deleted.`,
+      ...deletionEmailContent(code, requestId),
     }),
     signal: AbortSignal.timeout(8000),
   });

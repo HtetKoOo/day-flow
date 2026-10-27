@@ -1,5 +1,7 @@
 "use client";
 
+import { useIntentionalAuthExit } from "@/components/auth/use-intentional-auth-exit";
+import { unstable_rethrow } from "next/navigation";
 import { useState } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
@@ -8,18 +10,21 @@ import { disableDeviceReminders } from "@/lib/notifications/device";
 type SignOutAction = () => Promise<void>;
 
 export function SignOutConfirmation({ action }: { action: SignOutAction }) {
+  const intentionalExit = useIntentionalAuthExit();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
   async function confirm() {
     if (pending) return;
+    intentionalExit.begin();
     setPending(true);
     setError("");
     try {
       // Disconnect while authenticated, before the sign-out action clears cookies.
       await disableDeviceReminders();
     } catch (error) {
+      intentionalExit.cancel();
       setError(
         error instanceof Error
           ? error.message
@@ -31,7 +36,10 @@ export function SignOutConfirmation({ action }: { action: SignOutAction }) {
     // Keep redirects outside the cleanup catch so successful logout can navigate.
     try {
       await action();
-    } finally {
+    } catch (error) {
+      unstable_rethrow(error);
+      intentionalExit.cancel();
+      setError("Could not sign out. Please try again.");
       setPending(false);
     }
   }
