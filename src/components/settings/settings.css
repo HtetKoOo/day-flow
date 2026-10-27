@@ -46,3 +46,34 @@
     font-size: 14px;
   }
 }
+
+/* This dialog is portalled outside .settings-detail. Keep long action labels
+   within its own width, and let short phone screens scroll the full form. */
+.account-deletion-dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.account-deletion-dialog .confirmation-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.account-deletion-dialog [data-slot="button"] {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding-block: 10px;
+}
+.account-deletion-dialog .confirmation-actions [data-slot="button"] {
+  width: 100%;
+}
+@media (min-width: 640px) {
+  .account-deletion-dialog .confirmation-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  }
+}

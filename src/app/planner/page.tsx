@@ -1,3 +1,4 @@
+import { SessionGuard } from "@/components/auth/session-guard";
 import Link from "next/link";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
@@ -207,30 +208,33 @@ export default async function Planner({
       })),
     );
   return (
-    <PlannerShell
-      userId={user.id}
-      timezone={profile.timezone}
-      tasks={snapshot.inbox.map(toTask)}
-      inboxError={snapshot.inbox_error}
-      total={snapshot.inbox_count}
-      scheduled={[
-        ...snapshot.scheduled.map((row) => ({
-          ...toTask(row),
-          scheduled_date: row.scheduled_date as string,
-          start_time: row.start_time as string,
-        })),
-        ...routineBlocks,
-      ]}
-      scheduleError={
-        snapshot.scheduled_error || Boolean(routineError || exceptionError)
-      }
-      scheduledCount={snapshot.scheduled_count}
-      today={today}
-      range={range}
-      stripDays={strip.days}
-      loadedDays={loadedDays}
-      weekStartsOn={profile.week_starts_on}
-      routines={allRoutines}
-    />
+    <>
+      <SessionGuard userId={user.id} />
+      <PlannerShell
+        userId={user.id}
+        timezone={profile.timezone}
+        tasks={snapshot.inbox.map(toTask)}
+        inboxError={snapshot.inbox_error}
+        total={snapshot.inbox_count}
+        scheduled={[
+          ...snapshot.scheduled.map((row) => ({
+            ...toTask(row),
+            scheduled_date: row.scheduled_date as string,
+            start_time: row.start_time as string,
+          })),
+          ...routineBlocks,
+        ]}
+        scheduleError={
+          snapshot.scheduled_error || Boolean(routineError || exceptionError)
+        }
+        scheduledCount={snapshot.scheduled_count}
+        today={today}
+        range={range}
+        stripDays={strip.days}
+        loadedDays={loadedDays}
+        weekStartsOn={profile.week_starts_on}
+        routines={allRoutines}
+      />
+    </>
   );
 }

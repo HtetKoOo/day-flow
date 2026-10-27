@@ -2123,3 +2123,32 @@ button,
   .planner-app .app-header .plan-tomorrow-button { padding-inline: 4px; margin-left: 0; font-size: 11px; }
   .planner-app .app-header .planner-more-trigger { width: 28px; min-width: 28px; }
 }
+
+.demo-intro {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  padding: 2px 20px;
+  border-block: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.demo-intro p {
+  min-width: 0;
+  margin: 0;
+  padding-block: 8px;
+}
+.demo-intro a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.demo-intro a:hover {
+  text-decoration: underline;
+}

@@ -1,3 +1,4 @@
+import { sessionHasEnded } from "@/lib/auth/session-status";
 import { disconnectDeviceSubscription } from "./disconnect";
 import { createClient } from "@/lib/supabase/client";
 
@@ -5,7 +6,11 @@ const preferenceKey = "dayflow-device-reminders-disabled";
 export const deviceReminderEvent = "dayflow-device-reminders-change";
 
 export function setDeviceRemindersDisabled(disabled: boolean) {
-  localStorage.setItem(preferenceKey, disabled ? "true" : "false");
+  try {
+    localStorage.setItem(preferenceKey, disabled ? "true" : "false");
+  } catch {
+    /* Storage restrictions must not prevent logout. */
+  }
   window.dispatchEvent(new Event(deviceReminderEvent));
 }
 
@@ -25,8 +30,27 @@ export async function disableDeviceReminders() {
   if (subscription) {
     const client = createClient();
     const { data, error: authError } = await client.auth.getUser();
+    if (sessionHasEnded(authError, Boolean(data.user))) {
+      // Account deletion already cascaded its database endpoints. Do not make
+      // a dead session authenticate again just to leave the app.
+      try {
+        await subscription.unsubscribe();
+      } catch {
+        /* Best effort. */
+      }
+      try {
+        (await registration?.getNotifications())?.forEach((notification) =>
+          notification.close(),
+        );
+      } catch {
+        /* Best effort. */
+      }
+      return;
+    }
     if (authError || !data.user)
-      throw new Error("Please sign in again to disconnect reminders.");
+      throw new Error(
+        "Could not check this device. Check your connection and try again.",
+      );
     // Remove exactly this device and owner. Never remove every device on logout.
     await disconnectDeviceSubscription(
       subscription,

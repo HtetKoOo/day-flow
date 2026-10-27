@@ -10,6 +10,7 @@ import {
   requestAccountDeletionCode,
 } from "@/app/settings/delete-account-action";
 import { setDeviceRemindersDisabled } from "@/lib/notifications/device";
+import { useIntentionalAuthExit } from "@/components/auth/use-intentional-auth-exit";
 import { createClient } from "@/lib/supabase/client";
 
 export function DeleteAccount({
@@ -19,12 +20,14 @@ export function DeleteAccount({
   eligible: boolean;
   available: boolean;
 }) {
+  const intentionalExit = useIntentionalAuthExit();
   const [open, setOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [pending, setPending] = useState(false);
   const [sending, setSending] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
+  const [reference, setReference] = useState("");
   const [cooldown, setCooldown] = useState(0);
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -37,12 +40,16 @@ export function DeleteAccount({
   async function requestCode() {
     if (pending || sending || cooldown > 0) return;
     setSending(true);
+    setCode("");
+    setCodeSent(false);
+    setReference("");
     setMessage("");
     try {
       const result = await requestAccountDeletionCode();
       setMessage(result.message);
       if (result.ok) {
         setCodeSent(true);
+        setReference(result.reference ?? "");
         setCode("");
       }
       setCooldown(60);
@@ -63,16 +70,19 @@ export function DeleteAccount({
       !/^\d{6}$/.test(code)
     )
       return;
+    intentionalExit.begin();
     setPending(true);
     setMessage("");
     try {
       const result = await deleteOwnAccount(confirmation, code);
       if (!result.ok) {
+        intentionalExit.cancel();
         setMessage(result.message);
         setPending(false);
         return;
       }
     } catch {
+      intentionalExit.cancel();
       setMessage(
         "Could not confirm deletion. Check whether you can still sign in before retrying, or contact support.",
       );
@@ -93,7 +103,7 @@ export function DeleteAccount({
     try {
       await createClient().auth.signOut({ scope: "local" });
     } catch {
-      /* Server cookies were cleared. */
+      /* Login re-validates the deleted account with Auth even if cleanup fails. */
     }
     window.location.replace("/login?account=deleted");
   }
@@ -153,7 +163,7 @@ export function DeleteAccount({
             <Dialog.Portal>
               <Dialog.Overlay className="confirmation-overlay" />
               <Dialog.Content
-                className="confirmation-dialog"
+                className="confirmation-dialog account-deletion-dialog"
                 onEscapeKeyDown={(event) => {
                   if (pending || sending) event.preventDefault();
                 }}
@@ -196,6 +206,15 @@ export function DeleteAccount({
                   {codeSent && (
                     <label className="grid gap-2 text-sm">
                       Verification code
+                      {reference && (
+                        <span className="text-xs leading-5 text-muted-foreground">
+                          Use the email with request reference{" "}
+                          <strong className="font-mono text-foreground">
+                            {reference}
+                          </strong>
+                          .
+                        </span>
+                      )}
                       <Input
                         value={code}
                         onChange={(event) =>
@@ -207,13 +226,13 @@ export function DeleteAccount({
                         }
                         inputMode="numeric"
                         autoComplete="one-time-code"
-                        maxLength={6}
+                        maxLength={32}
                         disabled={pending || sending}
                       />
                     </label>
                   )}
                   <label className="grid gap-2 text-sm">
-                    Confirmation
+                    Type DELETE to confirm
                     <Input
                       value={confirmation}
                       onChange={(event) => setConfirmation(event.target.value)}

@@ -1,3 +1,4 @@
+import { SessionGuard } from "@/components/auth/session-guard";
 import { deletionEmailConfigured } from "@/lib/account/deletion";
 import { DeleteAccount } from "@/components/settings/delete-account";
 import { FeedbackForm } from "@/components/settings/feedback-form";
@@ -38,67 +39,70 @@ export default async function Settings({
     ]);
 
   return (
-    <SettingsShell
-      defaultSection={section}
-      sections={{
-        profile: (
-          <>
+    <>
+      <SessionGuard userId={user.id} />
+      <SettingsShell
+        defaultSection={section}
+        sections={{
+          profile: (
+            <>
+              <section className="rounded-3xl border bg-card p-6">
+                <h2 className="font-medium">Account</h2>
+                <p className="mt-2 break-all text-sm text-muted-foreground">
+                  {user.email}
+                </p>
+              </section>
+              <DisplayNameForm defaultValue={profile?.display_name ?? ""} />
+              <section className="mt-6 rounded-3xl border bg-card p-6">
+                <h2 className="font-medium">Sign out</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Sign out from this device.
+                </p>
+                <div className="mt-5">
+                  <SignOutConfirmation action={signOut} />
+                </div>
+              </section>
+            </>
+          ),
+          planning: (
+            <>
+              <TimezoneForm defaultValue={profile?.timezone ?? "UTC"} />
+              <PushNotificationSettings />
+            </>
+          ),
+          sharing: <ShareLinkManager shares={shares ?? []} />,
+          appearance: (
             <section className="rounded-3xl border bg-card p-6">
-              <h2 className="font-medium">Account</h2>
-              <p className="mt-2 break-all text-sm text-muted-foreground">
-                {user.email}
-              </p>
-            </section>
-            <DisplayNameForm defaultValue={profile?.display_name ?? ""} />
-            <section className="mt-6 rounded-3xl border bg-card p-6">
-              <h2 className="font-medium">Sign out</h2>
+              <h2 className="font-medium">Appearance</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Sign out from this device.
+                Choose how DayFlow looks on this device.
               </p>
               <div className="mt-5">
-                <SignOutConfirmation action={signOut} />
+                <ThemePicker />
               </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                System follows your device appearance.
+              </p>
             </section>
-          </>
-        ),
-        planning: (
-          <>
-            <TimezoneForm defaultValue={profile?.timezone ?? "UTC"} />
-            <PushNotificationSettings />
-          </>
-        ),
-        sharing: <ShareLinkManager shares={shares ?? []} />,
-        appearance: (
-          <section className="rounded-3xl border bg-card p-6">
-            <h2 className="font-medium">Appearance</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Choose how DayFlow looks on this device.
-            </p>
-            <div className="mt-5">
-              <ThemePicker />
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              System follows your device appearance.
-            </p>
-          </section>
-        ),
-        app: (
-          <>
-            <AboutDayFlow />
-            <FeedbackForm />
-            <InstallSettings />
-          </>
-        ),
-        security: (
-          <>
-            <PasswordSecurity />
-            <DeleteAccount
-              eligible={deletionStatus.data === true}
-              available={!deletionStatus.error && deletionEmailConfigured()}
-            />
-          </>
-        ),
-      }}
-    />
+          ),
+          app: (
+            <>
+              <AboutDayFlow />
+              <FeedbackForm />
+              <InstallSettings />
+            </>
+          ),
+          security: (
+            <>
+              <PasswordSecurity />
+              <DeleteAccount
+                eligible={deletionStatus.data === true}
+                available={!deletionStatus.error && deletionEmailConfigured()}
+              />
+            </>
+          ),
+        }}
+      />
+    </>
   );
 }

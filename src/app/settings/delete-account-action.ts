@@ -7,11 +7,13 @@ import {
   deletionEmailConfigured,
   sendDeletionCode,
 } from "@/lib/account/deletion";
+import { deletionRequestReference } from "@/lib/account/deletion-email";
 import { createClient } from "@/lib/supabase/server";
 
 export async function requestAccountDeletionCode(): Promise<{
   ok: boolean;
   message: string;
+  reference?: string;
 }> {
   if (!deletionEmailConfigured())
     return {
@@ -84,6 +86,7 @@ export async function requestAccountDeletionCode(): Promise<{
       };
     return {
       ok: true,
+      reference: deletionRequestReference(requestId),
       message:
         "A verification code was sent to your account email. It expires in 10 minutes.",
     };
@@ -138,12 +141,8 @@ export async function deleteOwnAccount(
         "Could not confirm account deletion. Check your connection and account before trying again, or contact support.",
     };
   }
-  // Auth deletion invalidates refresh sessions. Clear this browser's cookies too.
-  try {
-    await supabase.auth.signOut({ scope: "local" });
-  } catch {
-    // Deletion has committed. Client cleanup will also attempt local sign-out.
-    console.error("Post-deletion session cleanup unavailable");
-  }
+  // Return the result before clearing browser cookies. Cookie mutation here
+  // would make Next re-render this protected page while the client is still
+  // performing its own logout/navigation after successful deletion.
   return { ok: true, message: "Your account has been deleted." };
 }
