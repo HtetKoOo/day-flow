@@ -190,3 +190,27 @@ src/app/sw.js/route.ts       Versioned service worker endpoint
 - [Changelog](CHANGELOG.md)
 - [V2.0.0 release notes](docs/RELEASE-2.0.0.md)
 - [Original V1 product scope](docs/V1-BLUEPRINT.md) — historical planning reference; the implementation now includes V2 features.
+
+
+## Copyright & License
+
+Copyright © 2026 **Htet Ko Oo**. All Rights Reserved.
+
+DayFlow is publicly viewable for source review, learning, recruitment, and portfolio
+evaluation under the custom [DayFlow Source-Available Proprietary License](LICENSE).
+It is **not an OSI-approved open-source project** and is not licensed for unrestricted
+reuse. The license permits limited local evaluation and preparation of contributions;
+it does not authorize independent deployments, redistribution, sublicensing, or
+commercial reuse without separate written permission. GitHub platform rights and
+applicable statutory rights remain unaffected.
+
+You may use the [hosted DayFlow application](https://dayflow.htetkooo.dev).
+To request commercial use, redistribution, or other permission, contact
+**htetkooo2532@gmail.com** with your intended use and scope. Permission must be
+expressly granted in writing.
+
+Issues and proposed pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributors retain their copyright unless separately agreed, and incorporation may
+require a separate contributor agreement. Third-party components retain their own
+licenses and notices. See the [ownership and security review](docs/OWNERSHIP-AND-SECURITY-REVIEW.md)
+for review scope and remaining considerations.
