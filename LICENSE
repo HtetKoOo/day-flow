@@ -1,0 +1,99 @@
+DayFlow Source-Available Proprietary License
+Version 1.0 — 28 October 2026
+
+Copyright (c) 2026 Htet Ko Oo. All Rights Reserved.
+
+1. Scope and ownership
+
+Htet Ko Oo (the Owner) retains copyright in the original DayFlow source code,
+documentation, and original assets owned by the Owner (the Materials). This
+license grants limited permissions, not ownership. Third-party materials and
+contributions owned by others remain subject to their respective rights and
+licenses. This is a custom proprietary, source-available license; it is not an
+OSI-approved open-source license.
+
+2. Permitted viewing, evaluation, and contributions
+
+Subject to the conditions below, you may view and inspect the Materials for
+learning, code review, recruitment, and portfolio evaluation. You may make a
+local copy and run it solely for that evaluation, including recruitment by a
+commercial organization, or to investigate an issue or prepare a proposed
+contribution to the official DayFlow project. You may modify a copy solely to
+prepare and test such a contribution, and submit the proposed changes through
+a pull request to the official repository. These permissions do not authorize
+ongoing personal or business use of a self-hosted copy or an independent product.
+Retain copyright, license, and third-party notices in permitted copies.
+
+You may report issues. CONTRIBUTING.md describes the review process and the
+separate permissions required before a contribution is incorporated.
+
+3. Hosted application
+
+You may use the publicly hosted DayFlow application through its intended user
+interface, subject to applicable law and any separately communicated service
+terms. Normal downloading and execution of client assets necessary to use that
+service is permitted. This does not grant permission to extract, redeploy,
+redistribute, or republish the Materials as another application. This license
+does not promise continued availability of the hosted service.
+
+4. Reserved rights and restrictions
+
+Except as expressly permitted here, separately authorized in writing by the
+Owner, required by applicable law, or allowed under section 5, you may not:
+
+- copy, modify, adapt, or create derivative works of the Materials;
+- redistribute, publish, sublicense, sell, rent, or otherwise supply them;
+- deploy or use them independently, including as a personal self-hosted copy,
+  a hosted service, a commercial offering, or another product;
+- reuse the Materials in commercial work, client deliverables, or templates;
+- remove ownership notices or represent the Materials as your own work.
+
+The Owner controls official project branding, releases, and commercial licensing.
+No trademark or branding license is granted, except identification reasonably
+necessary for permitted review and contributions. No patent license is granted
+by this document. Rights not expressly granted are reserved.
+
+5. Platform, statutory, and third-party rights
+
+Nothing in this license limits rights granted under GitHub's applicable Terms
+of Service, including public-repository viewing and forking through GitHub's
+functionality. Such platform rights are not permission from the Owner to deploy
+or commercialize an independent product. Nor does this license restrict rights
+that applicable law does not permit the Owner to restrict.
+
+Third-party code, dependencies, icons, and other assets retain their own licenses
+and notices. Those licenses govern those components and prevail over conflicting
+restrictions here for those components. This license does not relicense them or
+claim ownership of them.
+
+6. Contributions
+
+Contributors retain copyright in their original contributions unless a separate
+written agreement expressly transfers it. Submitting a pull request does not
+transfer ownership. The review-and-submission permissions in section 2 do not
+by themselves grant the Owner the broader rights needed to incorporate and
+commercially license another person's original work. Before incorporation,
+contributors must provide a separate contributor license agreement or other
+express written permission acceptable to the Owner, where applicable. Owner
+approval is required before any contribution is merged. No contribution is
+automatically accepted.
+
+7. Disclaimer and liability
+
+To the fullest extent permitted by applicable law, the Materials are provided
+"AS IS", without warranties, including merchantability, fitness for a particular
+purpose, and non-infringement. To that extent, the Owner is not liable for damages
+arising from the Materials or their use. Nothing excludes liability or rights
+that cannot lawfully be excluded.
+
+8. Breach and separate permission
+
+Permissions under this license terminate upon your breach of its conditions.
+Upon termination, stop use and delete copies made under these permissions,
+except copies you may lawfully retain under independent rights described in
+section 5. Termination does not extinguish those independent rights.
+
+To request commercial, redistribution, independent-use, or other permission,
+contact Htet Ko Oo at htetkooo2532@gmail.com. Permission must be expressly granted
+in writing; silence, public availability, or acceptance of an issue is not consent.
+A separate written agreement may grant additional rights.
