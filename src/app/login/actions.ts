@@ -1,23 +1,19 @@
 "use server";
-import { z } from "zod";
+import { loginInput, loginErrorMessage } from "@/lib/auth/login";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-export type LoginState = { message: string };
+export type LoginState = { message: string; kind?: "error" | "success" };
 export async function signIn(
   _: LoginState,
   form: FormData,
 ): Promise<LoginState> {
-  const input = z
-    .object({
-      email: z.email(),
-      password: z.string().min(8).max(128),
-      mode: z.enum(["login", "signup"]),
-    })
-    .safeParse(Object.fromEntries(form));
+  const input = loginInput.safeParse(Object.fromEntries(form));
   if (!input.success)
     return {
-      message: "Enter a valid email and a password of at least 8 characters.",
+      kind: "error",
+      message:
+        input.error.issues[0]?.message ?? "Check your details and try again.",
     };
   const supabase = await createClient();
   const { email, password, mode } = input.data;
@@ -34,14 +30,14 @@ export async function signIn(
       : await supabase.auth.signInWithPassword({ email, password });
   if (error)
     return {
-      message:
-        error.status === 429
-          ? "Too many email requests. Please try again later."
-          : "Unable to continue. Check your details or try again later.",
+      kind: "error",
+      message: loginErrorMessage(error, mode),
     };
   if (mode === "signup")
     return {
-      message: "Check your email to confirm your account, then sign in.",
+      kind: "success",
+      message:
+        "If confirmation is needed, check your email for a link. Already registered? Sign in or continue with Google.",
     };
   redirect("/planner");
 }

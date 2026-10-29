@@ -39,13 +39,23 @@ export function GoogleSignInButton({
     setPending(true);
     setMessage("");
 
-    const { error } = await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/confirm` },
-    });
+    try {
+      const { error } = await createClient().auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/confirm`,
+          queryParams: { prompt: "select_account" },
+        },
+      });
 
-    if (error) {
-      setMessage("Unable to continue with Google. Please try again.");
+      if (error) {
+        setMessage("Unable to continue with Google. Please try again.");
+        setPending(false);
+      }
+    } catch {
+      setMessage(
+        "Unable to reach Google sign-in. Check your connection and try again.",
+      );
       setPending(false);
     }
   }
@@ -63,7 +73,7 @@ export function GoogleSignInButton({
         {pending ? "Opening Google…" : "Continue with Google"}
       </Button>
       {message && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="alert" className="text-sm text-destructive">
           {message}
         </p>
       )}

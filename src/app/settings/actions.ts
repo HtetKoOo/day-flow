@@ -60,10 +60,12 @@ export async function revokeTimetableShare(token: string) {
     : { ok: true, message: "Share link stopped." };
 }
 
+export type ProfileState = { message: string; value?: string; ok?: boolean };
+
 export async function updateDisplayName(
-  _: PasswordSecurityState,
+  _: ProfileState,
   form: FormData,
-): Promise<PasswordSecurityState> {
+): Promise<ProfileState> {
   void _;
   const parsed = z
     .object({
@@ -74,39 +76,46 @@ export async function updateDisplayName(
     return { message: "Use a display name with up to 100 characters." };
 
   const { supabase, user } = await requireUser();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .update({ display_name: parsed.data.displayName })
-    .eq("id", user.id);
-  return error
-    ? { message: "Could not save your display name. Try again." }
-    : {
-        message: parsed.data.displayName
-          ? "Display name saved."
-          : "Display name cleared.",
-      };
+    .eq("id", user.id)
+    .select()
+    .single();
+  if (error || !data)
+    return {
+      ok: false,
+      message: "Could not save your display name. Try again.",
+    };
+  revalidatePath("/settings");
+  return { ok: true, value: data.display_name, message: "Display name saved." };
 }
 
 export async function updateTimezone(
-  _: PasswordSecurityState,
+  _: ProfileState,
   form: FormData,
-): Promise<PasswordSecurityState> {
+): Promise<ProfileState> {
   void _;
   const parsed = z
     .object({ timezone: z.string().trim().min(1).max(100) })
     .safeParse(Object.fromEntries(form));
-  if (!parsed.success)
-    return { message: "Choose a valid timezone." };
+  if (!parsed.success) return { message: "Choose a valid timezone." };
 
   const { supabase, user } = await requireUser();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .update({ timezone: parsed.data.timezone })
-    .eq("id", user.id);
-  if (error)
+    .eq("id", user.id)
+    .select()
+    .single();
+  if (error || !data)
     return { message: "Choose a valid timezone, such as Asia/Bangkok." };
 
   revalidatePath("/planner");
   revalidatePath("/settings");
-  return { message: "Timezone saved. Planner times now use this timezone." };
+  return {
+    ok: true,
+    value: data.timezone,
+    message: "Timezone saved. Planner times now use this timezone.",
+  };
 }

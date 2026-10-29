@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.1 — Unreleased
+
+### Fixed
+
+- Clearer email/password login errors, Google sign-in guidance, and signup validation.
+- Google sign-in explicitly requests account selection.
+- Display-name and timezone saves verify that an updated profile row was returned.
+- Settings show saved profile values with Change, Save, and Cancel controls.
+- Responsive saved-value and editor layouts prevent buttons from squeezing names and timezones.
+
+### Documentation
+
+- Added the proprietary source-available license, contribution guidelines, and ownership/security review.
+
+No database migration or Edge Function redeployment is required for this patch. See [release notes](docs/RELEASE-2.0.1.md) for the remaining release checks.
+
 ## 2.0.0 — Release candidate
 
 ### Added

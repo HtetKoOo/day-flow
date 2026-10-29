@@ -15,9 +15,24 @@ export function TimezoneForm({ defaultValue }: { defaultValue: string }) {
       return "";
     }
   }, []);
-  const [state, action, pending] = useActionState(updateTimezone, {
-    message: "",
-  });
+  const [saved, setSaved] = useState(defaultValue);
+  const [editing, setEditing] = useState(false);
+  const [state, action, pending] = useActionState(
+    async (
+      previous: import("@/app/settings/actions").ProfileState,
+      form: FormData,
+    ) => {
+      const result = await updateTimezone(previous, form);
+      if (result.ok && result.value !== undefined) {
+        setSaved(result.value);
+        setEditing(false);
+      }
+      return result;
+    },
+    {
+      message: "",
+    },
+  );
 
   return (
     <section className="mt-6 rounded-3xl border bg-card p-6">
@@ -30,38 +45,62 @@ export function TimezoneForm({ defaultValue }: { defaultValue: string }) {
           </p>
         </div>
       </div>
-      <form
-        action={action}
-        className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end"
-      >
-        <label className="min-w-0 space-y-2">
-          <span className="text-sm">Your timezone</span>
-          <Input
-            name="timezone"
-            value={timezone}
-            onChange={(event) => setTimezone(event.target.value)}
-            maxLength={100}
-            placeholder="Asia/Bangkok"
-            list="dayflow-timezones"
-            required
-          />
-        </label>
-        <div className="grid gap-3 sm:flex sm:flex-wrap">
-          <Button disabled={pending}>
-            {pending ? "Saving…" : "Save timezone"}
+      {!editing && (
+        <div className="profile-saved-value mt-5">
+          <p className="min-w-0 font-medium [overflow-wrap:anywhere]">
+            {saved || "Not set"}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setTimezone(saved);
+              setEditing(true);
+            }}
+          >
+            Change
           </Button>
-          {deviceTimezone && deviceTimezone !== timezone && (
+        </div>
+      )}
+      {editing && (
+        <form action={action} className="profile-edit-form mt-5 grid gap-4">
+          <label className="min-w-0 space-y-2">
+            <span className="text-sm">Your timezone</span>
+            <Input
+              name="timezone"
+              value={timezone}
+              onChange={(event) => setTimezone(event.target.value)}
+              maxLength={100}
+              placeholder="Asia/Bangkok"
+              list="dayflow-timezones"
+              required
+            />
+          </label>
+          <div className="profile-edit-actions">
+            <Button disabled={pending}>
+              {pending ? "Saving…" : "Save timezone"}
+            </Button>
+            {deviceTimezone && deviceTimezone !== timezone && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={() => setTimezone(deviceTimezone)}
+              >
+                Use device timezone
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               disabled={pending}
-              onClick={() => setTimezone(deviceTimezone)}
+              onClick={() => setEditing(false)}
             >
-              Use device timezone
+              Cancel
             </Button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
       <datalist id="dayflow-timezones">
         <option value="Asia/Bangkok" />
         <option value="Asia/Yangon" />
