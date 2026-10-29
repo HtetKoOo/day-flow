@@ -77,3 +77,30 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
   }
 }
+
+/* Keep saved values readable even when settings buttons default to full width. */
+.settings-detail .profile-saved-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+.settings-detail .profile-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.settings-detail .profile-edit-form > label {
+  display: block;
+}
+@media (min-width: 640px) {
+  .settings-detail .profile-saved-value {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .settings-detail .profile-saved-value [data-slot="button"],
+  .settings-detail .profile-edit-actions [data-slot="button"] {
+    width: auto;
+    max-width: 100%;
+    flex-shrink: 0;
+  }
+}

@@ -2,7 +2,7 @@
 
 DayFlow is a personal daily planner for making a calm plan tonight and following it tomorrow. It combines an Inbox, a visual timetable, recurring weekly routines, and fast Day / 2 days / Week views.
 
-**Version:** 2.0.0 · [What’s new](CHANGELOG.md)
+**Version:** 2.0.1 · [What’s new](CHANGELOG.md)
 
 **Live app:** [dayflow.htetkooo.dev](https://dayflow.htetkooo.dev)
 **Explore the demo:** [dayflow.htetkooo.dev/demo](https://dayflow.htetkooo.dev/demo)
@@ -188,6 +188,7 @@ src/app/sw.js/route.ts       Versioned service worker endpoint
 - [Architecture and operations](docs/ARCHITECTURE.md)
 - [V2 release checklist and validation evidence](docs/V2-RELEASE.md)
 - [Changelog](CHANGELOG.md)
+- [V2.0.1 release notes](docs/RELEASE-2.0.1.md)
 - [V2.0.0 release notes](docs/RELEASE-2.0.0.md)
 - [Original V1 product scope](docs/V1-BLUEPRINT.md) — historical planning reference; the implementation now includes V2 features.
 

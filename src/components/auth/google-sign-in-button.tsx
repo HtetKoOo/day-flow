@@ -42,7 +42,10 @@ export function GoogleSignInButton({
     try {
       const { error } = await createClient().auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/confirm` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/confirm`,
+          queryParams: { prompt: "select_account" },
+        },
       });
 
       if (error) {

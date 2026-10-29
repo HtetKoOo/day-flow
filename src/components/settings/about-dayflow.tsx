@@ -5,34 +5,23 @@ import packageInfo from "../../../package.json";
 
 const highlights = [
   {
-    title: "Flexible routines",
+    title: "Clearer sign-in help",
     detail:
-      "Move, skip, or restore one day without changing your weekly routine.",
+      "Helpful messages for incorrect passwords, email confirmation, and Google sign-in.",
   },
   {
-    title: "Calendar import and export",
-    detail:
-      "Bring in calendar events or export your timetable with control over private details.",
+    title: "Choose your Google account",
+    detail: "Google sign-in now requests an account chooser.",
   },
   {
-    title: "View-only sharing",
+    title: "Easier profile settings",
     detail:
-      "Share a timetable link while private tasks and routines stay hidden.",
+      "See your saved name and timezone, then choose Change to edit them.",
   },
   {
-    title: "Reminders on your devices",
+    title: "Better settings layouts",
     detail:
-      "Set reminders and enable push notifications separately on each device.",
-  },
-  {
-    title: "A calmer tomorrow",
-    detail:
-      "Open tomorrow’s plan any time, with a quiet, dismissible reminder in the evening.",
-  },
-  {
-    title: "An app-like experience",
-    detail:
-      "Install DayFlow on supported devices and enjoy improved mobile navigation and planner views.",
+      "Names, timezones, and editing buttons fit more comfortably on smaller screens.",
   },
 ];
 
