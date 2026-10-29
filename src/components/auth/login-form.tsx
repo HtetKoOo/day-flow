@@ -20,6 +20,10 @@ export function LoginForm() {
   return (
     <form action={action} className="mt-8 space-y-5" onSubmit={trackSubmission}>
       <GoogleSignInButton disabled={pending} />
+      <p className="text-sm text-muted-foreground">
+        Signed up with Google? Use Continue with Google unless you have also set
+        a DayFlow password.
+      </p>
       <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
         or continue with email
       </div>
@@ -33,11 +37,30 @@ export function LoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
-          minLength={8}
           maxLength={128}
           required
+          aria-describedby="password-hint"
         />
+        <span
+          id="password-hint"
+          className="block text-xs text-muted-foreground"
+        >
+          Creating an account? Use at least 8 characters. Your Google password
+          is not your DayFlow password.
+        </span>
       </label>
+      {state.message && !pending && (
+        <p
+          role={state.kind === "error" ? "alert" : "status"}
+          className={
+            state.kind === "error"
+              ? "rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+              : "rounded-lg border border-border p-3 text-sm text-foreground"
+          }
+        >
+          {state.message}
+        </p>
+      )}
       <Button className="w-full" name="mode" value="login" disabled={pending}>
         {pending && submittedMode === "login" ? "Signing in…" : "Sign in"}
       </Button>
@@ -58,9 +81,6 @@ export function LoginForm() {
           ? "Creating account…"
           : "Create account"}
       </Button>
-      <p role="status" className="text-sm text-muted-foreground">
-        {state.message}
-      </p>
     </form>
   );
 }

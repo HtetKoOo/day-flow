@@ -32,8 +32,8 @@ export default async function Login({
       <p className="mt-4 text-muted-foreground">Make space for a calmer day.</p>
       {confirmation === "failed" && (
         <p role="alert" className="mt-5 text-sm">
-          This confirmation link is invalid or expired. Try signing in or
-          request a new signup email.
+          Sign-in or email verification could not be completed. Try Continue
+          with Google again, or request a new email link if yours has expired.
         </p>
       )}
       {account === "deleted" && (
