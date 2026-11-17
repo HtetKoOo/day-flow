@@ -854,7 +854,6 @@
   top: var(--agenda-time-position);
   right: 0;
   left: 0;
-  transform: translateY(-50%);
 }
 .agenda-time-aligned .agenda-gap {
   position: absolute;
@@ -884,24 +883,6 @@
   z-index: 1;
 }
 
-/* In range views, the shared clock anchors cards at their start and sizes
-   capsules to their actual visual time span. Adjacent tasks therefore meet at
-   one edge; any free interval occupies its own visible space. */
-.agenda-time-aligned .agenda-card {
-  transform: none;
-}
-.agenda-time-aligned .timeline-time,
-.agenda-time-aligned .agenda-body {
-  align-self: start;
-  padding-top: 8px;
-}
-
-/* In range views, the shared clock anchors cards at their start and sizes
-   capsules to their actual visual time span. Adjacent tasks therefore meet at
-   one edge; any free interval occupies its own visible space. */
-.agenda-time-aligned .agenda-card {
-  transform: none;
-}
 .agenda-time-aligned .timeline-time,
 .agenda-time-aligned .agenda-body {
   align-self: start;
@@ -1133,7 +1114,8 @@
   height: max(
     0px,
     calc(
-      var(--agenda-next-top) - var(--agenda-previous-top) -
+      var(--agenda-next-top) + var(--agenda-next-inset, 0px) -
+        var(--agenda-previous-top) -
         var(--connector-node-height)
     )
   );
@@ -1243,4 +1225,8 @@
   .day-timeline .agenda-card[data-draggable="true"]::before {
     inset-inline: 0;
   }
+}
+
+.agenda-time-aligned .agenda-card[data-touch-next] .timeline-marker {
+  align-self: end;
 }

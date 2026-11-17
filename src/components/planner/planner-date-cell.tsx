@@ -8,7 +8,6 @@ export function PlannerDateCell({
   day,
   today,
   displayedDay,
-  isRangeView,
   tasks,
   incomplete,
   href,
@@ -17,7 +16,6 @@ export function PlannerDateCell({
   day: string;
   today: string;
   displayedDay: string;
-  isRangeView: boolean;
   tasks: ScheduledTask[];
   incomplete: boolean;
   href: string;
@@ -25,7 +23,6 @@ export function PlannerDateCell({
 }) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
-      isRangeView ||
       event.button !== 0 ||
       event.metaKey ||
       event.ctrlKey ||
