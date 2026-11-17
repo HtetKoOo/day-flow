@@ -203,7 +203,6 @@ export function PlannerShell({
       day={day}
       today={today}
       displayedDay={displayedDay}
-      isRangeView={isRangeView}
       tasks={scheduledByDay.get(day) ?? []}
       incomplete={incompleteDatePreview}
       href={href(day, displayedView)}

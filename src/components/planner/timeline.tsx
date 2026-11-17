@@ -1,4 +1,6 @@
 "use client";
+
+import { timelineTaskHeight, type RangeTimeAxis } from "./planner-time-axis";
 import {
   BedDouble,
   BookOpen,
@@ -60,20 +62,6 @@ export function timelineMarker(
   return { icon: ListChecks, moment: task.duration_minutes <= 15 };
 }
 
-export function timelineTaskHeight(minutes: number, compact: boolean) {
-  const heights = compact
-    ? [46, 54, 66, 82, 98, 112, 126]
-    : [56, 66, 88, 110, 132, 150, 168];
-  const position =
-    minutes <= 15
-      ? 0
-      : minutes <= 30
-        ? 1
-        : Math.min(6, Math.ceil(minutes / 60) + 1);
-
-  return heights[position];
-}
-
 function durationHeight(minutes: number, compact: boolean) {
   return `${timelineTaskHeight(minutes, compact)}px`;
 }
@@ -116,12 +104,7 @@ export function Timeline({
   draggingTask?: InboxTask | null;
   dragTime?: string | null;
   dragPosition?: number | null;
-  timeAxis?: {
-    start: number;
-    end: number;
-    positions: Record<number, number>;
-    height: number;
-  };
+  timeAxis?: RangeTimeAxis;
 }) {
   const { setNodeRef } = useDroppable({
     id: `timeline-surface-${day}`,
@@ -141,26 +124,12 @@ export function Timeline({
     : "0px";
   const targetMinute = dragTime ? minutes(dragTime) : null;
   const previewTop = dragPosition === null ? 0 : Math.max(0, dragPosition);
-  const isTimeAligned = Boolean(timeAxis);
-  const timelineHeight = timeAxis?.height ?? null;
-  const timePosition = (minute: number) => {
-    if (!timeAxis) return 0;
-    const clamped = Math.max(timeAxis.start, Math.min(timeAxis.end, minute));
-    const lower = Math.floor(clamped / 15) * 15;
-    const upper = Math.min(timeAxis.end, lower + 15);
-    const lowerPosition = timeAxis.positions[lower] ?? 0;
-    const upperPosition = timeAxis.positions[upper] ?? lowerPosition;
-    return (
-      lowerPosition +
-      (upperPosition - lowerPosition) *
-        ((clamped - lower) / Math.max(1, upper - lower))
-    );
-  };
-  const visualTaskEnd = (minute: number) => {
-    if (!timeAxis) return minute;
-    const clamped = Math.max(timeAxis.start, Math.min(timeAxis.end, minute));
-    return Math.min(timeAxis.end, Math.ceil(clamped / 15) * 15);
-  };
+  // Conflicting events use the stacked agenda so both remain readable.
+  const axis = items.some(({ overlaps }) => overlaps) ? undefined : timeAxis;
+  const isTimeAligned = Boolean(axis);
+  const timelineHeight = axis?.height ?? null;
+  const timePosition = (minute: number) =>
+    axis?.positions[Math.max(axis.start, Math.min(axis.end, minute))] ?? 0;
   const targetEnd =
     targetMinute === null || !draggingTask
       ? null
@@ -223,14 +192,13 @@ export function Timeline({
         const nextGap = items[index + 1]?.gap ?? 0;
         const marker = timelineMarker(task);
         const previousEnd = previousTask
-          ? visualTaskEnd(
-              minutes(previousTask.start_time) + previousTask.duration_minutes,
-            )
+          ? minutes(previousTask.start_time) + previousTask.duration_minutes
           : null;
+        const nextItem = items[index + 1];
+        const touchesNext =
+          isTimeAligned && marker.moment && nextItem?.gap === 0;
         const taskPosition = timePosition(taskStart);
-        const taskEndPosition = timePosition(
-          visualTaskEnd(taskStart + task.duration_minutes),
-        );
+        const taskEndPosition = timePosition(taskStart + task.duration_minutes);
         const previousPosition = previousTask
           ? timePosition(minutes(previousTask.start_time))
           : 0;
@@ -244,6 +212,9 @@ export function Timeline({
           "--agenda-previous-top": `${previousPosition}px`,
           "--agenda-previous-height": `${previousVisualHeight}px`,
           "--agenda-next-top": `${taskPosition}px`,
+          "--agenda-next-inset": touchesNext
+            ? `max(0px, calc(${taskEndPosition - taskPosition}px - var(--timeline-node-size)))`
+            : "0px",
         };
         const gapVisualHeight = Math.max(0, taskPosition - gapPosition);
         const taskVisualHeight = Math.max(1, taskEndPosition - taskPosition);
@@ -260,7 +231,7 @@ export function Timeline({
                 : undefined
             }
           >
-            {(gap > 0 || (isTimeAligned && !overlapsPrevious)) &&
+            {gap > 0 &&
               index > 0 &&
               (draggingTask ? (
                 <div
@@ -345,16 +316,13 @@ export function Timeline({
             <DraggableTaskCard
               task={task}
               disabled={
-                pending ||
-                compact ||
-                compact ||
-                disableDrag ||
-                Boolean(task.is_routine)
+                pending || compact || disableDrag || Boolean(task.is_routine)
               }
               allowControlsWhenDragDisabled={
                 compact || disableDrag || Boolean(task.is_routine)
               }
               className={`agenda-card ${durationClass(task.duration_minutes)} ${marker.moment ? "is-moment" : "is-duration"} ${task.is_completed ? "is-complete" : ""} ${task.is_routine ? "is-routine" : ""} ${hasOverlap ? "has-overlap" : ""} ${targetEnd !== null && targetMinute! < minutes(task.start_time) + task.duration_minutes && targetEnd > minutes(task.start_time) ? "is-drop-conflict" : ""}`}
+              data-touch-next={touchesNext || undefined}
               data-color={taskColor(task.color)}
               data-timeline-segment
               data-timeline-segment-kind="task"

@@ -22,3 +22,34 @@ test("Range clock includes late-night tasks instead of collapsing them at 22:00"
     );
   }
 });
+
+test("Two-day and week clocks reserve space for consecutive tasks in the same 15-minute slot", () => {
+  const tasks = [
+    {
+      id: "wake",
+      scheduled_date: "2026-11-17",
+      start_time: "07:30",
+      duration_minutes: 5,
+    },
+    {
+      id: "study",
+      scheduled_date: "2026-11-17",
+      start_time: "07:35",
+      duration_minutes: 60,
+    },
+    {
+      id: "early",
+      scheduled_date: "2026-11-18",
+      start_time: "05:00",
+      duration_minutes: 5,
+    },
+  ] as ScheduledTask[];
+
+  for (const compact of [false, true]) {
+    const { start, positions } = buildRangeTimeAxis(tasks, compact);
+    assert.equal(start, 300);
+    assert.ok(positions[305] - positions[300] + 1e-6 >= (compact ? 46 : 56));
+    assert.ok(positions[455] - positions[450] + 1e-6 >= (compact ? 46 : 56));
+    assert.ok(positions[515] - positions[455] + 1e-6 >= (compact ? 66 : 88));
+  }
+});
